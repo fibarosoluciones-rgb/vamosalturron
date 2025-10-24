@@ -54,6 +54,7 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .status-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
 .status-pill[data-status="pendiente"] { background: rgba(244,178,55,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.45); }
 .status-pill[data-status="vendido"] { background: rgba(34,197,94,0.18); color:#86efac; border:1px solid rgba(34,197,94,0.45); }
+.status-pill[data-status="cancelado"] { background: rgba(239,68,68,0.18); color:#fca5a5; border:1px solid rgba(239,68,68,0.45); }
 .lead-list { margin-top:12px; display:flex; flex-direction:column; gap:12px; }
 .lead-card { border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:12px 14px; background:#0b1120; }
 .lead-card header { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -160,10 +161,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <div class="card">
         <label class="label">Compañía</label>
         <select id="compania"></select>
-      </div>
-      <div class="card">
-        <label class="label">Familia</label>
-        <select id="familia"></select>
       </div>
       <div class="card">
         <label class="label">Líneas</label>
@@ -289,6 +286,44 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
   </div>
 </div>
 
+<div id="requestModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3>Solicitar tarifa</h3>
+    <p class="dim">Tarifa seleccionada: <span class="highlight" id="requestTariffName"></span></p>
+    <p class="dim" style="margin-top:-4px;"><strong>Aviso:</strong> al rellenar este formulario se creará un perfil de cliente automáticamente.</p>
+    <form id="requestForm" class="stacked">
+      <input type="hidden" id="requestTariffId" />
+      <div class="form-grid">
+        <div>
+          <label class="label" for="requestUsername">Usuario</label>
+          <input id="requestUsername" type="text" autocomplete="username" required placeholder="Elige tu usuario" />
+        </div>
+        <div>
+          <label class="label" for="requestPassword">Contraseña</label>
+          <input id="requestPassword" type="password" autocomplete="new-password" required placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div>
+          <label class="label" for="requestEmail">Correo electrónico</label>
+          <input id="requestEmail" type="email" autocomplete="email" required placeholder="tu@correo.com" />
+        </div>
+        <div>
+          <label class="label" for="requestPhone">Teléfono de contacto</label>
+          <input id="requestPhone" type="tel" autocomplete="tel" required placeholder="Número de teléfono" />
+        </div>
+        <div class="full">
+          <label class="label" for="requestAddress">Dirección</label>
+          <textarea id="requestAddress" required placeholder="Dirección completa"></textarea>
+        </div>
+      </div>
+      <div class="dim" id="requestError" style="min-height:18px;"></div>
+      <div class="modal-actions">
+        <button type="button" class="smallbtn" id="cancelRequest">Cancelar</button>
+        <button type="submit" class="primary">Solicitar tarifa</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <main class="wrap">
   <section id="aiPanel" class="card">
     <h2 class="section-title">Buscador inteligente de tarifas</h2>
@@ -398,10 +433,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
         <div>
           <label class="label" for="tarifaCompania">Compañía</label>
           <input id="tarifaCompania" type="text" required />
-        </div>
-        <div>
-          <label class="label" for="tarifaFamilia">Familia</label>
-          <input id="tarifaFamilia" type="text" required />
         </div>
         <div>
           <label class="label" for="tarifaLineas">Líneas</label>
@@ -739,6 +770,16 @@ let grid,
   leadForm,
   leadTariffName,
   leadTariffIdInput,
+  requestModal,
+  requestForm,
+  requestTariffName,
+  requestTariffIdInput,
+  requestUsernameInput,
+  requestPasswordInput,
+  requestEmailInput,
+  requestPhoneInput,
+  requestAddressInput,
+  requestError,
   commercialNotifications,
   commercialLeads,
   leadSummary,
@@ -755,7 +796,6 @@ let grid,
   tarifaCodigo,
   tarifaNombre,
   tarifaCompania,
-  tarifaFamilia,
   tarifaLineas,
   tarifaPrecio,
   tarifaMoneda,
@@ -1338,6 +1378,10 @@ function normaliseLead(raw) {
   lead.clientName = lead.clientName || lead.client || '';
   lead.contact = lead.contact || '';
   lead.notes = lead.notes || '';
+  lead.cancelReason = lead.cancelReason || lead.cancel_reason || '';
+  lead.cancelledAt = lead.cancelledAt || lead.cancelled_at || null;
+  lead.cancelledBy = lead.cancelledBy || lead.cancelled_by || '';
+  lead.cancelledByName = lead.cancelledByName || lead.cancelled_by_name || '';
   return lead;
 }
 
@@ -1438,24 +1482,20 @@ function handleStorageEvent(event) {
 
 function populateFilterOptions(preserve = true) {
   const companiaSelect = $('#compania');
-  const familiaSelect = $('#familia');
   const lineasSelect = $('#lineas');
-  if (!companiaSelect || !familiaSelect || !lineasSelect) return;
+  if (!companiaSelect || !lineasSelect) return;
   const previous = preserve
-    ? { compania: companiaSelect.value, familia: familiaSelect.value, lineas: lineasSelect.value }
-    : { compania: '', familia: '', lineas: '' };
+    ? { compania: companiaSelect.value, lineas: lineasSelect.value }
+    : { compania: '', lineas: '' };
   const companias = uniq(tariffs.map(x => x['compañia'])).filter(Boolean);
-  const familias = uniq(tariffs.map(x => x['familia'])).filter(Boolean);
   const lineas = uniq(tariffs.map(x => (x.lineas !== null && x.lineas !== undefined ? String(x.lineas) : ''))).filter(Boolean);
   const fill = (select, values, placeholder) => {
     select.innerHTML = `<option value="">${placeholder}</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
   };
   fill(companiaSelect, companias, 'Todas');
-  fill(familiaSelect, familias, 'Todas');
   fill(lineasSelect, lineas, 'Todas');
   if (preserve) {
     companiaSelect.value = previous.compania || '';
-    familiaSelect.value = previous.familia || '';
     lineasSelect.value = previous.lineas || '';
   }
 }
@@ -1485,13 +1525,11 @@ function inVigencia(item, fecha) {
 
 function matchesFilters(item) {
   const compania = $('#compania')?.value || '';
-  const familia = $('#familia')?.value || '';
   const lineas = $('#lineas')?.value || '';
   const precioMax = parseFloat($('#precioMax')?.value || '');
   const permanencia = $('#permanencia')?.value || '';
   const fecha = $('#fecha')?.value || '';
   if (compania && item['compañia'] !== compania) return false;
-  if (familia && item['familia'] !== familia) return false;
   if (lineas && String(item.lineas) !== String(lineas)) return false;
   if (!Number.isNaN(precioMax) && item.precio != null && Number(item.precio) > precioMax) return false;
   if (permanencia && String(item.permanencia || '').toLowerCase() !== permanencia.toLowerCase()) return false;
@@ -1532,7 +1570,7 @@ function renderTariffGrid(data) {
         <span class="badge">${iconSVG('calendar')} Vigente: ${item.vigente_desde || '-'} → ${item.vigente_hasta || '-'} </span>
       </div>
       <div class="title" style="margin-top:8px;">${item.nombre}</div>
-      <div class="dim" style="margin-top:4px;">Código: <strong>${item.codigo}</strong> · Familia: <strong>${item.familia || '-'}</strong> · Permanencia: <strong>${item.permanencia || '-'}</strong></div>
+      <div class="dim" style="margin-top:4px;">Código: <strong>${item.codigo}</strong> · Permanencia: <strong>${item.permanencia || '-'}</strong></div>
       <hr class="sep" />
       <div style="display:flex; align-items:baseline; gap:8px;">
         <div class="price">${precio}</div>
@@ -1544,6 +1582,13 @@ function renderTariffGrid(data) {
     `;
     const actions = document.createElement('div');
     actions.className = 'tile-actions';
+    if (!currentUser) {
+      const requestBtn = document.createElement('button');
+      requestBtn.className = 'smallbtn';
+      requestBtn.textContent = 'Solicitar tarifa';
+      requestBtn.addEventListener('click', () => openRequestModal(item));
+      actions.appendChild(requestBtn);
+    }
     if (currentUser && (currentUser.role === 'comercial' || currentUser.role === 'lider' || currentUser.role === CLIENT_ROLE)) {
       const leadBtn = document.createElement('button');
       leadBtn.className = 'primary';
@@ -1590,7 +1635,6 @@ function prefillTariffForm(tariff) {
   if (tarifaCodigo) tarifaCodigo.value = tariff.codigo || '';
   if (tarifaNombre) tarifaNombre.value = tariff.nombre || '';
   if (tarifaCompania) tarifaCompania.value = tariff['compañia'] || '';
-  if (tarifaFamilia) tarifaFamilia.value = tariff.familia || '';
   if (tarifaLineas) tarifaLineas.value = tariff.lineas != null ? tariff.lineas : '';
   if (tarifaPrecio) tarifaPrecio.value = tariff.precio != null ? tariff.precio : '';
   if (tarifaMoneda) tarifaMoneda.value = tariff.moneda || 'EUR';
@@ -1611,7 +1655,6 @@ function handleTarifaFormSubmit(event) {
     nombre: tarifaNombre?.value.trim() || '',
     precio: tarifaPrecio?.value !== '' ? Number(tarifaPrecio.value) : null,
     'compañia': tarifaCompania?.value.trim() || '',
-    familia: tarifaFamilia?.value.trim() || '',
     moneda: tarifaMoneda?.value.trim() || 'EUR',
     permanencia: tarifaPermanencia?.value.trim() || '',
     'descripción': tarifaDescripcion?.value.trim() || '',
@@ -1770,6 +1813,25 @@ function formatDateTime(iso) {
   }
 }
 
+function leadStatusLabel(status) {
+  if (status === 'vendido') return 'Vendida';
+  if (status === 'cancelado') return 'Cancelada';
+  return 'Pendiente';
+}
+
+function leadCancellationDetails(lead) {
+  if (!lead || lead.status !== 'cancelado') return '';
+  const reason = (lead.cancelReason || '').trim();
+  if (!reason) return '';
+  const by = lead.cancelledByName || lead.cancelledBy || '';
+  const when = lead.cancelledAt ? formatDateTime(lead.cancelledAt) : '';
+  const metaParts = [];
+  if (by) metaParts.push(`Responsable: ${by}`);
+  if (when) metaParts.push(`Fecha: ${when}`);
+  const meta = metaParts.length ? ` <span class="dim">(${metaParts.join(' · ')})</span>` : '';
+  return `<p><strong>Motivo de cancelación:</strong> ${reason}${meta}</p>`;
+}
+
 function renderAdminLeadList() {
   if (!leadList) return;
   const teamLeads = leads.filter(lead => lead.origin !== CLIENT_ROLE);
@@ -1785,13 +1847,22 @@ function renderAdminLeadList() {
     } else {
       leadList.innerHTML = filtered
         .map(lead => {
-          const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
-          const toggleLabel = lead.status === 'vendido' ? 'Marcar como pendiente' : 'Marcar como vendida';
-          const installLabel = lead.installed ? 'Marcar como pendiente de instalación' : 'Marcar como instalada';
+          const statusLabel = leadStatusLabel(lead.status);
           const installedTag = lead.installed ? '<span class="tag tag-success">Instalada</span>' : '';
+          const allowToggle = lead.status !== 'cancelado';
+          const toggleLabel = lead.status === 'vendido' ? 'Marcar como pendiente' : 'Marcar como vendida';
+          const toggleButton = allowToggle
+            ? `<button class="smallbtn" data-action="toggle-status" data-id="${lead.id}">${toggleLabel}</button>`
+            : '';
+          const installLabel = lead.installed ? 'Marcar como pendiente de instalación' : 'Marcar como instalada';
           const installButton = lead.status === 'vendido'
             ? `<button class="smallbtn" data-action="toggle-installed" data-id="${lead.id}">${installLabel}</button>`
             : '';
+          const cancelButton = lead.status === 'vendido'
+            ? `<button class="smallbtn" data-action="cancel-lead" data-id="${lead.id}">Cancelar venta</button>`
+            : '';
+          const controls = [toggleButton, installButton, cancelButton].filter(Boolean).join('');
+          const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
           return `
             <div class="lead-card" data-id="${lead.id}">
               <header>
@@ -1808,14 +1879,12 @@ function renderAdminLeadList() {
                 <p><strong>Tarifa:</strong> ${lead.tariffNombre} · <strong>${lead.tariffCompania}</strong></p>
                 <p><strong>Contacto:</strong> ${lead.contact}</p>
                 ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
+                ${leadCancellationDetails(lead)}
               </div>
               <footer>
                 <span>Comercial: <strong>${lead.commercialName}</strong></span>
                 <span>Creada: ${formatDateTime(lead.createdAt)} · Última actualización: ${formatDateTime(lead.updatedAt)}</span>
-                <div class="controls" style="margin-left:auto;">
-                  <button class="smallbtn" data-action="toggle-status" data-id="${lead.id}">${toggleLabel}</button>
-                  ${installButton}
-                </div>
+                ${controlsMarkup}
               </footer>
             </div>
           `;
@@ -1841,13 +1910,22 @@ function renderDirectClientInbox() {
   directClientEmpty.classList.add('hidden');
   directClientList.innerHTML = directClients
     .map(lead => {
-      const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
-      const toggleLabel = lead.status === 'vendido' ? 'Marcar como pendiente' : 'Marcar como vendida';
-      const installLabel = lead.installed ? 'Marcar como pendiente de instalación' : 'Marcar como instalada';
+      const statusLabel = leadStatusLabel(lead.status);
       const installedTag = lead.installed ? '<span class="tag tag-success">Instalada</span>' : '';
+      const allowToggle = lead.status !== 'cancelado';
+      const toggleLabel = lead.status === 'vendido' ? 'Marcar como pendiente' : 'Marcar como vendida';
+      const toggleButton = allowToggle
+        ? `<button class="smallbtn" data-action="toggle-status" data-id="${lead.id}">${toggleLabel}</button>`
+        : '';
+      const installLabel = lead.installed ? 'Marcar como pendiente de instalación' : 'Marcar como instalada';
       const installButton = lead.status === 'vendido'
         ? `<button class="smallbtn" data-action="toggle-installed" data-id="${lead.id}">${installLabel}</button>`
         : '';
+      const cancelButton = lead.status === 'vendido'
+        ? `<button class="smallbtn" data-action="cancel-lead" data-id="${lead.id}">Cancelar venta</button>`
+        : '';
+      const controls = [toggleButton, installButton, cancelButton].filter(Boolean).join('');
+      const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
       return `
         <div class="lead-card" data-id="${lead.id}">
           <header>
@@ -1866,14 +1944,12 @@ function renderDirectClientInbox() {
             <p><strong>Solicitud enviada por:</strong> ${lead.commercialName}</p>
             <p><strong>Contacto:</strong> ${lead.contact}</p>
             ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
+            ${leadCancellationDetails(lead)}
           </div>
           <footer>
             <span>Recibida: ${formatDateTime(lead.createdAt)}</span>
             <span>Actualizada: ${formatDateTime(lead.updatedAt)}</span>
-            <div class="controls" style="margin-left:auto;">
-              <button class="smallbtn" data-action="toggle-status" data-id="${lead.id}">${toggleLabel}</button>
-              ${installButton}
-            </div>
+            ${controlsMarkup}
           </footer>
         </div>
       `;
@@ -1890,6 +1966,7 @@ function handleLeadListAction(event) {
   const lead = leads.find(l => l.id === id);
   if (!lead) return;
   if (action === 'toggle-status') {
+    if (lead.status === 'cancelado') return;
     lead.status = lead.status === 'vendido' ? 'pendiente' : 'vendido';
     lead.updatedAt = new Date().toISOString();
     if (lead.status === 'vendido') {
@@ -1898,6 +1975,10 @@ function handleLeadListAction(event) {
       lead.notified = true;
       lead.installed = false;
     }
+    lead.cancelReason = '';
+    lead.cancelledAt = null;
+    lead.cancelledBy = '';
+    lead.cancelledByName = '';
     saveLeads();
     renderLeadSummary();
     renderAdminLeadList();
@@ -1909,6 +1990,30 @@ function handleLeadListAction(event) {
     if (lead.status !== 'vendido') return;
     lead.installed = !lead.installed;
     lead.updatedAt = new Date().toISOString();
+    saveLeads();
+    renderLeadSummary();
+    renderAdminLeadList();
+    renderTeamPanel();
+    renderCommercialPanel();
+  }
+  if (action === 'cancel-lead') {
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'lider')) return;
+    if (lead.status !== 'vendido') return;
+    const reason = prompt('Indica el motivo de la cancelación de la venta:');
+    if (reason === null) return;
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      alert('Debes indicar un comentario para cancelar la venta.');
+      return;
+    }
+    lead.status = 'cancelado';
+    lead.cancelReason = trimmed;
+    lead.cancelledAt = new Date().toISOString();
+    lead.cancelledBy = currentUser.username;
+    lead.cancelledByName = userDisplayName(currentUser) || currentUser.username;
+    lead.installed = false;
+    lead.notified = true;
+    lead.updatedAt = lead.cancelledAt;
     saveLeads();
     renderLeadSummary();
     renderAdminLeadList();
@@ -1979,7 +2084,7 @@ function renderCommercialPanel() {
   }
   commercialLeads.innerHTML = mine
     .map(lead => {
-      const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
+      const statusLabel = leadStatusLabel(lead.status);
       const installedTag = lead.installed ? '<span class="tag tag-success">Instalada</span>' : '';
       return `
         <div class="lead-card">
@@ -1997,6 +2102,7 @@ function renderCommercialPanel() {
             <p><strong>Cliente:</strong> ${lead.clientName}</p>
             <p><strong>Contacto:</strong> ${lead.contact}</p>
             ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
+            ${leadCancellationDetails(lead)}
           </div>
           <footer>
             <span>Enviada: ${formatDateTime(lead.createdAt)}</span>
@@ -2059,12 +2165,17 @@ function renderTeamPanel() {
     .join('');
   teamLeadList.innerHTML = teamLeads
     .map(lead => {
-      const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
+      const statusLabel = leadStatusLabel(lead.status);
       const installedTag = lead.installed ? '<span class="tag tag-success">Instalada</span>' : '';
       const installLabel = lead.installed ? 'Marcar como pendiente de instalación' : 'Marcar como instalada';
       const installButton = lead.status === 'vendido'
         ? `<button class="smallbtn" data-action="toggle-installed" data-id="${lead.id}">${installLabel}</button>`
         : '';
+      const cancelButton = lead.status === 'vendido'
+        ? `<button class="smallbtn" data-action="cancel-lead" data-id="${lead.id}">Cancelar venta</button>`
+        : '';
+      const controls = [installButton, cancelButton].filter(Boolean).join('');
+      const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
       return `
         <div class="lead-card">
           <header>
@@ -2082,11 +2193,12 @@ function renderTeamPanel() {
             <p><strong>Comercial:</strong> ${lead.commercialName}</p>
             <p><strong>Contacto:</strong> ${lead.contact}</p>
             ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
+            ${leadCancellationDetails(lead)}
           </div>
           <footer>
             <span>Creada: ${formatDateTime(lead.createdAt)}</span>
             <span>Actualizada: ${formatDateTime(lead.updatedAt)}</span>
-            ${installButton ? `<div class="controls" style="margin-left:auto;">${installButton}</div>` : ''}
+            ${controlsMarkup}
           </footer>
         </div>
       `;
@@ -2107,6 +2219,27 @@ function closeLeadModal() {
   if (!leadModal || !leadForm) return;
   leadModal.classList.add('hidden');
   leadForm.reset();
+}
+
+function resetRequestForm() {
+  if (!requestForm) return;
+  requestForm.reset();
+  if (requestError) requestError.textContent = '';
+}
+
+function openRequestModal(tariff) {
+  if (!requestModal || !requestForm) return;
+  resetRequestForm();
+  requestModal.classList.remove('hidden');
+  if (requestTariffName) requestTariffName.textContent = `${tariff.nombre} (${tariff.codigo})`;
+  if (requestTariffIdInput) requestTariffIdInput.value = tariff.id;
+  setTimeout(() => requestUsernameInput?.focus(), 50);
+}
+
+function closeRequestModal() {
+  if (!requestModal) return;
+  requestModal.classList.add('hidden');
+  resetRequestForm();
 }
 
 function showRegisterModal() {
@@ -2202,6 +2335,101 @@ function handleLeadFormSubmit(event) {
   renderTeamPanel();
   showCommercialFlash('Tu propuesta se ha enviado al administrador.');
   closeLeadModal();
+}
+
+function handleRequestFormSubmit(event) {
+  event.preventDefault();
+  const tariffId = requestTariffIdInput?.value;
+  if (!tariffId) return;
+  const tariff = tariffs.find(t => t.id === tariffId);
+  if (!tariff) {
+    if (requestError) requestError.textContent = 'La tarifa seleccionada ya no está disponible.';
+    return;
+  }
+  const username = requestUsernameInput?.value.trim().toLowerCase();
+  const password = requestPasswordInput?.value || '';
+  const email = requestEmailInput?.value.trim();
+  const phone = requestPhoneInput?.value.trim();
+  const address = requestAddressInput?.value.trim();
+  if (!username || !password || !email || !phone || !address) {
+    if (requestError) requestError.textContent = 'Completa todos los campos para enviar tu solicitud.';
+    return;
+  }
+  if (password.length < 6) {
+    if (requestError) requestError.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    return;
+  }
+  const emailLower = email.toLowerCase();
+  const existing = users.find(user =>
+    user.username === username ||
+    (emailLower && user.email?.toLowerCase() === emailLower) ||
+    (phone && (user.personalPhone === phone || user.companyPhone === phone))
+  );
+  let userRecord = existing || null;
+  if (existing) {
+    if (existing.password && existing.password !== password) {
+      if (requestError) requestError.textContent = 'Las credenciales no coinciden con un usuario existente.';
+      return;
+    }
+    let updated = false;
+    if (!existing.email && email) { existing.email = email; updated = true; }
+    if (!existing.personalPhone && phone) { existing.personalPhone = phone; updated = true; }
+    if (!existing.address && address) { existing.address = address; updated = true; }
+    if (!existing.password && password) { existing.password = password; updated = true; }
+    if (updated) {
+      saveUsers();
+      updateAvailableUsersHint();
+      renderUserList();
+    }
+  } else {
+    const newUser = normaliseUser({
+      username,
+      password,
+      role: CLIENT_ROLE,
+      email,
+      personalPhone: phone,
+      address
+    });
+    newUser.password = password;
+    users.push(newUser);
+    saveUsers();
+    updateAvailableUsersHint();
+    renderUserList();
+    userRecord = newUser;
+  }
+  if (!userRecord) {
+    if (requestError) requestError.textContent = 'No se pudo crear el usuario. Inténtalo de nuevo.';
+    return;
+  }
+  const displayName = userDisplayName(userRecord) || userRecord.username;
+  const contact = [`Teléfono: ${phone}`, `Correo: ${email}`].filter(Boolean).join(' · ');
+  const lead = {
+    id: createId('lead'),
+    tariffId,
+    tariffCodigo: tariff.codigo,
+    tariffNombre: tariff.nombre,
+    tariffCompania: tariff['compañia'],
+    commercial: userRecord.username,
+    commercialName: displayName,
+    clientName: displayName,
+    contact,
+    notes: `Dirección: ${address}`,
+    status: 'pendiente',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    notified: true,
+    origin: CLIENT_ROLE,
+    installed: false
+  };
+  leads.push(lead);
+  saveLeads();
+  renderLeadSummary();
+  renderAdminLeadList();
+  renderCommercialPanel();
+  renderTeamPanel();
+  setCurrentUser(buildUserSnapshot(userRecord));
+  closeRequestModal();
+  showCommercialFlash('Hemos recibido tu solicitud. El equipo la revisará en breve.');
 }
 
 function showLoginModal() {
@@ -2349,13 +2577,11 @@ function updateUIForRole() {
 
 function resetFilters() {
   const compania = $('#compania');
-  const familia = $('#familia');
   const lineas = $('#lineas');
   const precioMax = $('#precioMax');
   const permanencia = $('#permanencia');
   const fecha = $('#fecha');
   if (compania) compania.value = '';
-  if (familia) familia.value = '';
   if (lineas) lineas.value = '';
   if (precioMax) precioMax.value = '';
   if (permanencia) permanencia.value = '';
@@ -2820,6 +3046,16 @@ document.addEventListener('DOMContentLoaded', () => {
   leadForm = $('#leadForm');
   leadTariffName = $('#leadTariffName');
   leadTariffIdInput = $('#leadTariffId');
+  requestModal = $('#requestModal');
+  requestForm = $('#requestForm');
+  requestTariffName = $('#requestTariffName');
+  requestTariffIdInput = $('#requestTariffId');
+  requestUsernameInput = $('#requestUsername');
+  requestPasswordInput = $('#requestPassword');
+  requestEmailInput = $('#requestEmail');
+  requestPhoneInput = $('#requestPhone');
+  requestAddressInput = $('#requestAddress');
+  requestError = $('#requestError');
   commercialNotifications = $('#commercialNotifications');
   commercialLeads = $('#commercialLeads');
   leadSummary = $('#leadSummary');
@@ -2836,7 +3072,6 @@ document.addEventListener('DOMContentLoaded', () => {
   tarifaCodigo = $('#tarifaCodigo');
   tarifaNombre = $('#tarifaNombre');
   tarifaCompania = $('#tarifaCompania');
-  tarifaFamilia = $('#tarifaFamilia');
   tarifaLineas = $('#tarifaLineas');
   tarifaPrecio = $('#tarifaPrecio');
   tarifaMoneda = $('#tarifaMoneda');
@@ -2913,6 +3148,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#cancelLead')?.addEventListener('click', closeLeadModal);
   leadModal?.addEventListener('click', (event) => { if (event.target === leadModal) closeLeadModal(); });
 
+  requestForm?.addEventListener('submit', handleRequestFormSubmit);
+  $('#cancelRequest')?.addEventListener('click', closeRequestModal);
+  requestModal?.addEventListener('click', (event) => { if (event.target === requestModal) closeRequestModal(); });
+
   profileForm?.addEventListener('submit', handleProfileFormSubmit);
 
   tarifaForm?.addEventListener('submit', handleTarifaFormSubmit);
@@ -2943,6 +3182,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hideLoginModal();
       closeLeadModal();
       hideRegisterModal();
+      closeRequestModal();
     }
   });
 
