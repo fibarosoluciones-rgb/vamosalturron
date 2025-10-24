@@ -133,6 +133,8 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 @media (max-width: 640px) { .tile{grid-column: span 12 / span 12;} .toolbar{grid-template-columns:1fr;} .brand img{height:34px;} }
 .smallbtn { background: transparent; border:1px solid rgba(255,255,255,.2); color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; }
 .smallbtn:hover { border-color: var(--primary); }
+.smallbtn.danger { border-color: rgba(239,68,68,0.55); color:#fca5a5; }
+.smallbtn.danger:hover { border-color: rgba(239,68,68,0.8); background: rgba(239,68,68,0.18); }
 .stacked.gap-sm { gap:8px; }
 .multi-select { min-height:110px; }
 .inline-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
@@ -168,6 +170,38 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .commission-card { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background: rgba(78,143,202,0.12); border:1px solid rgba(78,143,202,0.35); border-radius:14px; padding:14px; }
 .commission-value { font-size:26px; font-weight:700; }
 .commission-meta { display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:#a8b3c7; }
+.bonus-highlight {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:16px;
+  border-radius:16px;
+  border:1px solid rgba(251,191,36,0.45);
+  background: linear-gradient(135deg, rgba(251,191,36,0.18) 0%, rgba(217,119,6,0.08) 100%);
+  color:#facc15;
+  box-shadow:0 12px 35px rgba(120,73,0,0.25);
+}
+.bonus-highlight.active {
+  background: linear-gradient(135deg, rgba(250,204,21,0.35) 0%, rgba(202,138,4,0.25) 100%);
+  color:#fef3c7;
+  border-color: rgba(250,204,21,0.8);
+  box-shadow:0 16px 45px rgba(202,138,4,0.35);
+}
+.bonus-label { font-size:12px; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,0.75); }
+.bonus-amount { font-size:32px; font-weight:800; color:#fff; text-shadow:0 4px 14px rgba(250,204,21,0.35); }
+.bonus-note { font-size:13px; color:rgba(255,255,255,0.75); }
+.total-benefit-card {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:16px;
+  border-radius:16px;
+  border:1px solid rgba(34,197,94,0.35);
+  background: linear-gradient(135deg, rgba(34,197,94,0.18) 0%, rgba(22,163,74,0.12) 100%);
+  box-shadow:0 12px 30px rgba(15,118,110,0.25);
+}
+.total-benefit-value { font-size:28px; font-weight:800; color:#bbf7d0; }
 .metrics-history { border-top:1px dashed rgba(255,255,255,0.12); padding-top:12px; }
 .metrics-history h4 { margin:0 0 8px; font-size:14px; color:#a8b3c7; text-transform:uppercase; letter-spacing:.4px; }
 .metrics-history ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
@@ -622,6 +656,20 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
           <span class="dim" id="userFormInfo"></span>
         </div>
       </form>
+      <div class="toolbar" id="userFilterBar">
+        <div>
+          <label class="label" for="userRoleFilter">Filtrar por tipo de usuario</label>
+          <select id="userRoleFilter">
+            <option value="all">Todos los usuarios</option>
+            <option value="lider">Responsables de equipo</option>
+            <option value="comercial">Comerciales</option>
+            <option value="direct-client">Clientes directos</option>
+            <option value="cliente">Clientes gestionados</option>
+            <option value="admin">Administradores</option>
+            <option value="basico">Usuarios básicos</option>
+          </select>
+        </div>
+      </div>
       <div id="userList"></div>
     </div>
   </section>
@@ -933,6 +981,7 @@ let grid,
   userAddress,
   userManagedUsers,
   managedUsersField,
+  userRoleFilter,
   userListContainer,
   saveUserBtn,
   cancelUserEdit;
@@ -1021,6 +1070,7 @@ function normaliseUser(raw) {
     personalPhone: (raw.personalPhone || '').trim(),
     address: (raw.address || '').trim(),
     photo: (raw.photo || '').trim(),
+    selfRegistered: Boolean(raw.selfRegistered),
     managedUsers: managedUsers.filter(value => value && value !== username)
   };
 }
@@ -1981,7 +2031,10 @@ function renderAdminLeadList() {
           const cancelButton = lead.status === 'vendido'
             ? `<button class="smallbtn" data-action="cancel-lead" data-id="${lead.id}">Cancelar venta</button>`
             : '';
-          const controls = [toggleButton, installButton, cancelButton].filter(Boolean).join('');
+          const deleteButton = currentUser?.role === 'admin'
+            ? `<button class="smallbtn danger" data-action="delete-lead" data-id="${lead.id}">Eliminar</button>`
+            : '';
+          const controls = [toggleButton, installButton, cancelButton, deleteButton].filter(Boolean).join('');
           const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
           return `
             <div class="lead-card" data-id="${lead.id}">
@@ -2045,7 +2098,10 @@ function renderDirectClientInbox() {
       const cancelButton = lead.status === 'vendido'
         ? `<button class="smallbtn" data-action="cancel-lead" data-id="${lead.id}">Cancelar venta</button>`
         : '';
-      const controls = [toggleButton, installButton, cancelButton].filter(Boolean).join('');
+      const deleteButton = currentUser?.role === 'admin'
+        ? `<button class="smallbtn danger" data-action="delete-lead" data-id="${lead.id}">Eliminar</button>`
+        : '';
+      const controls = [toggleButton, installButton, cancelButton, deleteButton].filter(Boolean).join('');
       const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
       return `
         <div class="lead-card" data-id="${lead.id}">
@@ -2176,6 +2232,7 @@ function buildMonthlyMetrics() {
   const tariffIndex = new Map();
   leads.forEach(lead => {
     if (lead.status !== 'vendido') return;
+    if (!lead.installed) return;
     const saleDate = parseDate(lead.soldAt || lead.updatedAt);
     if (!saleDate) return;
     const monthDate = startOfMonth(saleDate);
@@ -2246,7 +2303,7 @@ function getUserMonthlyStats(metricsMap, monthDate, username) {
 
 function renderCommercialMetrics() {
   if (!commercialMetrics) return;
-  if (!currentUser || !['comercial', 'lider', CLIENT_ROLE].includes(currentUser.role)) {
+  if (!currentUser || currentUser.role !== 'comercial') {
     commercialMetrics.classList.add('hidden');
     commercialMetrics.innerHTML = '';
     return;
@@ -2262,12 +2319,22 @@ function renderCommercialMetrics() {
     : (stats.packSales > 0 ? 100 : 0);
   const status = stats.kpi;
   const firstThreshold = KPI_THRESHOLDS[0];
+  const bonusValue = status.bonus || 0;
+  const totalBenefit = stats.commission + bonusValue;
+  const bonusClass = bonusValue > 0 ? 'bonus-highlight active' : 'bonus-highlight';
+  const bonusNote = bonusValue > 0
+    ? `Has desbloqueado un bono de ${euro(bonusValue)} este mes.`
+    : status.next
+      ? `Instala ${status.missing} packs más para alcanzar ${euro(status.next.bonus)}.`
+      : firstThreshold
+        ? `Instala ${firstThreshold.sales} packs para activar el primer bono.`
+        : 'Aún no has activado un bono este mes.';
   const nextMessage = status.next
-    ? `Te faltan <strong>${status.missing}</strong> packs para alcanzar ${euro(status.next.bonus)}.`
+    ? `Te faltan <strong>${status.missing}</strong> packs instalados para alcanzar ${euro(status.next.bonus)}.`
     : status.reached
       ? 'Has alcanzado el máximo bono mensual disponible.'
       : firstThreshold
-        ? `Logra ${firstThreshold.sales} packs para activar el primer bono.`
+        ? `Instala ${firstThreshold.sales} packs para activar el primer bono.`
         : 'Define objetivos de packs para activar los bonos.';
   const historyItems = [];
   for (let offset = 1; offset <= KPI_HISTORY_MONTHS; offset += 1) {
@@ -2287,6 +2354,7 @@ function renderCommercialMetrics() {
     ? [0, ...KPI_THRESHOLDS.map(t => t.sales)]
     : [0];
   const markers = markerValues.map(value => `<span>${value}</span>`).join('');
+  const installReminder = 'Recuerda que solo cuentan las instalaciones confirmadas.';
   commercialMetrics.innerHTML = `
     <div class="commercial-kpi">
       <div class="kpi-header">
@@ -2303,19 +2371,31 @@ function renderCommercialMetrics() {
         <div class="kpi-markers">${markers}</div>
       </div>
       <div class="kpi-status">
-        <span>Ventas de packs: <strong>${stats.packSales}</strong></span>
+        <span>Packs instalados: <strong>${stats.packSales}</strong></span>
         <span>${nextMessage}</span>
       </div>
     </div>
+    <div class="${bonusClass}">
+      <span class="bonus-label">Bono del mes</span>
+      <span class="bonus-amount">${euro(bonusValue)}</span>
+      <span class="bonus-note">${bonusNote}</span>
+      <span class="bonus-note">${installReminder}</span>
+    </div>
     <div class="commission-card">
       <div>
-        <div class="dim">Comisión estimada del mes</div>
+        <div class="dim">Comisión confirmada del mes</div>
         <div class="commission-value">${euro(stats.commission)}</div>
       </div>
       <div class="commission-meta">
         <span>Fibra: <strong>${stats.fiberSales}</strong></span>
         <span>Líneas móviles: <strong>${stats.mobileLines}</strong></span>
-        <span>Ventas totales: <strong>${stats.totalSales}</strong></span>
+        <span>Ventas instaladas: <strong>${stats.totalSales}</strong></span>
+      </div>
+    </div>
+    <div class="total-benefit-card">
+      <div>
+        <div class="dim">Beneficio total (comisiones + bono)</div>
+        <div class="total-benefit-value">${euro(totalBenefit)}</div>
       </div>
     </div>
     <div class="metrics-history">
@@ -2358,11 +2438,11 @@ function renderAdminSalesStats() {
       const kpiState = stats.kpi.reached ? 'active' : 'pending';
       const kpiText = stats.kpi.reached ? `${stats.kpi.label}` : 'KPI pendiente';
       const detail = stats.kpi.next
-        ? `Faltan ${stats.kpi.missing} packs para ${euro(stats.kpi.next.bonus)}`
+        ? `Faltan ${stats.kpi.missing} packs instalados para ${euro(stats.kpi.next.bonus)}`
         : stats.kpi.reached
-          ? 'Objetivo de packs completado.'
+          ? 'Objetivo de packs instalados completado.'
           : firstThreshold
-            ? `Necesitas ${firstThreshold.sales} packs para el primer bono.`
+            ? `Necesitas ${firstThreshold.sales} packs instalados para el primer bono.`
             : 'Sin configuración de bonos.';
       return `
         <div class="stat-card">
@@ -2372,8 +2452,8 @@ function renderAdminSalesStats() {
             <span class="kpi-badge" data-state="${kpiState}">${kpiText}</span>
           </div>
           <div class="stat-body">
-            <div>Ventas totales: <strong>${stats.totalSales}</strong></div>
-            <div>Packs C: <strong>${stats.packSales}</strong></div>
+            <div>Ventas instaladas: <strong>${stats.totalSales}</strong></div>
+            <div>Packs instalados: <strong>${stats.packSales}</strong></div>
             <div>Ventas con fibra: <strong>${stats.fiberSales}</strong></div>
             <div>Líneas móviles: <strong>${stats.mobileLines}</strong></div>
             <div>Comisión: <strong>${euro(stats.commission)}</strong></div>
@@ -2473,6 +2553,19 @@ function handleLeadListAction(event) {
     renderAdminLeadList();
     renderTeamPanel();
     renderCommercialPanel();
+  }
+  if (action === 'delete-lead') {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    if (!confirm('¿Eliminar definitivamente esta venta?')) {
+      return;
+    }
+    leads = leads.filter(entry => entry.id !== id);
+    saveLeads();
+    renderLeadSummary();
+    renderAdminLeadList();
+    renderTeamPanel();
+    renderCommercialPanel();
+    return;
   }
 }
 
@@ -2755,7 +2848,8 @@ function handleRegisterSubmit(event) {
     role: CLIENT_ROLE,
     firstName,
     lastName,
-    email
+    email,
+    selfRegistered: true
   });
   users.push(newRecord);
   saveUsers();
@@ -3273,7 +3367,8 @@ function handleUserFormSubmit(event) {
       personalPhone: userPersonalPhone?.value.trim() || '',
       photo: userPhoto?.value.trim() || '',
       address: userAddress?.value.trim() || '',
-      managedUsers: managedSelection
+      managedUsers: managedSelection,
+      selfRegistered: false
     });
     users.push(payload);
     if (userFormInfo) userFormInfo.textContent = 'Usuario creado correctamente.';
@@ -3368,9 +3463,25 @@ function renderUserList() {
     userListContainer.innerHTML = '<p class="dim">Aún no hay cuentas registradas.</p>';
     return;
   }
-  const rows = users
+  const filterValue = userRoleFilter?.value || 'all';
+  const filteredUsers = users
     .slice()
-    .sort((a, b) => userDisplayName(a).localeCompare(userDisplayName(b), 'es'))
+    .filter(user => {
+      if (filterValue === 'all') return true;
+      if (filterValue === 'direct-client') {
+        return user.role === CLIENT_ROLE && Boolean(user.selfRegistered);
+      }
+      if (filterValue === 'cliente') {
+        return user.role === CLIENT_ROLE && !user.selfRegistered;
+      }
+      return user.role === filterValue;
+    })
+    .sort((a, b) => userDisplayName(a).localeCompare(userDisplayName(b), 'es'));
+  if (!filteredUsers.length) {
+    userListContainer.innerHTML = '<p class="dim">No hay usuarios que coincidan con el filtro seleccionado.</p>';
+    return;
+  }
+  const rows = filteredUsers
     .map(user => {
       const name = userDisplayName(user);
       const email = user.email || '-';
@@ -3388,12 +3499,22 @@ function renderUserList() {
       const teamTitle = memberNames.join(', ');
       const deleteDisabled = currentUser?.username === user.username ? 'disabled' : '';
       const roleText = roleLabel(user.role);
+      const tagBadges = [];
+      if (user.role === 'lider') {
+        tagBadges.push('<span class="tag">Responsable</span>');
+      }
+      if (user.role === CLIENT_ROLE && user.selfRegistered) {
+        tagBadges.push('<span class="tag tag-warning">Cliente directo</span>');
+      }
+      const badgesMarkup = tagBadges.length
+        ? `<div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">${tagBadges.join('')}</div>`
+        : '';
       const teamCell = user.role === 'lider'
         ? `<td${teamTitle ? ` title="${teamTitle.replace(/"/g, '&quot;')}"` : ''}>${teamCount}</td>`
         : '<td>-</td>';
       return `
         <tr data-username="${user.username}">
-          <td><strong>${name}</strong><br><span class="dim">${user.username}</span>${addressLine}</td>
+          <td><strong>${name}</strong><br><span class="dim">${user.username}</span>${addressLine}${badgesMarkup}</td>
           <td>${roleText}</td>
           <td>${email}</td>
           <td>${companyPhone}</td>
@@ -3598,6 +3719,7 @@ document.addEventListener('DOMContentLoaded', () => {
   userAddress = $('#userAddress');
   userManagedUsers = $('#userManagedUsers');
   managedUsersField = $('#managedUsersField');
+  userRoleFilter = $('#userRoleFilter');
   userListContainer = $('#userList');
   saveUserBtn = $('#saveUserBtn');
   cancelUserEdit = $('#cancelUserEdit');
@@ -3652,6 +3774,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selected = editingUser ? (getUserByUsername(editingUser)?.managedUsers || []) : [];
     populateManagedUserOptions(role === 'lider' ? selected : []);
   });
+  userRoleFilter?.addEventListener('change', renderUserList);
   userListContainer?.addEventListener('click', handleUserListAction);
   adminTabs?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-tab]');
