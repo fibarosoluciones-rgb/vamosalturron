@@ -144,6 +144,55 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .ai-card h4 { margin:0; font-size:16px; }
 .ai-card p { margin:0; }
 .ai-card .badge { margin-right:auto; }
+.profile-modal { max-width: 720px; width: 100%; }
+.profile-modal h3 { margin-top: 0; }
+.profile-modal .modal-actions { gap: 12px; flex-wrap: wrap; }
+
+#commercialMetrics {
+  background: #0b1120;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 16px;
+}
+#commercialMetrics .commercial-kpi { display: flex; flex-direction: column; gap: 12px; }
+#commercialMetrics .kpi-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+#commercialMetrics .kpi-header strong { font-size: 20px; }
+.kpi-progress-track { position: relative; height: 10px; border-radius: 999px; background: rgba(148,163,184,0.2); overflow: hidden; }
+.kpi-progress-fill { position: absolute; inset: 0; background: linear-gradient(90deg, #4E8FCA 0%, #22d3ee 100%); }
+.kpi-markers { display:flex; justify-content:space-between; font-size:11px; color:#a8b3c7; margin-top:4px; }
+.kpi-status { display:flex; flex-direction:column; gap:4px; font-size:13px; color:#a8b3c7; }
+.commission-card { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background: rgba(78,143,202,0.12); border:1px solid rgba(78,143,202,0.35); border-radius:14px; padding:14px; }
+.commission-value { font-size:26px; font-weight:700; }
+.commission-meta { display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:#a8b3c7; }
+.metrics-history { border-top:1px dashed rgba(255,255,255,0.12); padding-top:12px; }
+.metrics-history h4 { margin:0 0 8px; font-size:14px; color:#a8b3c7; text-transform:uppercase; letter-spacing:.4px; }
+.metrics-history ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.metrics-history li { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#a8b3c7; }
+.metrics-history li strong { color:#fff; }
+
+.admin-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+.admin-tabs .tab { border:1px solid rgba(255,255,255,0.15); background:transparent; color:#fff; padding:8px 16px; border-radius:999px; cursor:pointer; font-weight:600; letter-spacing:.3px; }
+.admin-tabs .tab.active { background:var(--primary); border-color:var(--primary); }
+.admin-tab { margin-top:0; }
+.stats-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); }
+.stat-card { background:#0b1120; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; box-shadow:0 12px 30px rgba(0,0,0,0.25); }
+.stat-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.stat-name { font-weight:600; font-size:16px; }
+.stat-rank { font-size:12px; color:#a8b3c7; }
+.kpi-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:11px; border:1px solid rgba(255,255,255,0.18); }
+.kpi-badge[data-state="active"] { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color:#86efac; }
+.kpi-badge[data-state="pending"] { background: rgba(234,179,8,0.15); border-color: rgba(234,179,8,0.35); color:#facc15; }
+.stat-body { display:grid; gap:6px; font-size:13px; color:#a8b3c7; }
+.stat-body strong { color:#fff; }
+
+@media (max-width: 768px) {
+  #commercialMetrics { padding: 16px; }
+  .commission-card { flex-direction:column; align-items:flex-start; }
+}
 </style>
 </head>
 <body>
@@ -324,35 +373,10 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
   </div>
 </div>
 
-<main class="wrap">
-  <section id="aiPanel" class="card">
-    <h2 class="section-title">Buscador inteligente de tarifas</h2>
-    <p class="dim">Describe lo que necesitas y te mostraremos tres propuestas ajustadas al momento.</p>
-    <form id="aiSearchForm" class="stacked">
-      <textarea id="aiSearchInput" placeholder="Necesito tres líneas móviles con al menos 40GB y fibra rápida por menos de 70€"></textarea>
-      <div class="inline-actions" style="justify-content:flex-end;">
-        <button type="button" class="smallbtn" id="aiSearchClear">Limpiar</button>
-        <button type="submit" class="primary">Buscar tarifas</button>
-      </div>
-    </form>
-    <div id="aiResults" class="ai-results"></div>
-  </section>
-
-  <section id="authReminder" class="notice">
-    <div id="authNoticeAnonymous">
-      <h2 class="section-title">Bienvenido a FÍBARO</h2>
-      <p>Explora todas nuestras tarifas actualizadas al instante y crea una cuenta gratuita para solicitar la que mejor se adapte a tu negocio.</p>
-      <p class="dim">¿Ya formas parte del equipo? Inicia sesión con tus credenciales. Si eres cliente nuevo, regístrate y envía tus solicitudes directamente al equipo administrador.</p>
-    </div>
-    <div id="authNoticeBasic" class="hidden">
-      <h2 class="section-title">Modo lectura</h2>
-      <p>Has iniciado sesión como <span class="role-tag" data-role="basico">usuario básico</span>. Puedes consultar las tarifas disponibles, pero las acciones de edición y envío de ventas están deshabilitadas.</p>
-    </div>
-  </section>
-
-  <section id="profilePanel" class="card hidden">
-    <h2 class="section-title">Mi perfil</h2>
-    <p class="dim">Completa tus datos personales, indica cómo debe contactarte el administrador y elige una nueva contraseña si lo necesitas.</p>
+<div id="profilePanel" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content profile-modal">
+    <h3>Mi perfil</h3>
+    <p class="dim" style="margin-top:-4px;">Actualiza tus datos personales y de contacto. También puedes definir una nueva contraseña.</p>
     <form id="profileForm" class="stacked">
       <div class="form-grid">
         <div>
@@ -396,14 +420,43 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       </div>
       <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
         <button type="submit" class="primary">Guardar cambios</button>
+        <button type="button" class="smallbtn" id="closeProfile">Cerrar</button>
         <span class="dim" id="profileFormInfo"></span>
       </div>
     </form>
+  </div>
+</div>
+
+<main class="wrap">
+  <section id="aiPanel" class="card">
+    <h2 class="section-title">Buscador inteligente de tarifas</h2>
+    <p class="dim">Describe lo que necesitas y te mostraremos tres propuestas ajustadas al momento.</p>
+    <form id="aiSearchForm" class="stacked">
+      <textarea id="aiSearchInput" placeholder="Necesito tres líneas móviles con al menos 40GB y fibra rápida por menos de 70€"></textarea>
+      <div class="inline-actions" style="justify-content:flex-end;">
+        <button type="button" class="smallbtn" id="aiSearchClear">Limpiar</button>
+        <button type="submit" class="primary">Buscar tarifas</button>
+      </div>
+    </form>
+    <div id="aiResults" class="ai-results"></div>
+  </section>
+
+  <section id="authReminder" class="notice">
+    <div id="authNoticeAnonymous">
+      <h2 class="section-title">Bienvenido a FÍBARO</h2>
+      <p>Explora todas nuestras tarifas actualizadas al instante y crea una cuenta gratuita para solicitar la que mejor se adapte a tu negocio.</p>
+      <p class="dim">¿Ya formas parte del equipo? Inicia sesión con tus credenciales. Si eres cliente nuevo, regístrate y envía tus solicitudes directamente al equipo administrador.</p>
+    </div>
+    <div id="authNoticeBasic" class="hidden">
+      <h2 class="section-title">Modo lectura</h2>
+      <p>Has iniciado sesión como <span class="role-tag" data-role="basico">usuario básico</span>. Puedes consultar las tarifas disponibles, pero las acciones de edición y envío de ventas están deshabilitadas.</p>
+    </div>
   </section>
 
   <section id="commercialPanel" class="card hidden">
     <h2 class="section-title">Mis oportunidades</h2>
     <p class="dim">Selecciona una tarifa y pulsa <strong>Enviar propuesta</strong> para remitir los datos del cliente al administrador.</p>
+    <div id="commercialMetrics" class="hidden"></div>
     <div id="commercialNotifications" class="notice hidden"></div>
     <div id="commercialLeads" class="lead-list"></div>
   </section>
@@ -417,144 +470,160 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 
   <section id="adminPanel" class="card hidden">
     <h2 class="section-title">Panel de administración</h2>
-    <p class="dim">Desde aquí puedes crear, editar o eliminar tarifas, así como revisar las oportunidades enviadas por los comerciales.</p>
-    <div class="section-subtitle">Gestión de tarifas</div>
-    <form id="tarifaForm" class="stacked">
-      <input type="hidden" id="tarifaId" />
-      <div class="form-grid">
-        <div>
-          <label class="label" for="tarifaCodigo">Código</label>
-          <input id="tarifaCodigo" type="text" required />
-        </div>
-        <div>
-          <label class="label" for="tarifaNombre">Nombre</label>
-          <input id="tarifaNombre" type="text" required />
-        </div>
-        <div>
-          <label class="label" for="tarifaCompania">Compañía</label>
-          <input id="tarifaCompania" type="text" required />
-        </div>
-        <div>
-          <label class="label" for="tarifaLineas">Líneas</label>
-          <input id="tarifaLineas" type="number" min="0" step="1" />
-        </div>
-        <div>
-          <label class="label" for="tarifaPrecio">Precio mensual</label>
-          <input id="tarifaPrecio" type="number" step="0.01" min="0" required />
-        </div>
-        <div>
-          <label class="label" for="tarifaMoneda">Moneda</label>
-          <input id="tarifaMoneda" type="text" value="EUR" />
-        </div>
-        <div>
-          <label class="label" for="tarifaPermanencia">Permanencia</label>
-          <input id="tarifaPermanencia" type="text" placeholder="Sí/No/meses" />
-        </div>
-        <div>
-          <label class="label" for="tarifaDesde">Vigente desde</label>
-          <input id="tarifaDesde" type="date" />
-        </div>
-        <div>
-          <label class="label" for="tarifaHasta">Vigente hasta</label>
-          <input id="tarifaHasta" type="date" />
-        </div>
-        <div class="full">
-          <label class="label" for="tarifaDescripcion">Descripción</label>
-          <textarea id="tarifaDescripcion" placeholder="Detalle comercial de la tarifa"></textarea>
-        </div>
-      </div>
-      <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
-        <button type="submit" class="primary" id="guardarTarifa">Guardar tarifa</button>
-        <button type="button" class="smallbtn" id="cancelarEdicion">Cancelar</button>
-        <span class="dim" id="tarifaFormInfo"></span>
-      </div>
-    </form>
-    <div id="tarifaList"></div>
-
-    <hr class="sep" />
-    <div class="flex-between">
-      <div class="section-subtitle" style="margin:0;">Seguimiento de comerciales</div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <label class="label" for="leadFilter" style="margin:0;">Filtrar por comercial</label>
-        <select id="leadFilter">
-          <option value="">Todos</option>
-        </select>
-      </div>
-    </div>
-    <div id="leadSummary" class="kpis" style="margin-top:12px;"></div>
-    <div id="leadList" class="lead-list"></div>
-
-    <div id="directClientSection" class="notice hidden" style="margin-top:16px;">
-      <h3 class="section-subtitle" style="margin-top:0;">Solicitudes de clientes directos</h3>
-      <p class="dim" id="directClientEmpty">Cuando un cliente registrado solicite una tarifa aparecerá aquí para su revisión.</p>
-      <div id="directClientList" class="lead-list"></div>
+    <p class="dim">Organiza tus tareas por apartados para controlar las ventas, las tarifas disponibles y la base de usuarios.</p>
+    <div id="adminTabs" class="admin-tabs">
+      <button type="button" class="tab active" data-tab="sales">Ventas</button>
+      <button type="button" class="tab" data-tab="tariffs">Tarifas</button>
+      <button type="button" class="tab" data-tab="clients">Clientes directos</button>
+      <button type="button" class="tab" data-tab="users">Usuarios</button>
     </div>
 
-    <hr class="sep" />
-    <div class="section-subtitle" style="margin:12px 0 8px;">Gestión de usuarios</div>
-    <form id="userForm" class="stacked gap-sm">
-      <div class="form-grid">
-        <div>
-          <label class="label" for="userUsername">Usuario</label>
-          <input id="userUsername" type="text" placeholder="Identificador único" autocomplete="off" required />
-        </div>
-        <div>
-          <label class="label" for="userPassword">Contraseña</label>
-          <input id="userPassword" type="password" placeholder="Obligatoria al crear" autocomplete="new-password" />
-        </div>
-        <div>
-          <label class="label" for="userRole">Rol</label>
-          <select id="userRole">
-            <option value="basico">Básico</option>
-            <option value="comercial">Comercial</option>
-            <option value="cliente">Cliente</option>
-            <option value="lider">Responsable de equipo</option>
-            <option value="admin">Administrador</option>
+    <div id="adminSalesTab" class="admin-tab">
+      <div class="section-subtitle" style="margin:0 0 12px;">Registro de ventas</div>
+      <div class="flex-between">
+        <p class="dim" style="margin:0;">Consulta y actualiza el estado de cada oportunidad.</p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label class="label" for="leadFilter" style="margin:0;">Filtrar por comercial</label>
+          <select id="leadFilter">
+            <option value="">Todos</option>
           </select>
         </div>
-        <div>
-          <label class="label" for="userEmail">Correo de notificaciones</label>
-          <input id="userEmail" type="email" placeholder="correo@empresa.com" />
-        </div>
-        <div>
-          <label class="label" for="userFirstName">Nombre</label>
-          <input id="userFirstName" type="text" placeholder="Nombre" />
-        </div>
-        <div>
-          <label class="label" for="userLastName">Apellidos</label>
-          <input id="userLastName" type="text" placeholder="Apellidos" />
-        </div>
       </div>
-      <div class="form-grid">
-        <div>
-          <label class="label" for="userCompanyPhone">Teléfono de empresa</label>
-          <input id="userCompanyPhone" type="text" placeholder="Teléfono corporativo" />
+      <div id="leadSummary" class="kpis" style="margin-top:12px;"></div>
+      <div id="leadList" class="lead-list" style="margin-top:12px;"></div>
+      <div class="section-subtitle" style="margin:18px 0 8px;">Control de comisiones por técnico</div>
+      <div id="adminSalesStats" class="stats-grid"></div>
+    </div>
+
+    <div id="adminTariffsTab" class="admin-tab hidden">
+      <div class="section-subtitle">Gestión de tarifas</div>
+      <form id="tarifaForm" class="stacked">
+        <input type="hidden" id="tarifaId" />
+        <div class="form-grid">
+          <div>
+            <label class="label" for="tarifaCodigo">Código</label>
+            <input id="tarifaCodigo" type="text" required />
+          </div>
+          <div>
+            <label class="label" for="tarifaNombre">Nombre</label>
+            <input id="tarifaNombre" type="text" required />
+          </div>
+          <div>
+            <label class="label" for="tarifaCompania">Compañía</label>
+            <input id="tarifaCompania" type="text" required />
+          </div>
+          <div>
+            <label class="label" for="tarifaLineas">Líneas</label>
+            <input id="tarifaLineas" type="number" min="0" step="1" />
+          </div>
+          <div>
+            <label class="label" for="tarifaPrecio">Precio mensual</label>
+            <input id="tarifaPrecio" type="number" step="0.01" min="0" required />
+          </div>
+          <div>
+            <label class="label" for="tarifaMoneda">Moneda</label>
+            <input id="tarifaMoneda" type="text" value="EUR" />
+          </div>
+          <div>
+            <label class="label" for="tarifaPermanencia">Permanencia</label>
+            <input id="tarifaPermanencia" type="text" placeholder="Sí/No/meses" />
+          </div>
+          <div>
+            <label class="label" for="tarifaDesde">Vigente desde</label>
+            <input id="tarifaDesde" type="date" />
+          </div>
+          <div>
+            <label class="label" for="tarifaHasta">Vigente hasta</label>
+            <input id="tarifaHasta" type="date" />
+          </div>
+          <div class="full">
+            <label class="label" for="tarifaDescripcion">Descripción</label>
+            <textarea id="tarifaDescripcion" placeholder="Detalle comercial de la tarifa"></textarea>
+          </div>
         </div>
-        <div>
-          <label class="label" for="userPersonalPhone">Teléfono personal</label>
-          <input id="userPersonalPhone" type="text" placeholder="Teléfono personal" />
+        <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
+          <button type="submit" class="primary" id="guardarTarifa">Guardar tarifa</button>
+          <button type="button" class="smallbtn" id="cancelarEdicion">Cancelar</button>
+          <span class="dim" id="tarifaFormInfo"></span>
         </div>
-        <div>
-          <label class="label" for="userPhoto">Foto de perfil (URL)</label>
-          <input id="userPhoto" type="url" placeholder="https://..." />
-        </div>
-        <div class="full">
-          <label class="label" for="userAddress">Dirección</label>
-          <textarea id="userAddress" placeholder="Dirección completa"></textarea>
-        </div>
-        <div class="full hidden" id="managedUsersField">
-          <label class="label" for="userManagedUsers">Equipo a cargo</label>
-          <select id="userManagedUsers" class="multi-select" multiple></select>
-          <p class="dim" style="margin:6px 0 0;">Selecciona los usuarios que formarán parte del equipo comercial de este responsable.</p>
-        </div>
+      </form>
+      <div id="tarifaList"></div>
+    </div>
+
+    <div id="adminClientsTab" class="admin-tab hidden">
+      <div id="directClientSection" class="notice hidden">
+        <h3 class="section-subtitle" style="margin-top:0;">Solicitudes de clientes directos</h3>
+        <p class="dim" id="directClientEmpty">Cuando un cliente registrado solicite una tarifa aparecerá aquí para su revisión.</p>
+        <div id="directClientList" class="lead-list"></div>
       </div>
-      <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
-        <button type="submit" class="primary" id="saveUserBtn">Crear usuario</button>
-        <button type="button" class="smallbtn" id="cancelUserEdit">Cancelar</button>
-        <span class="dim" id="userFormInfo"></span>
-      </div>
-    </form>
-    <div id="userList"></div>
+    </div>
+
+    <div id="adminUsersTab" class="admin-tab hidden">
+      <div class="section-subtitle" style="margin:0 0 8px;">Gestión de usuarios</div>
+      <form id="userForm" class="stacked gap-sm">
+        <div class="form-grid">
+          <div>
+            <label class="label" for="userUsername">Usuario</label>
+            <input id="userUsername" type="text" placeholder="Identificador único" autocomplete="off" required />
+          </div>
+          <div>
+            <label class="label" for="userPassword">Contraseña</label>
+            <input id="userPassword" type="password" placeholder="Obligatoria al crear" autocomplete="new-password" />
+          </div>
+          <div>
+            <label class="label" for="userRole">Rol</label>
+            <select id="userRole">
+              <option value="basico">Básico</option>
+              <option value="comercial">Comercial</option>
+              <option value="cliente">Cliente</option>
+              <option value="lider">Responsable de equipo</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="userEmail">Correo de notificaciones</label>
+            <input id="userEmail" type="email" placeholder="correo@empresa.com" />
+          </div>
+          <div>
+            <label class="label" for="userFirstName">Nombre</label>
+            <input id="userFirstName" type="text" placeholder="Nombre" />
+          </div>
+          <div>
+            <label class="label" for="userLastName">Apellidos</label>
+            <input id="userLastName" type="text" placeholder="Apellidos" />
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="label" for="userCompanyPhone">Teléfono de empresa</label>
+            <input id="userCompanyPhone" type="text" placeholder="Teléfono corporativo" />
+          </div>
+          <div>
+            <label class="label" for="userPersonalPhone">Teléfono personal</label>
+            <input id="userPersonalPhone" type="text" placeholder="Teléfono personal" />
+          </div>
+          <div>
+            <label class="label" for="userPhoto">Foto de perfil (URL)</label>
+            <input id="userPhoto" type="url" placeholder="https://..." />
+          </div>
+          <div class="full">
+            <label class="label" for="userAddress">Dirección</label>
+            <textarea id="userAddress" placeholder="Dirección completa"></textarea>
+          </div>
+          <div class="full hidden" id="managedUsersField">
+            <label class="label" for="userManagedUsers">Equipo a cargo</label>
+            <select id="userManagedUsers" class="multi-select" multiple></select>
+            <p class="dim" style="margin:6px 0 0;">Selecciona los usuarios que formarán parte del equipo comercial de este responsable.</p>
+          </div>
+        </div>
+        <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
+          <button type="submit" class="primary" id="saveUserBtn">Crear usuario</button>
+          <button type="button" class="smallbtn" id="cancelUserEdit">Cancelar</button>
+          <span class="dim" id="userFormInfo"></span>
+        </div>
+      </form>
+      <div id="userList"></div>
+    </div>
   </section>
 
   <div class="grid" id="grid"></div>
@@ -604,6 +673,22 @@ const DEFAULT_USERS = [
 
 const ROLE_LABELS = { admin: 'Administrador', comercial: 'Comercial', basico: 'Básico', lider: 'Responsable de equipo', cliente: 'Cliente' };
 const CLIENT_ROLE = 'cliente';
+
+// Configuración de bonos por packs (productos con código que comienza por "C")
+const KPI_THRESHOLDS = [
+  { sales: 3, bonus: 30 },
+  { sales: 5, bonus: 100 },
+  { sales: 8, bonus: 200 },
+  { sales: 10, bonus: 300 }
+];
+
+// Comisión fija por cada tipo de producto vendido
+const COMMISSION_RATES = {
+  fiber: 30,
+  mobile: 10
+};
+
+const KPI_HISTORY_MONTHS = 3;
 
 const REMOTE_TARGET = window.FIREBASE_DATA_DOCUMENT || { collection: 'app', document: 'state' };
 
@@ -782,12 +867,19 @@ let grid,
   requestError,
   commercialNotifications,
   commercialLeads,
+  commercialMetrics,
   leadSummary,
   leadList,
   leadFilter,
   directClientSection,
   directClientList,
   directClientEmpty,
+  adminSalesStats,
+  adminTabs,
+  adminSalesTab,
+  adminTariffsTab,
+  adminClientsTab,
+  adminUsersTab,
   tarifaList,
   tarifaForm,
   tarifaFormInfo,
@@ -823,6 +915,7 @@ let grid,
   profileAddress,
   profilePassword,
   profilePasswordConfirm,
+  closeProfileBtn,
   teamPanel,
   teamSummary,
   teamLeadList,
@@ -851,6 +944,9 @@ let editingTariffId = null;
 let editingUser = null;
 let commercialNoticeTimeout = null;
 let aiLastQuery = '';
+let adminActiveTab = 'sales';
+let adminTabButtons = [];
+let adminTabPanels = {};
 
 function renderEverythingAfterDataChange({ refreshFilters = false, refreshAi = false } = {}) {
   if (!domReady) return;
@@ -876,6 +972,28 @@ function todayISO() {
 
 function createId(prefix = 'id') {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
+}
+
+function parseDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function monthKeyFromDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthLabel(date) {
+  try {
+    return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+  } catch (error) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
 }
 
 function normaliseUser(raw) {
@@ -1370,6 +1488,8 @@ function normaliseLead(raw) {
   lead.status = lead.status || 'pendiente';
   lead.createdAt = lead.createdAt || lead.created_at || new Date().toISOString();
   lead.updatedAt = lead.updatedAt || lead.updated_at || lead.createdAt;
+  const normalisedSoldAt = parseDate(raw.soldAt || raw.sold_at || lead.soldAt);
+  lead.soldAt = normalisedSoldAt ? normalisedSoldAt.toISOString() : (lead.status === 'vendido' ? lead.updatedAt : null);
   lead.notified = lead.notified !== undefined ? Boolean(lead.notified) : true;
   lead.origin = lead.origin || 'comercial';
   lead.installed = Boolean(lead.installed);
@@ -1893,6 +2013,7 @@ function renderAdminLeadList() {
     }
   }
   renderDirectClientInbox();
+  renderAdminSalesStats();
 }
 
 function renderDirectClientInbox() {
@@ -1957,6 +2078,336 @@ function renderDirectClientInbox() {
     .join('');
 }
 
+function getTariffFromIndex(lead, index) {
+  if (!lead) return null;
+  if (lead.tariffId && index.has(lead.tariffId)) {
+    return index.get(lead.tariffId);
+  }
+  if (lead.tariffId) {
+    const byId = tariffs.find(item => item.id === lead.tariffId);
+    if (byId) {
+      index.set(byId.id, byId);
+      return byId;
+    }
+  }
+  if (lead.tariffCodigo) {
+    const byCode = tariffs.find(item => item.codigo === lead.tariffCodigo);
+    if (byCode) {
+      index.set(byCode.id, byCode);
+      return byCode;
+    }
+  }
+  return null;
+}
+
+function computeLeadMetrics(lead, index) {
+  const tariff = getTariffFromIndex(lead, index);
+  const descriptionSource = [
+    tariff?.nombre || '',
+    tariff?.['descripción'] || '',
+    lead.tariffNombre || '',
+    lead.notes || ''
+  ].join(' ').toLowerCase();
+  const hasFiber = /fibra/i.test(descriptionSource);
+  let mobileLines = 0;
+  if (tariff && tariff.lineas !== null && tariff.lineas !== undefined) {
+    const parsed = Number(tariff.lineas);
+    if (Number.isFinite(parsed)) {
+      mobileLines = Math.max(0, parsed);
+    }
+  }
+  if (!mobileLines) {
+    const match = descriptionSource.match(/(\d+)\s*(?:l[ií]neas?)/i);
+    if (match) {
+      const parsed = Number(match[1]);
+      if (Number.isFinite(parsed)) {
+        mobileLines = Math.max(mobileLines, parsed);
+      }
+    }
+  }
+  const code = (lead.tariffCodigo || tariff?.codigo || '').trim();
+  const isPack = /^c[-_]?/i.test(code);
+  const fiberCount = hasFiber ? 1 : 0;
+  const commission = fiberCount * COMMISSION_RATES.fiber + mobileLines * COMMISSION_RATES.mobile;
+  return {
+    fiberCount,
+    mobileLines,
+    isPack,
+    commission
+  };
+}
+
+function getKpiStatus(packSales) {
+  const thresholds = KPI_THRESHOLDS.slice().sort((a, b) => a.sales - b.sales);
+  let achieved = null;
+  let next = null;
+  thresholds.forEach(threshold => {
+    if (packSales >= threshold.sales) {
+      achieved = threshold;
+    } else if (!next) {
+      next = threshold;
+    }
+  });
+  const previousSales = achieved ? achieved.sales : 0;
+  const targetSales = next ? next.sales : (achieved ? achieved.sales : (thresholds[thresholds.length - 1]?.sales || 0));
+  const span = Math.max(1, targetSales - previousSales);
+  let progress = next ? (packSales - previousSales) / span : 1;
+  if (!Number.isFinite(progress)) progress = 0;
+  progress = Math.max(0, Math.min(1, progress));
+  const missing = next ? Math.max(0, next.sales - packSales) : 0;
+  const bonus = achieved ? achieved.bonus : 0;
+  const label = achieved ? `Bono ${euro(bonus)}` : 'Sin bono';
+  return {
+    achieved,
+    next,
+    progress,
+    missing,
+    bonus,
+    packSales,
+    label,
+    previousSales,
+    targetSales,
+    reached: Boolean(achieved)
+  };
+}
+
+function buildMonthlyMetrics() {
+  const metrics = new Map();
+  const tariffIndex = new Map();
+  leads.forEach(lead => {
+    if (lead.status !== 'vendido') return;
+    const saleDate = parseDate(lead.soldAt || lead.updatedAt);
+    if (!saleDate) return;
+    const monthDate = startOfMonth(saleDate);
+    const key = monthKeyFromDate(monthDate);
+    if (!metrics.has(key)) {
+      metrics.set(key, { date: monthDate, perUser: new Map() });
+    }
+    const entry = metrics.get(key);
+    const username = lead.commercial || 'sin-asignar';
+    const userRecord = getUserByUsername(username);
+    const displayName = userDisplayName(userRecord) || lead.commercialName || (username === 'sin-asignar' ? 'Sin asignar' : username);
+    if (!entry.perUser.has(username)) {
+      entry.perUser.set(username, {
+        username,
+        name: displayName,
+        totalSales: 0,
+        packSales: 0,
+        fiberSales: 0,
+        mobileLines: 0,
+        commission: 0
+      });
+    }
+    const stats = entry.perUser.get(username);
+    const metricsForLead = computeLeadMetrics(lead, tariffIndex);
+    stats.totalSales += 1;
+    stats.packSales += metricsForLead.isPack ? 1 : 0;
+    stats.fiberSales += metricsForLead.fiberCount;
+    stats.mobileLines += metricsForLead.mobileLines;
+    stats.commission += metricsForLead.commission;
+  });
+  metrics.forEach(entry => {
+    entry.perUser.forEach(stats => {
+      stats.kpi = getKpiStatus(stats.packSales);
+    });
+  });
+  return metrics;
+}
+
+function getUserMonthlyStats(metricsMap, monthDate, username) {
+  const key = monthKeyFromDate(monthDate);
+  const entry = metricsMap.get(key);
+  const stats = entry?.perUser.get(username);
+  if (stats) {
+    return {
+      username: stats.username,
+      name: stats.name,
+      totalSales: stats.totalSales,
+      packSales: stats.packSales,
+      fiberSales: stats.fiberSales,
+      mobileLines: stats.mobileLines,
+      commission: stats.commission,
+      kpi: stats.kpi || getKpiStatus(stats.packSales)
+    };
+  }
+  const userRecord = getUserByUsername(username);
+  const displayName = userDisplayName(userRecord) || username;
+  return {
+    username,
+    name: displayName,
+    totalSales: 0,
+    packSales: 0,
+    fiberSales: 0,
+    mobileLines: 0,
+    commission: 0,
+    kpi: getKpiStatus(0)
+  };
+}
+
+function renderCommercialMetrics() {
+  if (!commercialMetrics) return;
+  if (!currentUser || !['comercial', 'lider', CLIENT_ROLE].includes(currentUser.role)) {
+    commercialMetrics.classList.add('hidden');
+    commercialMetrics.innerHTML = '';
+    return;
+  }
+  const metricsMap = buildMonthlyMetrics();
+  const currentMonth = startOfMonth(new Date());
+  const stats = getUserMonthlyStats(metricsMap, currentMonth, currentUser.username);
+  const userRecord = getUserByUsername(currentUser.username) || currentUser;
+  const displayName = userDisplayName(userRecord) || currentUser.username;
+  const maxThreshold = KPI_THRESHOLDS[KPI_THRESHOLDS.length - 1]?.sales || 0;
+  const globalProgress = maxThreshold
+    ? Math.min(100, Math.round((stats.packSales / maxThreshold) * 100))
+    : (stats.packSales > 0 ? 100 : 0);
+  const status = stats.kpi;
+  const firstThreshold = KPI_THRESHOLDS[0];
+  const nextMessage = status.next
+    ? `Te faltan <strong>${status.missing}</strong> packs para alcanzar ${euro(status.next.bonus)}.`
+    : status.reached
+      ? 'Has alcanzado el máximo bono mensual disponible.'
+      : firstThreshold
+        ? `Logra ${firstThreshold.sales} packs para activar el primer bono.`
+        : 'Define objetivos de packs para activar los bonos.';
+  const historyItems = [];
+  for (let offset = 1; offset <= KPI_HISTORY_MONTHS; offset += 1) {
+    const monthDate = new Date(currentMonth);
+    monthDate.setMonth(monthDate.getMonth() - offset);
+    const historyStats = getUserMonthlyStats(metricsMap, monthDate, currentUser.username);
+    historyItems.push({
+      label: monthLabel(monthDate),
+      packs: historyStats.packSales,
+      commission: historyStats.commission
+    });
+  }
+  const historyMarkup = historyItems.length
+    ? historyItems.map(item => `<li><span>${item.label}</span><span><strong>${item.packs}</strong> packs · ${euro(item.commission)}</span></li>`).join('')
+    : '<li>No hay histórico disponible.</li>';
+  const markerValues = KPI_THRESHOLDS.length
+    ? [0, ...KPI_THRESHOLDS.map(t => t.sales)]
+    : [0];
+  const markers = markerValues.map(value => `<span>${value}</span>`).join('');
+  commercialMetrics.innerHTML = `
+    <div class="commercial-kpi">
+      <div class="kpi-header">
+        <div>
+          <div class="dim">${monthLabel(currentMonth)}</div>
+          <strong>${displayName}</strong>
+        </div>
+        <div class="badge">${status.label}</div>
+      </div>
+      <div>
+        <div class="kpi-progress-track">
+          <div class="kpi-progress-fill" style="width:${globalProgress}%;"></div>
+        </div>
+        <div class="kpi-markers">${markers}</div>
+      </div>
+      <div class="kpi-status">
+        <span>Ventas de packs: <strong>${stats.packSales}</strong></span>
+        <span>${nextMessage}</span>
+      </div>
+    </div>
+    <div class="commission-card">
+      <div>
+        <div class="dim">Comisión estimada del mes</div>
+        <div class="commission-value">${euro(stats.commission)}</div>
+      </div>
+      <div class="commission-meta">
+        <span>Fibra: <strong>${stats.fiberSales}</strong></span>
+        <span>Líneas móviles: <strong>${stats.mobileLines}</strong></span>
+        <span>Ventas totales: <strong>${stats.totalSales}</strong></span>
+      </div>
+    </div>
+    <div class="metrics-history">
+      <h4>Histórico reciente</h4>
+      <ul>${historyMarkup}</ul>
+    </div>
+  `;
+  commercialMetrics.classList.remove('hidden');
+}
+
+function renderAdminSalesStats() {
+  if (!adminSalesStats) return;
+  const metricsMap = buildMonthlyMetrics();
+  const currentMonth = startOfMonth(new Date());
+  const key = monthKeyFromDate(currentMonth);
+  const entry = metricsMap.get(key);
+  if (!entry || !entry.perUser.size) {
+    adminSalesStats.innerHTML = '<p class="dim">Aún no hay ventas registradas este mes.</p>';
+    return;
+  }
+  const items = Array.from(entry.perUser.values())
+    .map(stats => ({
+      username: stats.username,
+      name: stats.name,
+      totalSales: stats.totalSales,
+      packSales: stats.packSales,
+      fiberSales: stats.fiberSales,
+      mobileLines: stats.mobileLines,
+      commission: stats.commission,
+      kpi: stats.kpi || getKpiStatus(stats.packSales)
+    }))
+    .sort((a, b) => {
+      if (b.commission !== a.commission) return b.commission - a.commission;
+      if (b.packSales !== a.packSales) return b.packSales - a.packSales;
+      return a.name.localeCompare(b.name, 'es');
+    });
+  const firstThreshold = KPI_THRESHOLDS[0];
+  adminSalesStats.innerHTML = items
+    .map((stats, index) => {
+      const kpiState = stats.kpi.reached ? 'active' : 'pending';
+      const kpiText = stats.kpi.reached ? `${stats.kpi.label}` : 'KPI pendiente';
+      const detail = stats.kpi.next
+        ? `Faltan ${stats.kpi.missing} packs para ${euro(stats.kpi.next.bonus)}`
+        : stats.kpi.reached
+          ? 'Objetivo de packs completado.'
+          : firstThreshold
+            ? `Necesitas ${firstThreshold.sales} packs para el primer bono.`
+            : 'Sin configuración de bonos.';
+      return `
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-rank">#${index + 1}</span>
+            <span class="stat-name">${stats.name}</span>
+            <span class="kpi-badge" data-state="${kpiState}">${kpiText}</span>
+          </div>
+          <div class="stat-body">
+            <div>Ventas totales: <strong>${stats.totalSales}</strong></div>
+            <div>Packs C: <strong>${stats.packSales}</strong></div>
+            <div>Ventas con fibra: <strong>${stats.fiberSales}</strong></div>
+            <div>Líneas móviles: <strong>${stats.mobileLines}</strong></div>
+            <div>Comisión: <strong>${euro(stats.commission)}</strong></div>
+            <div>${detail}</div>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function activateAdminTab(tab) {
+  if (!adminTabPanels) return;
+  const availableKeys = Object.keys(adminTabPanels).filter(key => adminTabPanels[key]);
+  const target = tab && adminTabPanels[tab] ? tab : 'sales';
+  adminActiveTab = target;
+  adminTabButtons?.forEach(button => {
+    const isActive = button.dataset.tab === target;
+    button.classList.toggle('active', isActive);
+  });
+  availableKeys.forEach(key => {
+    const panel = adminTabPanels[key];
+    if (!panel) return;
+    if (key === target) {
+      panel.classList.remove('hidden');
+    } else {
+      panel.classList.add('hidden');
+    }
+  });
+  if (target === 'sales') {
+    renderAdminSalesStats();
+  }
+}
+
 function handleLeadListAction(event) {
   const button = event.target.closest('button[data-action]');
   if (!button) return;
@@ -1971,9 +2422,11 @@ function handleLeadListAction(event) {
     lead.updatedAt = new Date().toISOString();
     if (lead.status === 'vendido') {
       lead.notified = false;
+      lead.soldAt = lead.updatedAt;
     } else {
       lead.notified = true;
       lead.installed = false;
+      lead.soldAt = null;
     }
     lead.cancelReason = '';
     lead.cancelledAt = null;
@@ -2014,6 +2467,7 @@ function handleLeadListAction(event) {
     lead.installed = false;
     lead.notified = true;
     lead.updatedAt = lead.cancelledAt;
+    lead.soldAt = null;
     saveLeads();
     renderLeadSummary();
     renderAdminLeadList();
@@ -2070,6 +2524,7 @@ function renderCommercialPanel() {
   const mine = leads
     .filter(lead => lead.commercial === currentUser?.username)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  renderCommercialMetrics();
   const pendingAlerts = mine.filter(lead => lead.status === 'vendido' && !lead.notified);
   if (pendingAlerts.length) {
     showCommercialAlert(pendingAlerts);
@@ -2240,6 +2695,18 @@ function closeRequestModal() {
   if (!requestModal) return;
   requestModal.classList.add('hidden');
   resetRequestForm();
+}
+
+function openProfilePanel() {
+  if (!profilePanel || !currentUser) return;
+  prefillProfileForm();
+  profilePanel.classList.remove('hidden');
+  setTimeout(() => profileFirstName?.focus(), 50);
+}
+
+function closeProfilePanel() {
+  if (!profilePanel) return;
+  profilePanel.classList.add('hidden');
 }
 
 function showRegisterModal() {
@@ -2496,11 +2963,7 @@ function updateUserInfo() {
   const registerBtn = $('#openRegister', userInfo);
   if (registerBtn) registerBtn.addEventListener('click', showRegisterModal);
   const profileBtn = $('#openProfile', userInfo);
-  if (profileBtn) profileBtn.addEventListener('click', () => {
-    if (!profilePanel) return;
-    profilePanel.classList.remove('hidden');
-    profilePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  if (profileBtn) profileBtn.addEventListener('click', openProfilePanel);
   const logoutBtn = $('#logoutBtn', userInfo);
   if (logoutBtn) logoutBtn.addEventListener('click', logout);
 }
@@ -2508,15 +2971,14 @@ function updateUserInfo() {
 function updateUIForRole() {
   updateUserInfo();
   if (!authReminder) return;
+  if (!currentUser) {
+    adminActiveTab = 'sales';
+  }
   if (currentUser?.role !== 'comercial' && currentUser?.role !== 'lider' && currentUser?.role !== CLIENT_ROLE) {
     hideCommercialNotifications();
   }
-  if (profilePanel) {
-    if (currentUser) {
-      profilePanel.classList.remove('hidden');
-    } else {
-      profilePanel.classList.add('hidden');
-    }
+  if (profilePanel && !currentUser) {
+    closeProfilePanel();
   }
   if (teamPanel && currentUser?.role !== 'lider') {
     teamPanel.classList.add('hidden');
@@ -2546,6 +3008,7 @@ function updateUIForRole() {
     renderLeadSummary();
     renderAdminLeadList();
     renderUserList();
+    activateAdminTab(adminActiveTab);
   } else if (currentUser.role === CLIENT_ROLE) {
     authReminder.classList.add('hidden');
     authNoticeAnonymous?.classList.add('hidden');
@@ -3058,12 +3521,27 @@ document.addEventListener('DOMContentLoaded', () => {
   requestError = $('#requestError');
   commercialNotifications = $('#commercialNotifications');
   commercialLeads = $('#commercialLeads');
+  commercialMetrics = $('#commercialMetrics');
   leadSummary = $('#leadSummary');
   leadList = $('#leadList');
   leadFilter = $('#leadFilter');
   directClientSection = $('#directClientSection');
   directClientList = $('#directClientList');
   directClientEmpty = $('#directClientEmpty');
+  adminSalesStats = $('#adminSalesStats');
+  adminTabs = $('#adminTabs');
+  adminSalesTab = $('#adminSalesTab');
+  adminTariffsTab = $('#adminTariffsTab');
+  adminClientsTab = $('#adminClientsTab');
+  adminUsersTab = $('#adminUsersTab');
+  adminTabButtons = adminTabs ? Array.from(adminTabs.querySelectorAll('button[data-tab]')) : [];
+  adminTabPanels = {
+    sales: adminSalesTab,
+    tariffs: adminTariffsTab,
+    clients: adminClientsTab,
+    users: adminUsersTab
+  };
+  activateAdminTab(adminActiveTab);
   tarifaList = $('#tarifaList');
   tarifaForm = $('#tarifaForm');
   tarifaFormInfo = $('#tarifaFormInfo');
@@ -3100,6 +3578,7 @@ document.addEventListener('DOMContentLoaded', () => {
   profileAddress = $('#profileAddress');
   profilePassword = $('#profilePassword');
   profilePasswordConfirm = $('#profilePasswordConfirm');
+  closeProfileBtn = $('#closeProfile');
 
   teamPanel = $('#teamPanel');
   teamSummary = $('#teamSummary');
@@ -3153,6 +3632,8 @@ document.addEventListener('DOMContentLoaded', () => {
   requestModal?.addEventListener('click', (event) => { if (event.target === requestModal) closeRequestModal(); });
 
   profileForm?.addEventListener('submit', handleProfileFormSubmit);
+  closeProfileBtn?.addEventListener('click', closeProfilePanel);
+  profilePanel?.addEventListener('click', (event) => { if (event.target === profilePanel) closeProfilePanel(); });
 
   tarifaForm?.addEventListener('submit', handleTarifaFormSubmit);
   cancelarEdicionBtn?.addEventListener('click', () => resetTariffForm());
@@ -3172,6 +3653,12 @@ document.addEventListener('DOMContentLoaded', () => {
     populateManagedUserOptions(role === 'lider' ? selected : []);
   });
   userListContainer?.addEventListener('click', handleUserListAction);
+  adminTabs?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-tab]');
+    if (!button) return;
+    event.preventDefault();
+    activateAdminTab(button.dataset.tab);
+  });
 
   aiForm?.addEventListener('submit', handleAiSearchSubmit);
   aiClearBtn?.addEventListener('click', resetAiSearch);
@@ -3183,6 +3670,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeLeadModal();
       hideRegisterModal();
       closeRequestModal();
+      closeProfilePanel();
     }
   });
 
