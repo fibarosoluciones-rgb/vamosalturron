@@ -82,6 +82,10 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .points-history .meta span { font-size:12px; color:#cbd5f5; }
 .rewards-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); }
 .reward-card { background:#0b1120; border:1px solid rgba(148,163,184,0.18); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:12px; position:relative; overflow:hidden; }
+.reward-thumb { position:relative; width:100%; aspect-ratio:4/3; border-radius:14px; overflow:hidden; border:1px solid rgba(148,163,184,0.2); background:linear-gradient(135deg, rgba(30,64,175,0.25), rgba(30,41,59,0.65)); display:flex; align-items:center; justify-content:center; }
+.reward-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.reward-thumb.placeholder { color:#cbd5f5; font-size:12px; text-transform:uppercase; letter-spacing:.6px; font-weight:600; }
+.reward-thumb.placeholder span { opacity:0.7; }
 .reward-card .title { font-size:17px; font-weight:700; }
 .reward-card .cost { font-size:14px; color:#fbbf24; font-weight:600; }
 .reward-card .validity { font-size:12px; color:#a8b3c7; }
@@ -724,6 +728,10 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
             <input id="rewardValidUntil" type="date" />
           </div>
           <div class="full">
+            <label class="label" for="rewardImage">Imagen destacada (URL)</label>
+            <input id="rewardImage" type="url" placeholder="https://..." />
+          </div>
+          <div class="full">
             <label class="label" for="rewardDescription">Descripción</label>
             <textarea id="rewardDescription" placeholder="Detalla la recompensa y cómo se entregará."></textarea>
           </div>
@@ -1031,6 +1039,19 @@ const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 const uniq = (arr) => Array.from(new Set(arr.filter(x => x !== null && x !== undefined && x !== '')))
   .sort((a, b) => ('' + a).localeCompare('' + b, 'es', { numeric: true }));
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, match => {
+    switch (match) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return match;
+    }
+  });
+}
+
 function normalisePointsMovement(raw) {
   if (!raw) return null;
   const amount = Number(raw.amount ?? raw.points ?? raw.puntos ?? 0);
@@ -1140,6 +1161,7 @@ let grid,
   rewardPointsInput,
   rewardValidFromInput,
   rewardValidUntilInput,
+  rewardImageInput,
   rewardDescriptionInput,
   rewardList,
   clientNameInput,
@@ -1781,7 +1803,8 @@ function normaliseLead(raw) {
   const ledger = lead.pointsLedger || lead.points_ledger || {};
   lead.pointsLedger = {
     base: Number.isFinite(Number(ledger.base)) ? Number(ledger.base) : 0,
-    referral: Number.isFinite(Number(ledger.referral)) ? Number(ledger.referral) : 0
+    referral: Number.isFinite(Number(ledger.referral)) ? Number(ledger.referral) : 0,
+    awardedAt: ledger.awardedAt || ledger.awarded_at || null
   };
   return lead;
 }
@@ -1814,6 +1837,7 @@ function normaliseReward(raw) {
     title,
     pointsCost,
     description: (raw.description || raw.descripcion || raw['descripción'] || '').trim(),
+    imageUrl: (raw.imageUrl || raw.image || raw.img || '').trim(),
     validFrom: raw.validFrom || raw.valid_from || '',
     validUntil: raw.validUntil || raw.valid_until || '',
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
@@ -1978,9 +2002,14 @@ function grantInstallationPoints(lead) {
   const username = lead.clientUsername || (lead.origin === CLIENT_ROLE ? lead.commercial : '');
   if (!username) return false;
   const client = getUserByUsername(username);
-  if (!client || client.role !== CLIENT_ROLE) return false;
+  if (!client) return false;
   ensureUserPointsStructure(client);
-  lead.pointsLedger = lead.pointsLedger || { base: 0, referral: 0 };
+  const ledger = lead.pointsLedger && typeof lead.pointsLedger === 'object' ? lead.pointsLedger : {};
+  lead.pointsLedger = {
+    base: Number.isFinite(Number(ledger.base)) ? Number(ledger.base) : 0,
+    referral: Number.isFinite(Number(ledger.referral)) ? Number(ledger.referral) : 0,
+    awardedAt: ledger.awardedAt || null
+  };
   if (lead.pointsLedger.base > 0 || lead.pointsLedger.referral > 0) return false;
   const totalPoints = calculateLeadPoints(lead);
   if (!totalPoints) return false;
@@ -2012,6 +2041,7 @@ function grantInstallationPoints(lead) {
     changed = true;
   }
   if (changed) {
+    lead.pointsLedger.awardedAt = new Date().toISOString();
     saveUsers();
     updateSnapshotsAfterPointsChange(client, inviter);
   }
@@ -2039,6 +2069,7 @@ function revokeInstallationPoints(lead) {
     }
   }
   lead.pointsLedger.referral = 0;
+  lead.pointsLedger.awardedAt = null;
   if (changed) {
     saveUsers();
     updateSnapshotsAfterPointsChange(client, inviter);
@@ -2191,7 +2222,7 @@ function handleReferralSubmit(event) {
     installed: false,
     clientUsername: newUser.username,
     referredBy: currentUser.username,
-    pointsLedger: { base: 0, referral: 0 }
+    pointsLedger: { base: 0, referral: 0, awardedAt: null }
   };
   leads.push(lead);
   saveLeads();
@@ -2236,6 +2267,9 @@ function renderClientRewards(record) {
       const delivered = userRequests.filter(entry => entry.status === 'entregado');
       const hasPending = pending.length > 0;
       const unlocked = balance >= reward.pointsCost;
+      const imageMarkup = reward.imageUrl
+        ? `<figure class="reward-thumb"><img src="${escapeHtml(reward.imageUrl)}" alt="Imagen de ${escapeHtml(reward.title)}" loading="lazy" /></figure>`
+        : '<figure class="reward-thumb placeholder"><span>Sin imagen</span></figure>';
       const statusParts = [];
       if (pending.length) statusParts.push(`${pending.length} pendiente${pending.length !== 1 ? 's' : ''}`);
       if (delivered.length) statusParts.push(`${delivered.length} entregada${delivered.length !== 1 ? 's' : ''}`);
@@ -2250,6 +2284,7 @@ function renderClientRewards(record) {
       const description = reward.description ? `<p class="dim">${reward.description}</p>` : '';
       return `
         <div class="${cardClass}" data-id="${reward.id}">
+          ${imageMarkup}
           <div class="title">${reward.title}</div>
           <div class="cost">${formatPoints(reward.pointsCost)}</div>
           <div class="validity">${formatRewardValidity(reward)}</div>
@@ -2343,6 +2378,9 @@ function renderAdminRewards() {
         ? `${total} solicitud${total !== 1 ? 'es' : ''} (${pending} pendiente${pending !== 1 ? 's' : ''})`
         : 'Sin solicitudes por ahora';
       const description = reward.description ? `<p class="dim">${reward.description}</p>` : '';
+      const imageMarkup = reward.imageUrl
+        ? `<figure class="reward-thumb"><img src="${escapeHtml(reward.imageUrl)}" alt="Imagen de ${escapeHtml(reward.title)}" loading="lazy" /></figure>`
+        : '<figure class="reward-thumb placeholder"><span>Sin imagen</span></figure>';
       const requestsMarkup = total
         ? `<div class="requests-list">${reward.requests
             .slice()
@@ -2376,6 +2414,7 @@ function renderAdminRewards() {
       const cardClass = active ? 'reward-card unlocked' : 'reward-card locked';
       return `
         <div class="${cardClass}" data-id="${reward.id}">
+          ${imageMarkup}
           <div class="title">${reward.title}</div>
           <div class="cost">${formatPoints(reward.pointsCost)}</div>
           <div class="validity">${formatRewardValidity(reward)}</div>
@@ -2405,6 +2444,7 @@ function fillRewardForm(reward) {
   if (rewardPointsInput) rewardPointsInput.value = reward.pointsCost;
   if (rewardValidFromInput) rewardValidFromInput.value = reward.validFrom || '';
   if (rewardValidUntilInput) rewardValidUntilInput.value = reward.validUntil || '';
+  if (rewardImageInput) rewardImageInput.value = reward.imageUrl || '';
   if (rewardDescriptionInput) rewardDescriptionInput.value = reward.description || '';
   if (rewardFormInfo) rewardFormInfo.textContent = 'Editando recompensa existente.';
 }
@@ -2414,6 +2454,11 @@ function handleRewardFormSubmit(event) {
   if (!rewardForm) return;
   const title = rewardTitleInput?.value.trim();
   const pointsValue = Number(rewardPointsInput?.value || 0);
+  const imageUrl = rewardImageInput?.value.trim() || '';
+  if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+    if (rewardFormInfo) rewardFormInfo.textContent = 'La imagen debe ser una URL válida que comience por http o https.';
+    return;
+  }
   if (!title) {
     if (rewardFormInfo) rewardFormInfo.textContent = 'Indica un nombre para la recompensa.';
     return;
@@ -2435,6 +2480,7 @@ function handleRewardFormSubmit(event) {
     existing.description = rewardDescriptionInput?.value.trim() || '';
     existing.validFrom = rewardValidFromInput?.value || '';
     existing.validUntil = rewardValidUntilInput?.value || '';
+    existing.imageUrl = imageUrl;
     existing.updatedAt = now;
     if (rewardFormInfo) rewardFormInfo.textContent = 'Recompensa actualizada correctamente.';
   } else {
@@ -2443,6 +2489,7 @@ function handleRewardFormSubmit(event) {
       title,
       pointsCost: Math.round(pointsValue),
       description: rewardDescriptionInput?.value.trim() || '',
+      imageUrl,
       validFrom: rewardValidFromInput?.value || '',
       validUntil: rewardValidUntilInput?.value || '',
       createdAt: now,
@@ -3932,7 +3979,7 @@ function handleRequestFormSubmit(event) {
     installed: false,
     clientUsername: userRecord.username,
     referredBy: userRecord.referredBy || '',
-    pointsLedger: { base: 0, referral: 0 }
+    pointsLedger: { base: 0, referral: 0, awardedAt: null }
   };
   leads.push(lead);
   saveLeads();
@@ -4656,6 +4703,7 @@ document.addEventListener('DOMContentLoaded', () => {
   rewardPointsInput = $('#rewardPoints');
   rewardValidFromInput = $('#rewardValidFrom');
   rewardValidUntilInput = $('#rewardValidUntil');
+  rewardImageInput = $('#rewardImage');
   rewardDescriptionInput = $('#rewardDescription');
   rewardList = $('#rewardList');
   clientNameInput = $('#clientName');
