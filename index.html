@@ -33,6 +33,7 @@ body {
 .brand h1 { margin: 0; font-size: 20px; letter-spacing: .5px; font-weight: 600; }
 .hidden { display: none !important; }
 .user-info { display:flex; justify-content:flex-end; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.user-info .avatar { width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.25); }
 .user-info .name { font-weight:600; }
 .role-tag { display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:12px; text-transform:uppercase; letter-spacing:.6px; }
 .role-tag[data-role="admin"] { background: rgba(78,143,202,0.15); border-color: rgba(78,143,202,0.55); }
@@ -58,6 +59,10 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .lead-card .meta { font-size:12px; color:#93a0b5; }
 .lead-card .body { margin-top:8px; font-size:13px; line-height:1.45; }
 .lead-card footer { margin-top:12px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:12px; color:#93a0b5; }
+.status-stack { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.install-status { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; letter-spacing:.4px; border:1px solid rgba(148,163,184,0.35); }
+.install-status[data-installed="true"] { background: rgba(59,130,246,0.18); color:#bfdbfe; border-color: rgba(59,130,246,0.45); }
+.install-status[data-installed="false"] { background: rgba(148,163,184,0.12); color:#cbd5f5; }
 .modal { position:fixed; inset:0; background:rgba(11,15,23,0.85); display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); z-index:99; }
 .modal.hidden { display:none !important; }
 .modal .modal-content { background:#0f1522; border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px; max-width:420px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.45); }
@@ -126,6 +131,16 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 @media (max-width: 640px) { .tile{grid-column: span 12 / span 12;} .toolbar{grid-template-columns:1fr;} .brand img{height:34px;} }
 .smallbtn { background: transparent; border:1px solid rgba(255,255,255,.2); color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; }
 .smallbtn:hover { border-color: var(--primary); }
+.smallbtn:disabled { opacity: 0.5; cursor: not-allowed; border-color: rgba(148,163,184,0.2); }
+.stacked.gap-sm { gap:8px; }
+.multi-select { min-height:110px; }
+.guide-steps { margin: 14px 0 0; padding-left: 20px; display:flex; flex-direction:column; gap:12px; }
+.guide-steps li { line-height:1.45; }
+.guide-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.demo-button, .jump-link { background: rgba(78,143,202,0.15); border:1px solid rgba(78,143,202,0.35); color:#fff; padding:8px 12px;
+  border-radius:10px; cursor:pointer; font-size:12px; letter-spacing:.3px; font-weight:600; }
+.demo-button:hover, .jump-link:hover { border-color: rgba(148,196,235,0.65); }
+.guide-note { margin-top:12px; font-size:12px; color:#93a0b5; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -202,7 +217,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
         <button type="submit" class="primary">Entrar</button>
       </div>
     </form>
-    <p class="muted-link">Perfiles disponibles: <code>admin</code>, <code>sofia</code>, <code>ana</code>.</p>
+    <p class="muted-link">Perfiles disponibles: <span id="availableUsers"></span></p>
   </div>
 </div>
 
@@ -233,15 +248,36 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 </div>
 
 <main class="wrap">
+  <section id="usageGuide" class="card">
+    <h2 class="section-title">Guía rápida de uso</h2>
+    <p class="dim">Sigue estos pasos para localizar el panel de administración, el formulario de perfiles y las opciones de equipo.</p>
+    <ol class="guide-steps">
+      <li>
+        <strong>Inicia sesión con un perfil existente.</strong> Pulsa el botón <strong>Iniciar sesión</strong> que verás arriba a la derecha y usa una de las cuentas de prueba.
+        <div class="guide-actions">
+          <button type="button" class="demo-button" data-demo-login="admin">Rellenar admin</button>
+          <button type="button" class="demo-button" data-demo-login="sofia">Rellenar comercial</button>
+          <button type="button" class="demo-button" data-demo-login="ana">Rellenar lector</button>
+        </div>
+      </li>
+      <li>
+        <strong>Gestiona usuarios y equipos.</strong> Dentro del <button type="button" class="jump-link" data-scroll-target="#adminPanel">Panel de administración</button> encontrarás la sección “Gestión de usuarios” para crear, editar, eliminar perfiles y asignar roles o equipos.
+      </li>
+      <li>
+        <strong>Completa tus datos personales.</strong> El formulario <button type="button" class="jump-link" data-scroll-target="#profilePanel">Mi perfil</button> permite guardar nombre, teléfonos, dirección, foto y cambiar la contraseña de cada cuenta entregada.
+      </li>
+      <li>
+        <strong>Revisa el rendimiento del equipo comercial.</strong> Al convertir a un comercial en líder, accede al apartado <button type="button" class="jump-link" data-scroll-target="#teamPanel">Equipo comercial</button> para consultar ventas y oportunidades de su grupo.
+      </li>
+    </ol>
+    <p class="guide-note">Los cambios se guardan en el navegador para que puedas cerrar y volver a abrir la demo sin perder las cuentas creadas.</p>
+  </section>
   <section id="authReminder" class="notice">
     <div id="authNoticeAnonymous">
       <h2 class="section-title">Acceso restringido</h2>
-      <p>Esta demo permite simular los tres perfiles principales: administrador, comercial y lector básico. Pulsa <strong>Iniciar sesión</strong> para usar uno de los perfiles disponibles.</p>
-      <ul class="login-hints">
-        <li><strong>Administrador:</strong> usuario <code>admin</code> · contraseña <code>admin123</code>.</li>
-        <li><strong>Comercial:</strong> usuario <code>sofia</code> · contraseña <code>comercial123</code>.</li>
-        <li><strong>Básico:</strong> usuario <code>ana</code> · contraseña <code>basico123</code>.</li>
-      </ul>
+      <p>Esta demo permite simular los perfiles de administrador, comercial, responsable de equipo y lector básico. Pulsa <strong>Iniciar sesión</strong> para usar uno de los perfiles configurados.</p>
+      <p>El administrador puede crear, editar o eliminar cuentas, definir sus datos de contacto y asignar qué usuarios forman parte de cada equipo comercial.</p>
+      <p class="dim">Credenciales iniciales: <code>admin/admin123</code>, <code>sofia/comercial123</code> y <code>ana/basico123</code>. Cámbialas tras la primera entrada.</p>
     </div>
     <div id="authNoticeBasic" class="hidden">
       <h2 class="section-title">Modo lectura</h2>
@@ -249,11 +285,69 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
     </div>
   </section>
 
+  <section id="profilePanel" class="card hidden">
+    <h2 class="section-title">Mi perfil</h2>
+    <p class="dim">Completa tus datos personales, indica cómo debe contactarte el administrador y elige una nueva contraseña si lo necesitas.</p>
+    <form id="profileForm" class="stacked">
+      <div class="form-grid">
+        <div>
+          <label class="label" for="profileFirstName">Nombre</label>
+          <input id="profileFirstName" type="text" placeholder="Nombre" autocomplete="given-name" />
+        </div>
+        <div>
+          <label class="label" for="profileLastName">Apellidos</label>
+          <input id="profileLastName" type="text" placeholder="Apellidos" autocomplete="family-name" />
+        </div>
+        <div>
+          <label class="label" for="profileEmail">Correo de notificaciones</label>
+          <input id="profileEmail" type="email" placeholder="correo@empresa.com" autocomplete="email" />
+        </div>
+        <div>
+          <label class="label" for="profileCompanyPhone">Teléfono de empresa</label>
+          <input id="profileCompanyPhone" type="text" placeholder="Teléfono corporativo" autocomplete="tel" />
+        </div>
+        <div>
+          <label class="label" for="profilePersonalPhone">Teléfono personal</label>
+          <input id="profilePersonalPhone" type="text" placeholder="Teléfono personal" autocomplete="tel" />
+        </div>
+        <div>
+          <label class="label" for="profilePhoto">Foto de perfil (URL)</label>
+          <input id="profilePhoto" type="url" placeholder="https://..." autocomplete="url" />
+        </div>
+        <div class="full">
+          <label class="label" for="profileAddress">Dirección</label>
+          <textarea id="profileAddress" placeholder="Dirección completa"></textarea>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label class="label" for="profilePassword">Nueva contraseña</label>
+          <input id="profilePassword" type="password" autocomplete="new-password" placeholder="Deja en blanco para mantenerla" />
+        </div>
+        <div>
+          <label class="label" for="profilePasswordConfirm">Repite la contraseña</label>
+          <input id="profilePasswordConfirm" type="password" autocomplete="new-password" placeholder="Confirma la nueva contraseña" />
+        </div>
+      </div>
+      <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
+        <button type="submit" class="primary">Guardar cambios</button>
+        <span class="dim" id="profileFormInfo"></span>
+      </div>
+    </form>
+  </section>
+
   <section id="commercialPanel" class="card hidden">
     <h2 class="section-title">Mis oportunidades</h2>
     <p class="dim">Selecciona una tarifa y pulsa <strong>Enviar propuesta</strong> para remitir los datos del cliente al administrador.</p>
     <div id="commercialNotifications" class="notice hidden"></div>
     <div id="commercialLeads" class="lead-list"></div>
+  </section>
+
+  <section id="teamPanel" class="card hidden">
+    <h2 class="section-title">Equipo comercial</h2>
+    <p class="dim">Consulta las ventas de las personas a tu cargo y haz seguimiento de su actividad.</p>
+    <div id="teamSummary" class="kpis"></div>
+    <div id="teamLeadList" class="lead-list"></div>
   </section>
 
   <section id="adminPanel" class="card hidden">
@@ -328,6 +422,71 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
     </div>
     <div id="leadSummary" class="kpis" style="margin-top:12px;"></div>
     <div id="leadList" class="lead-list"></div>
+
+    <hr class="sep" />
+    <div class="section-subtitle" style="margin:12px 0 8px;">Gestión de usuarios</div>
+    <form id="userForm" class="stacked gap-sm">
+      <div class="form-grid">
+        <div>
+          <label class="label" for="userUsername">Usuario</label>
+          <input id="userUsername" type="text" placeholder="Identificador único" autocomplete="off" required />
+        </div>
+        <div>
+          <label class="label" for="userPassword">Contraseña</label>
+          <input id="userPassword" type="password" placeholder="Obligatoria al crear" autocomplete="new-password" />
+        </div>
+        <div>
+          <label class="label" for="userRole">Rol</label>
+          <select id="userRole">
+            <option value="basico">Básico</option>
+            <option value="comercial">Comercial</option>
+            <option value="lider">Responsable de equipo</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="userEmail">Correo de notificaciones</label>
+          <input id="userEmail" type="email" placeholder="correo@empresa.com" />
+        </div>
+        <div>
+          <label class="label" for="userFirstName">Nombre</label>
+          <input id="userFirstName" type="text" placeholder="Nombre" />
+        </div>
+        <div>
+          <label class="label" for="userLastName">Apellidos</label>
+          <input id="userLastName" type="text" placeholder="Apellidos" />
+        </div>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label class="label" for="userCompanyPhone">Teléfono de empresa</label>
+          <input id="userCompanyPhone" type="text" placeholder="Teléfono corporativo" />
+        </div>
+        <div>
+          <label class="label" for="userPersonalPhone">Teléfono personal</label>
+          <input id="userPersonalPhone" type="text" placeholder="Teléfono personal" />
+        </div>
+        <div>
+          <label class="label" for="userPhoto">Foto de perfil (URL)</label>
+          <input id="userPhoto" type="url" placeholder="https://..." />
+        </div>
+        <div class="full">
+          <label class="label" for="userAddress">Dirección</label>
+          <textarea id="userAddress" placeholder="Dirección completa"></textarea>
+        </div>
+        <div class="full hidden" id="managedUsersField">
+          <label class="label" for="userManagedUsers">Equipo a cargo</label>
+          <select id="userManagedUsers" class="multi-select" multiple></select>
+          <p class="dim" style="margin:6px 0 0;">Selecciona los usuarios que formarán parte del equipo comercial de este responsable.</p>
+        </div>
+      </div>
+      <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
+        <button type="submit" class="primary" id="saveUserBtn">Crear usuario</button>
+        <button type="button" class="smallbtn" id="cancelUserEdit">Cancelar</button>
+        <span class="dim" id="userFormInfo"></span>
+      </div>
+    </form>
+    <div id="userList"></div>
   </section>
 
   <div class="grid" id="grid"></div>
@@ -340,22 +499,45 @@ const BASE_DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "pre
 const STORAGE_KEYS = {
   tariffs: 'panel.tarifas.v1',
   leads: 'panel.leads.v1',
-  session: 'panel.session.v1'
+  session: 'panel.session.v2',
+  users: 'panel.usuarios.v1'
 };
 
-const USERS = [
-  { username: 'admin', password: 'admin123', role: 'admin', name: 'Alicia Admin' },
-  { username: 'sofia', password: 'comercial123', role: 'comercial', name: 'Sofía Comercial' },
-  { username: 'ana', password: 'basico123', role: 'basico', name: 'Ana Lectora' }
+const DEFAULT_USERS = [
+  {
+    username: 'admin',
+    password: 'admin123',
+    role: 'admin',
+    firstName: 'Alicia',
+    lastName: 'Admin',
+    email: 'admin@fibaro.es'
+  },
+  {
+    username: 'sofia',
+    password: 'comercial123',
+    role: 'comercial',
+    firstName: 'Sofía',
+    lastName: 'Comercial',
+    email: 'sofia@fibaro.es'
+  },
+  {
+    username: 'ana',
+    password: 'basico123',
+    role: 'basico',
+    firstName: 'Ana',
+    lastName: 'Lectora',
+    email: 'ana@fibaro.es'
+  }
 ];
 
-const ROLE_LABELS = { admin: 'Administrador', comercial: 'Comercial', basico: 'Básico' };
+const ROLE_LABELS = { admin: 'Administrador', comercial: 'Comercial', basico: 'Básico', lider: 'Responsable de equipo' };
 
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 const uniq = (arr) => Array.from(new Set(arr.filter(x => x !== null && x !== undefined && x !== '')))
   .sort((a, b) => ('' + a).localeCompare('' + b, 'es', { numeric: true }));
 
+let users = [];
 let grid,
   countEl,
   authReminder,
@@ -363,6 +545,7 @@ let grid,
   authNoticeBasic,
   adminPanel,
   commercialPanel,
+  usageGuide,
   userInfo,
   loginModal,
   loginForm,
@@ -396,12 +579,45 @@ let grid,
   tarifaDescripcion,
   clientNameInput,
   clientContactInput,
-  clientNotesInput;
+  clientNotesInput,
+  profilePanel,
+  profileForm,
+  profileFormInfo,
+  profileFirstName,
+  profileLastName,
+  profileEmail,
+  profileCompanyPhone,
+  profilePersonalPhone,
+  profilePhoto,
+  profileAddress,
+  profilePassword,
+  profilePasswordConfirm,
+  teamPanel,
+  teamSummary,
+  teamLeadList,
+  userForm,
+  userFormInfo,
+  userUsername,
+  userPassword,
+  userRole,
+  userEmail,
+  userFirstName,
+  userLastName,
+  userCompanyPhone,
+  userPersonalPhone,
+  userPhoto,
+  userAddress,
+  userManagedUsers,
+  managedUsersField,
+  userListContainer,
+  saveUserBtn,
+  cancelUserEdit;
 
 let currentUser = null;
 let tariffs = [];
 let leads = [];
 let editingTariffId = null;
+let editingUser = null;
 let commercialNoticeTimeout = null;
 
 function todayISO() {
@@ -410,6 +626,130 @@ function todayISO() {
 
 function createId(prefix = 'id') {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
+}
+
+function normaliseUser(raw) {
+  if (!raw) return null;
+  const username = (raw.username || '').trim().toLowerCase();
+  if (!username) return null;
+  let firstName = (raw.firstName || '').trim();
+  let lastName = (raw.lastName || '').trim();
+  if (!firstName && !lastName && raw.name) {
+    const pieces = String(raw.name).trim().split(/\s+/);
+    firstName = pieces.shift() || '';
+    lastName = pieces.join(' ');
+  }
+  const managedUsers = Array.isArray(raw.managedUsers)
+    ? uniq(raw.managedUsers.map(u => (u || '').trim().toLowerCase()))
+    : [];
+  return {
+    username,
+    password: raw.password || '',
+    role: raw.role || 'basico',
+    firstName,
+    lastName,
+    email: (raw.email || '').trim(),
+    companyPhone: (raw.companyPhone || '').trim(),
+    personalPhone: (raw.personalPhone || '').trim(),
+    address: (raw.address || '').trim(),
+    photo: (raw.photo || '').trim(),
+    managedUsers: managedUsers.filter(value => value && value !== username)
+  };
+}
+
+function cleanManagedUsers(list) {
+  const usernames = new Set(list.map(u => u.username));
+  let changed = false;
+  list.forEach(user => {
+    const filtered = (user.managedUsers || []).filter(member => usernames.has(member) && member !== user.username);
+    if (filtered.length !== (user.managedUsers || []).length) {
+      changed = true;
+    }
+    user.managedUsers = filtered;
+  });
+  return changed;
+}
+
+function removeFromManagedTeams(username) {
+  if (!username) return false;
+  let changed = false;
+  users.forEach(user => {
+    if (!Array.isArray(user.managedUsers)) return;
+    const filtered = user.managedUsers.filter(member => member !== username);
+    if (filtered.length !== user.managedUsers.length) {
+      user.managedUsers = filtered;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function loadUsersFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.users);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const list = parsed.map(normaliseUser).filter(Boolean);
+        cleanManagedUsers(list);
+        return list;
+      }
+    }
+  } catch (error) {
+    console.warn('No se pudieron cargar los usuarios guardados', error);
+  }
+  const defaults = DEFAULT_USERS.map(normaliseUser).filter(Boolean);
+  cleanManagedUsers(defaults);
+  return defaults;
+}
+
+function saveUsers() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+  } catch (error) {
+    console.warn('No se pudieron guardar los usuarios', error);
+  }
+}
+
+function getUserByUsername(username) {
+  if (!username) return null;
+  return users.find(user => user.username === username) || null;
+}
+
+function buildUserSnapshot(user) {
+  if (!user) return null;
+  return {
+    username: user.username,
+    role: user.role,
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    email: user.email || '',
+    companyPhone: user.companyPhone || '',
+    personalPhone: user.personalPhone || '',
+    address: user.address || '',
+    photo: user.photo || '',
+    managedUsers: Array.isArray(user.managedUsers) ? [...user.managedUsers] : []
+  };
+}
+
+function userDisplayName(user) {
+  if (!user) return '';
+  const first = (user.firstName || '').trim();
+  const last = (user.lastName || '').trim();
+  const combined = `${first} ${last}`.trim();
+  if (combined) return combined;
+  if (user.name) return user.name;
+  return user.username || '';
+}
+
+function updateAvailableUsersHint() {
+  const hint = $('#availableUsers');
+  if (!hint) return;
+  if (!users.length) {
+    hint.textContent = 'Sin usuarios disponibles';
+    return;
+  }
+  hint.textContent = users.map(u => u.username).join(', ');
 }
 
 function normaliseTariff(item) {
@@ -454,7 +794,9 @@ function loadLeadsFromStorage() {
       if (Array.isArray(parsed)) {
         return parsed.map(lead => ({
           ...lead,
-          notified: lead.notified !== undefined ? lead.notified : true
+          notified: lead.notified !== undefined ? lead.notified : true,
+          installed: lead.installed === true,
+          installedAt: lead.installedAt || null
         }));
       }
     }
@@ -476,7 +818,10 @@ function loadSessionUser() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEYS.session);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.username) {
+        return parsed;
+      }
     }
   } catch (error) {
     console.warn('No se pudo restaurar la sesión', error);
@@ -486,8 +831,8 @@ function loadSessionUser() {
 
 function persistSessionUser(user) {
   try {
-    if (user) {
-      sessionStorage.setItem(STORAGE_KEYS.session, JSON.stringify(user));
+    if (user?.username) {
+      sessionStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ username: user.username }));
     } else {
       sessionStorage.removeItem(STORAGE_KEYS.session);
     }
@@ -607,7 +952,7 @@ function renderTariffGrid(data) {
     `;
     const actions = document.createElement('div');
     actions.className = 'tile-actions';
-    if (currentUser?.role === 'comercial') {
+    if (currentUser?.role === 'comercial' || currentUser?.role === 'lider') {
       const leadBtn = document.createElement('button');
       leadBtn.className = 'primary';
       leadBtn.textContent = 'Enviar propuesta';
@@ -844,6 +1189,13 @@ function renderAdminLeadList() {
     .map(lead => {
       const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
       const toggleLabel = lead.status === 'vendido' ? 'Marcar como pendiente' : 'Marcar como vendida';
+      const installText = lead.installed ? 'Instalada' : 'Instalación pendiente';
+      const installLabel = lead.installed ? 'Marcar sin instalar' : 'Marcar como instalada';
+      const canInstall = lead.status === 'vendido';
+      const installTitle = canInstall ? '' : ' title="Marca la oportunidad como vendida antes de instalar"';
+      const installInfo = lead.installed
+        ? `Instalada: ${formatDateTime(lead.installedAt)}`
+        : 'Instalación pendiente';
       return `
         <div class="lead-card" data-id="${lead.id}">
           <header>
@@ -851,7 +1203,10 @@ function renderAdminLeadList() {
               <strong>${lead.clientName}</strong>
               <span class="tag">${lead.tariffCodigo}</span>
             </div>
-            <span class="status-pill" data-status="${lead.status}">${statusLabel}</span>
+            <div class="status-stack">
+              <span class="status-pill" data-status="${lead.status}">${statusLabel}</span>
+              <span class="install-status" data-installed="${lead.installed}">${installText}</span>
+            </div>
           </header>
           <div class="body">
             <p><strong>Tarifa:</strong> ${lead.tariffNombre} · <strong>${lead.tariffCompania}</strong></p>
@@ -861,8 +1216,10 @@ function renderAdminLeadList() {
           <footer>
             <span>Comercial: <strong>${lead.commercialName}</strong></span>
             <span>Creada: ${formatDateTime(lead.createdAt)} · Última actualización: ${formatDateTime(lead.updatedAt)}</span>
+            <span>${installInfo}</span>
             <div class="controls" style="margin-left:auto;">
               <button class="smallbtn" data-action="toggle-status" data-id="${lead.id}">${toggleLabel}</button>
+              <button class="smallbtn" data-action="toggle-installed" data-id="${lead.id}"${installTitle}${canInstall ? '' : ' disabled'}>${installLabel}</button>
             </div>
           </footer>
         </div>
@@ -886,10 +1243,26 @@ function handleLeadListAction(event) {
       lead.notified = false;
     } else {
       lead.notified = true;
+      lead.installed = false;
+      lead.installedAt = null;
     }
     saveLeads();
     renderLeadSummary();
     renderAdminLeadList();
+    renderTeamPanel();
+    renderCommercialPanel();
+  } else if (action === 'toggle-installed') {
+    if (lead.status !== 'vendido') {
+      return;
+    }
+    lead.installed = !lead.installed;
+    lead.installedAt = lead.installed ? new Date().toISOString() : null;
+    lead.updatedAt = new Date().toISOString();
+    saveLeads();
+    renderLeadSummary();
+    renderAdminLeadList();
+    renderTeamPanel();
+    renderCommercialPanel();
   }
 }
 
@@ -956,6 +1329,10 @@ function renderCommercialPanel() {
   commercialLeads.innerHTML = mine
     .map(lead => {
       const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
+      const installText = lead.installed ? 'Instalada' : 'Instalación pendiente';
+      const installInfo = lead.installed
+        ? `Instalada: ${formatDateTime(lead.installedAt)}`
+        : 'Instalación pendiente';
       return `
         <div class="lead-card">
           <header>
@@ -963,7 +1340,10 @@ function renderCommercialPanel() {
               <strong>${lead.tariffNombre}</strong>
               <span class="tag">${lead.tariffCodigo}</span>
             </div>
-            <span class="status-pill" data-status="${lead.status}">${statusLabel}</span>
+            <div class="status-stack">
+              <span class="status-pill" data-status="${lead.status}">${statusLabel}</span>
+              <span class="install-status" data-installed="${lead.installed}">${installText}</span>
+            </div>
           </header>
           <div class="body">
             <p><strong>Cliente:</strong> ${lead.clientName}</p>
@@ -973,6 +1353,98 @@ function renderCommercialPanel() {
           <footer>
             <span>Enviada: ${formatDateTime(lead.createdAt)}</span>
             <span>Última actualización: ${formatDateTime(lead.updatedAt)}</span>
+            <span>${installInfo}</span>
+          </footer>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function renderTeamPanel() {
+  if (!teamPanel || !teamSummary || !teamLeadList) return;
+  if (!currentUser || currentUser.role !== 'lider') {
+    teamSummary.innerHTML = '';
+    teamLeadList.innerHTML = '';
+    return;
+  }
+  const managerRecord = getUserByUsername(currentUser.username) || currentUser;
+  const members = Array.isArray(managerRecord?.managedUsers)
+    ? managerRecord.managedUsers
+    : Array.isArray(currentUser.managedUsers)
+      ? currentUser.managedUsers
+      : [];
+  const uniqueMembers = Array.from(new Set(members.filter(Boolean)));
+  if (!uniqueMembers.length) {
+    teamSummary.innerHTML = '<div class="dim">Aún no tienes usuarios asignados a tu equipo.</div>';
+    teamLeadList.innerHTML = '';
+    return;
+  }
+  const teamLeads = leads
+    .filter(lead => uniqueMembers.includes(lead.commercial))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  if (!teamLeads.length) {
+    teamSummary.innerHTML = '<div class="dim">Sin oportunidades registradas para tu equipo.</div>';
+    teamLeadList.innerHTML = '<p class="dim">Cuando tu equipo envíe propuestas aparecerán aquí.</p>';
+    return;
+  }
+  const aggregate = teamLeads.reduce((acc, lead) => {
+    if (!acc[lead.commercial]) {
+      acc[lead.commercial] = {
+        username: lead.commercial,
+        name: lead.commercialName || lead.commercial,
+        total: 0,
+        sold: 0
+      };
+    }
+    acc[lead.commercial].total += 1;
+    if (lead.status === 'vendido') acc[lead.commercial].sold += 1;
+    return acc;
+  }, {});
+  teamSummary.innerHTML = Object.values(aggregate)
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+    .map(info => `
+      <div class="kpi">
+        <div class="label">${info.name}</div>
+        <div><span class="highlight">${info.sold}</span> / ${info.total} ventas</div>
+      </div>
+    `)
+    .join('');
+  teamLeadList.innerHTML = teamLeads
+    .map(lead => {
+      const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
+      const installText = lead.installed ? 'Instalada' : 'Instalación pendiente';
+      const installInfo = lead.installed
+        ? `Instalada: ${formatDateTime(lead.installedAt)}`
+        : 'Instalación pendiente';
+      const installLabel = lead.installed ? 'Marcar sin instalar' : 'Marcar como instalada';
+      const canInstall = lead.status === 'vendido';
+      const installTitle = canInstall ? '' : ' title="Marca la oportunidad como vendida antes de instalar"';
+      return `
+        <div class="lead-card">
+          <header>
+            <div>
+              <strong>${lead.clientName}</strong>
+              <span class="tag">${lead.tariffCodigo}</span>
+            </div>
+            <div class="status-stack">
+              <span class="status-pill" data-status="${lead.status}">${statusLabel}</span>
+              <span class="install-status" data-installed="${lead.installed}">${installText}</span>
+            </div>
+          </header>
+          <div class="body">
+            <p><strong>Tarifa:</strong> ${lead.tariffNombre} · <strong>${lead.tariffCompania}</strong></p>
+            <p><strong>Comercial:</strong> ${lead.commercialName}</p>
+            <p><strong>Contacto:</strong> ${lead.contact}</p>
+            ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
+          </div>
+          <footer>
+            <span>Creada: ${formatDateTime(lead.createdAt)}</span>
+            <span>Actualizada: ${formatDateTime(lead.updatedAt)}</span>
+            <span>${installInfo}</span>
+            <div class="controls" style="margin-left:auto;">
+              <button class="smallbtn" data-action="toggle-installed" data-id="${lead.id}"${installTitle}${canInstall ? '' : ' disabled'}>${installLabel}</button>
+            </div>
           </footer>
         </div>
       `;
@@ -1001,6 +1473,8 @@ function handleLeadFormSubmit(event) {
   if (!tariffId) return;
   const tariff = tariffs.find(t => t.id === tariffId);
   if (!tariff || !currentUser) return;
+  const commercialRecord = getUserByUsername(currentUser.username) || currentUser;
+  const commercialName = userDisplayName(commercialRecord);
   const lead = {
     id: createId('lead'),
     tariffId,
@@ -1008,11 +1482,13 @@ function handleLeadFormSubmit(event) {
     tariffNombre: tariff.nombre,
     tariffCompania: tariff['compañia'],
     commercial: currentUser.username,
-    commercialName: currentUser.name,
+    commercialName,
     clientName: clientNameInput?.value.trim() || '',
     contact: clientContactInput?.value.trim() || '',
     notes: clientNotesInput?.value.trim() || '',
     status: 'pendiente',
+    installed: false,
+    installedAt: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     notified: true
@@ -1022,14 +1498,32 @@ function handleLeadFormSubmit(event) {
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
+  renderTeamPanel();
   showCommercialFlash('Tu propuesta se ha enviado al administrador.');
   closeLeadModal();
 }
 
-function showLoginModal() {
+function showLoginModal(prefill) {
+  if (prefill instanceof Event) {
+    prefill = null;
+  }
+  const data = prefill || {};
   if (!loginModal) return;
+  if (loginError) loginError.textContent = '';
+  loginForm?.reset();
   loginModal.classList.remove('hidden');
-  setTimeout(() => loginUserInput?.focus(), 50);
+  if (data.username && loginUserInput) {
+    loginUserInput.value = data.username;
+  }
+  if (data.password && loginPassInput) {
+    loginPassInput.value = data.password;
+  }
+  setTimeout(() => {
+    if (loginUserInput) {
+      const target = data.password ? loginPassInput : loginUserInput;
+      target?.focus();
+    }
+  }, 50);
 }
 
 function hideLoginModal() {
@@ -1043,12 +1537,12 @@ function handleLoginSubmit(event) {
   event.preventDefault();
   const username = loginUserInput?.value.trim().toLowerCase();
   const password = loginPassInput?.value;
-  const user = USERS.find(u => u.username === username && u.password === password);
+  const user = users.find(u => u.username === username && u.password === password);
   if (!user) {
     if (loginError) loginError.textContent = 'Credenciales no válidas.';
     return;
   }
-  setCurrentUser({ username: user.username, role: user.role, name: user.name });
+  setCurrentUser(buildUserSnapshot(user));
   hideLoginModal();
 }
 
@@ -1058,6 +1552,7 @@ function setCurrentUser(user, { persist = true } = {}) {
     persistSessionUser(user);
   }
   updateUIForRole();
+  prefillProfileForm();
 }
 
 function logout() {
@@ -1069,15 +1564,26 @@ function updateUserInfo() {
   if (!currentUser) {
     userInfo.innerHTML = '<button class="primary" id="openLogin">Iniciar sesión</button>';
   } else {
+    const displayName = userDisplayName(currentUser);
+    const role = currentUser.role;
+    const avatar = currentUser.photo ? `<img class="avatar" src="${currentUser.photo}" alt="${displayName}">` : '';
     userInfo.innerHTML = `
+      ${avatar}
       <span class="dim">Sesión iniciada:</span>
-      <span class="name">${currentUser.name}</span>
-      <span class="role-tag" data-role="${currentUser.role}">${roleLabel(currentUser.role)}</span>
+      <span class="name">${displayName}</span>
+      <span class="role-tag" data-role="${role}">${roleLabel(role)}</span>
+      <button class="smallbtn" id="openProfile">Mi perfil</button>
       <button class="smallbtn" id="logoutBtn">Cerrar sesión</button>
     `;
   }
   const openBtn = $('#openLogin', userInfo);
   if (openBtn) openBtn.addEventListener('click', showLoginModal);
+  const profileBtn = $('#openProfile', userInfo);
+  if (profileBtn) profileBtn.addEventListener('click', () => {
+    if (!profilePanel) return;
+    profilePanel.classList.remove('hidden');
+    profilePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   const logoutBtn = $('#logoutBtn', userInfo);
   if (logoutBtn) logoutBtn.addEventListener('click', logout);
 }
@@ -1085,8 +1591,18 @@ function updateUserInfo() {
 function updateUIForRole() {
   updateUserInfo();
   if (!authReminder) return;
-  if (currentUser?.role !== 'comercial') {
+  if (currentUser?.role !== 'comercial' && currentUser?.role !== 'lider') {
     hideCommercialNotifications();
+  }
+  if (profilePanel) {
+    if (currentUser) {
+      profilePanel.classList.remove('hidden');
+    } else {
+      profilePanel.classList.add('hidden');
+    }
+  }
+  if (teamPanel && currentUser?.role !== 'lider') {
+    teamPanel.classList.add('hidden');
   }
   if (!currentUser) {
     authReminder.classList.remove('hidden');
@@ -1094,21 +1610,25 @@ function updateUIForRole() {
     authNoticeBasic?.classList.add('hidden');
     adminPanel?.classList.add('hidden');
     commercialPanel?.classList.add('hidden');
+    teamPanel?.classList.add('hidden');
   } else if (currentUser.role === 'basico') {
     authReminder.classList.remove('hidden');
     authNoticeAnonymous?.classList.add('hidden');
     authNoticeBasic?.classList.remove('hidden');
     adminPanel?.classList.add('hidden');
     commercialPanel?.classList.add('hidden');
+    teamPanel?.classList.add('hidden');
   } else if (currentUser.role === 'admin') {
     authReminder.classList.add('hidden');
     authNoticeAnonymous?.classList.add('hidden');
     authNoticeBasic?.classList.add('hidden');
     adminPanel?.classList.remove('hidden');
     commercialPanel?.classList.add('hidden');
+    teamPanel?.classList.add('hidden');
     renderTariffTable();
     renderLeadSummary();
     renderAdminLeadList();
+    renderUserList();
   } else if (currentUser.role === 'comercial') {
     authReminder.classList.add('hidden');
     authNoticeAnonymous?.classList.add('hidden');
@@ -1116,6 +1636,16 @@ function updateUIForRole() {
     adminPanel?.classList.add('hidden');
     commercialPanel?.classList.remove('hidden');
     renderCommercialPanel();
+    teamPanel?.classList.add('hidden');
+  } else if (currentUser.role === 'lider') {
+    authReminder.classList.add('hidden');
+    authNoticeAnonymous?.classList.add('hidden');
+    authNoticeBasic?.classList.add('hidden');
+    adminPanel?.classList.add('hidden');
+    commercialPanel?.classList.remove('hidden');
+    teamPanel?.classList.remove('hidden');
+    renderCommercialPanel();
+    renderTeamPanel();
   }
   aplicarFiltros();
 }
@@ -1135,6 +1665,382 @@ function resetFilters() {
   if (fecha) fecha.value = todayISO();
 }
 
+function updateLeadAssignmentsForUser(user) {
+  if (!user) return false;
+  const displayName = userDisplayName(user);
+  let changed = false;
+  leads.forEach(lead => {
+    if (lead.commercial === user.username && lead.commercialName !== displayName) {
+      lead.commercialName = displayName;
+      changed = true;
+    }
+  });
+  if (changed) {
+    saveLeads();
+  }
+  return changed;
+}
+
+function prefillProfileForm() {
+  if (!profileForm) return;
+  if (!currentUser) {
+    profileForm.reset();
+    if (profileFormInfo) profileFormInfo.textContent = '';
+    return;
+  }
+  const record = getUserByUsername(currentUser.username);
+  if (!record) return;
+  if (profileFirstName) profileFirstName.value = record.firstName || '';
+  if (profileLastName) profileLastName.value = record.lastName || '';
+  if (profileEmail) profileEmail.value = record.email || '';
+  if (profileCompanyPhone) profileCompanyPhone.value = record.companyPhone || '';
+  if (profilePersonalPhone) profilePersonalPhone.value = record.personalPhone || '';
+  if (profilePhoto) profilePhoto.value = record.photo || '';
+  if (profileAddress) profileAddress.value = record.address || '';
+  if (profilePassword) profilePassword.value = '';
+  if (profilePasswordConfirm) profilePasswordConfirm.value = '';
+  if (profileFormInfo) profileFormInfo.textContent = '';
+}
+
+function handleProfileFormSubmit(event) {
+  event.preventDefault();
+  if (!currentUser) return;
+  const record = getUserByUsername(currentUser.username);
+  if (!record) return;
+  const newPassword = profilePassword?.value || '';
+  const confirmPassword = profilePasswordConfirm?.value || '';
+  if (newPassword || confirmPassword) {
+    if (newPassword !== confirmPassword) {
+      if (profileFormInfo) profileFormInfo.textContent = 'Las contraseñas no coinciden.';
+      return;
+    }
+    record.password = newPassword;
+  }
+  record.firstName = profileFirstName?.value.trim() || '';
+  record.lastName = profileLastName?.value.trim() || '';
+  record.email = profileEmail?.value.trim() || '';
+  record.companyPhone = profileCompanyPhone?.value.trim() || '';
+  record.personalPhone = profilePersonalPhone?.value.trim() || '';
+  record.photo = profilePhoto?.value.trim() || '';
+  record.address = profileAddress?.value.trim() || '';
+  saveUsers();
+  updateAvailableUsersHint();
+  const leadsUpdated = updateLeadAssignmentsForUser(record);
+  setCurrentUser(buildUserSnapshot(record));
+  if (profileFormInfo) profileFormInfo.textContent = 'Perfil actualizado correctamente.';
+  if (leadsUpdated) {
+    renderLeadSummary();
+    renderAdminLeadList();
+    renderCommercialPanel();
+    renderTeamPanel();
+  }
+  renderUserList();
+}
+
+function toggleManagedUsersField(role) {
+  if (!managedUsersField) return;
+  if (role === 'lider') {
+    managedUsersField.classList.remove('hidden');
+  } else {
+    managedUsersField.classList.add('hidden');
+  }
+}
+
+function populateManagedUserOptions(selected = []) {
+  if (!userManagedUsers) return;
+  const select = userManagedUsers;
+  const managerUsername = editingUser || userUsername?.value.trim().toLowerCase() || '';
+  const available = users
+    .filter(user => user.role === 'comercial' && user.username !== managerUsername)
+    .sort((a, b) => userDisplayName(a).localeCompare(userDisplayName(b), 'es'));
+  const selectedSet = new Set((selected || []).filter(Boolean));
+  select.innerHTML = '';
+  if (!available.length) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'Sin comerciales disponibles';
+    option.disabled = true;
+    select.appendChild(option);
+    return;
+  }
+  available.forEach(user => {
+    const option = document.createElement('option');
+    option.value = user.username;
+    option.textContent = `${userDisplayName(user)} (${user.username})`;
+    option.selected = selectedSet.has(user.username);
+    select.appendChild(option);
+  });
+  selectedSet.forEach(value => {
+    if (!available.some(user => user.username === value)) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = `${value} (no disponible)`;
+      option.selected = true;
+      option.disabled = true;
+      select.appendChild(option);
+    }
+  });
+}
+
+function resetUserForm(options = {}) {
+  if (!userForm) return;
+  userForm.reset();
+  editingUser = null;
+  if (userUsername) {
+    userUsername.value = '';
+    userUsername.removeAttribute('disabled');
+  }
+  if (userPassword) {
+    userPassword.value = '';
+    userPassword.placeholder = 'Obligatoria al crear';
+  }
+  if (saveUserBtn) saveUserBtn.textContent = 'Crear usuario';
+  if (!options.keepMessage && userFormInfo) userFormInfo.textContent = '';
+  toggleManagedUsersField(userRole?.value || 'basico');
+  populateManagedUserOptions([]);
+}
+
+function prefillUserForm(user) {
+  if (!userForm || !user) return;
+  editingUser = user.username;
+  if (userUsername) {
+    userUsername.value = user.username;
+    userUsername.setAttribute('disabled', 'true');
+  }
+  if (userPassword) {
+    userPassword.value = '';
+    userPassword.placeholder = 'Deja en blanco para mantenerla';
+  }
+  if (userRole) userRole.value = user.role;
+  if (userEmail) userEmail.value = user.email || '';
+  if (userFirstName) userFirstName.value = user.firstName || '';
+  if (userLastName) userLastName.value = user.lastName || '';
+  if (userCompanyPhone) userCompanyPhone.value = user.companyPhone || '';
+  if (userPersonalPhone) userPersonalPhone.value = user.personalPhone || '';
+  if (userPhoto) userPhoto.value = user.photo || '';
+  if (userAddress) userAddress.value = user.address || '';
+  toggleManagedUsersField(user.role);
+  populateManagedUserOptions(user.role === 'lider' ? user.managedUsers : []);
+  if (userFormInfo) userFormInfo.textContent = `Editando el usuario «${userDisplayName(user)}» (${user.username}).`;
+  if (saveUserBtn) saveUserBtn.textContent = 'Actualizar usuario';
+}
+
+function handleUserFormSubmit(event) {
+  event.preventDefault();
+  if (!userForm) return;
+  const usernameValue = userUsername?.value.trim().toLowerCase() || '';
+  const isEditing = Boolean(editingUser);
+  const targetUsername = isEditing ? editingUser : usernameValue;
+  if (!usernameValue) {
+    if (userFormInfo) userFormInfo.textContent = 'El nombre de usuario es obligatorio.';
+    return;
+  }
+  if (!isEditing && users.some(u => u.username === usernameValue)) {
+    if (userFormInfo) userFormInfo.textContent = 'Ya existe un usuario con ese identificador.';
+    return;
+  }
+  const roleValue = userRole?.value || 'basico';
+  const passwordValue = userPassword?.value || '';
+  if (!isEditing && !passwordValue) {
+    if (userFormInfo) userFormInfo.textContent = 'Debes indicar una contraseña inicial.';
+    return;
+  }
+  let record = isEditing ? getUserByUsername(editingUser) : null;
+  if (isEditing && !record) {
+    if (userFormInfo) userFormInfo.textContent = 'No se encontró el usuario seleccionado.';
+    return;
+  }
+  const managedSelection = roleValue === 'lider'
+    ? Array.from(userManagedUsers?.selectedOptions || []).map(option => option.value).filter(Boolean)
+    : [];
+  if (isEditing) {
+    if (record.role === 'admin' && roleValue !== 'admin') {
+      const otherAdmins = users.filter(user => user.username !== record.username && user.role === 'admin');
+      if (!otherAdmins.length) {
+        if (userFormInfo) userFormInfo.textContent = 'Debe permanecer al menos un administrador activo.';
+        return;
+      }
+    }
+    record.role = roleValue;
+    record.email = userEmail?.value.trim() || '';
+    record.firstName = userFirstName?.value.trim() || '';
+    record.lastName = userLastName?.value.trim() || '';
+    record.companyPhone = userCompanyPhone?.value.trim() || '';
+    record.personalPhone = userPersonalPhone?.value.trim() || '';
+    record.photo = userPhoto?.value.trim() || '';
+    record.address = userAddress?.value.trim() || '';
+    if (passwordValue) record.password = passwordValue;
+    record.managedUsers = roleValue === 'lider' ? managedSelection : [];
+    if (roleValue !== 'comercial') {
+      removeFromManagedTeams(record.username);
+    }
+    if (userFormInfo) userFormInfo.textContent = 'Usuario actualizado correctamente.';
+  } else {
+    const payload = normaliseUser({
+      username: usernameValue,
+      password: passwordValue,
+      role: roleValue,
+      email: userEmail?.value.trim() || '',
+      firstName: userFirstName?.value.trim() || '',
+      lastName: userLastName?.value.trim() || '',
+      companyPhone: userCompanyPhone?.value.trim() || '',
+      personalPhone: userPersonalPhone?.value.trim() || '',
+      photo: userPhoto?.value.trim() || '',
+      address: userAddress?.value.trim() || '',
+      managedUsers: managedSelection
+    });
+    users.push(payload);
+    if (userFormInfo) userFormInfo.textContent = 'Usuario creado correctamente.';
+  }
+  cleanManagedUsers(users);
+  saveUsers();
+  updateAvailableUsersHint();
+  renderUserList();
+  populateManagedUserOptions(isEditing && roleValue === 'lider' ? managedSelection : []);
+  const updatedRecord = getUserByUsername(targetUsername);
+  const leadsUpdated = updateLeadAssignmentsForUser(updatedRecord);
+  if (currentUser?.username === targetUsername) {
+    if (updatedRecord) {
+      setCurrentUser(buildUserSnapshot(updatedRecord));
+      if (leadsUpdated) {
+        renderLeadSummary();
+        renderAdminLeadList();
+        renderCommercialPanel();
+        renderTeamPanel();
+      }
+    } else {
+      setCurrentUser(null);
+    }
+  } else {
+    if (currentUser?.role === 'lider') {
+      const manager = getUserByUsername(currentUser.username);
+      if (manager) {
+        setCurrentUser(buildUserSnapshot(manager));
+      }
+    }
+    if (leadsUpdated) {
+      renderLeadSummary();
+      renderAdminLeadList();
+      renderCommercialPanel();
+      renderTeamPanel();
+    } else {
+      renderTeamPanel();
+    }
+  }
+  resetUserForm({ keepMessage: true });
+}
+
+function handleUserListAction(event) {
+  const button = event.target.closest('button[data-action][data-username]');
+  if (!button) return;
+  const action = button.dataset.action;
+  const username = button.dataset.username;
+  const user = getUserByUsername(username);
+  if (!user) return;
+  if (action === 'edit-user') {
+    prefillUserForm(user);
+    userForm?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (action === 'delete-user') {
+    if (currentUser?.username === username) {
+      alert('No puedes eliminar tu propia cuenta mientras está iniciada la sesión.');
+      return;
+    }
+    if (user.role === 'admin') {
+      const otherAdmins = users.filter(entry => entry.username !== username && entry.role === 'admin');
+      if (!otherAdmins.length) {
+        alert('Debe permanecer al menos un administrador activo.');
+        return;
+      }
+    }
+    if (!confirm(`¿Seguro que deseas eliminar al usuario «${userDisplayName(user)}» (${user.username})?`)) {
+      return;
+    }
+    removeFromManagedTeams(username);
+    users = users.filter(entry => entry.username !== username);
+    cleanManagedUsers(users);
+    saveUsers();
+    updateAvailableUsersHint();
+    renderUserList();
+    renderTeamPanel();
+    if (editingUser === username) {
+      resetUserForm();
+    }
+    if (currentUser?.role === 'lider') {
+      const manager = getUserByUsername(currentUser.username);
+      if (manager) {
+        setCurrentUser(buildUserSnapshot(manager));
+      }
+    }
+  }
+}
+
+function renderUserList() {
+  if (!userListContainer) return;
+  if (!users.length) {
+    userListContainer.innerHTML = '<p class="dim">Aún no hay cuentas registradas.</p>';
+    return;
+  }
+  const rows = users
+    .slice()
+    .sort((a, b) => userDisplayName(a).localeCompare(userDisplayName(b), 'es'))
+    .map(user => {
+      const name = userDisplayName(user);
+      const email = user.email || '-';
+      const companyPhone = user.companyPhone || '-';
+      const personalPhone = user.personalPhone || '-';
+      const addressLine = user.address ? `<br><span class="dim">${user.address}</span>` : '';
+      const members = Array.isArray(user.managedUsers) ? user.managedUsers : [];
+      const memberNames = members
+        .map(username => {
+          const record = getUserByUsername(username);
+          return record ? userDisplayName(record) : username;
+        })
+        .filter(Boolean);
+      const teamCount = user.role === 'lider' ? members.length : 0;
+      const teamTitle = memberNames.join(', ');
+      const deleteDisabled = currentUser?.username === user.username ? 'disabled' : '';
+      const roleText = roleLabel(user.role);
+      const teamCell = user.role === 'lider'
+        ? `<td${teamTitle ? ` title="${teamTitle.replace(/"/g, '&quot;')}"` : ''}>${teamCount}</td>`
+        : '<td>-</td>';
+      return `
+        <tr data-username="${user.username}">
+          <td><strong>${name}</strong><br><span class="dim">${user.username}</span>${addressLine}</td>
+          <td>${roleText}</td>
+          <td>${email}</td>
+          <td>${companyPhone}</td>
+          <td>${personalPhone}</td>
+          ${teamCell}
+          <td>
+            <div class="controls">
+              <button class="smallbtn" data-action="edit-user" data-username="${user.username}">Editar</button>
+              <button class="smallbtn" data-action="delete-user" data-username="${user.username}" ${deleteDisabled}>Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    })
+    .join('');
+  userListContainer.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Rol</th>
+          <th>Correo</th>
+          <th>Tel. empresa</th>
+          <th>Tel. personal</th>
+          <th>Equipo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   grid = $('#grid');
   countEl = $('#count');
@@ -1143,6 +2049,7 @@ document.addEventListener('DOMContentLoaded', () => {
   authNoticeBasic = $('#authNoticeBasic');
   adminPanel = $('#adminPanel');
   commercialPanel = $('#commercialPanel');
+  usageGuide = $('#usageGuide');
   userInfo = $('#userInfo');
   loginModal = $('#loginModal');
   loginForm = $('#loginForm');
@@ -1178,18 +2085,96 @@ document.addEventListener('DOMContentLoaded', () => {
   clientContactInput = $('#clientContact');
   clientNotesInput = $('#clientNotes');
 
+  profilePanel = $('#profilePanel');
+  profileForm = $('#profileForm');
+  profileFormInfo = $('#profileFormInfo');
+  profileFirstName = $('#profileFirstName');
+  profileLastName = $('#profileLastName');
+  profileEmail = $('#profileEmail');
+  profileCompanyPhone = $('#profileCompanyPhone');
+  profilePersonalPhone = $('#profilePersonalPhone');
+  profilePhoto = $('#profilePhoto');
+  profileAddress = $('#profileAddress');
+  profilePassword = $('#profilePassword');
+  profilePasswordConfirm = $('#profilePasswordConfirm');
+
+  teamPanel = $('#teamPanel');
+  teamSummary = $('#teamSummary');
+  teamLeadList = $('#teamLeadList');
+
+  userForm = $('#userForm');
+  userFormInfo = $('#userFormInfo');
+  userUsername = $('#userUsername');
+  userPassword = $('#userPassword');
+  userRole = $('#userRole');
+  userEmail = $('#userEmail');
+  userFirstName = $('#userFirstName');
+  userLastName = $('#userLastName');
+  userCompanyPhone = $('#userCompanyPhone');
+  userPersonalPhone = $('#userPersonalPhone');
+  userPhoto = $('#userPhoto');
+  userAddress = $('#userAddress');
+  userManagedUsers = $('#userManagedUsers');
+  managedUsersField = $('#managedUsersField');
+  userListContainer = $('#userList');
+  saveUserBtn = $('#saveUserBtn');
+  cancelUserEdit = $('#cancelUserEdit');
+
+  users = loadUsersFromStorage();
   tariffs = loadTariffsFromStorage();
   leads = loadLeadsFromStorage();
+
+  updateAvailableUsersHint();
+  renderUserList();
+  resetUserForm();
 
   initFilters();
   aplicarFiltros();
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
+  renderTeamPanel();
 
   $('#filtrar')?.addEventListener('click', aplicarFiltros);
   $('#limpiar')?.addEventListener('click', () => { resetFilters(); aplicarFiltros(); });
   $('#imprimir')?.addEventListener('click', () => window.print());
+
+  if (usageGuide) {
+    $$('#usageGuide [data-demo-login]').forEach(button => {
+      button.addEventListener('click', () => {
+        const username = button.getAttribute('data-demo-login');
+        if (!username) return;
+        const record = getUserByUsername(username);
+        showLoginModal({
+          username,
+          password: record?.password || ''
+        });
+      });
+    });
+    $$('#usageGuide [data-scroll-target]').forEach(button => {
+      button.addEventListener('click', () => {
+        const targetSelector = button.getAttribute('data-scroll-target');
+        if (!targetSelector) return;
+        const target = document.querySelector(targetSelector);
+        if (!target) return;
+        if (target.classList.contains('hidden')) {
+          if (!currentUser) {
+            showLoginModal();
+            return;
+          }
+          if (targetSelector === '#adminPanel' && currentUser?.role !== 'admin') {
+            authReminder?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+          }
+          if (targetSelector === '#teamPanel' && currentUser?.role !== 'lider') {
+            authReminder?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+          }
+        }
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
 
   loginForm?.addEventListener('submit', handleLoginSubmit);
   $('#cancelLogin')?.addEventListener('click', hideLoginModal);
@@ -1199,12 +2184,25 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#cancelLead')?.addEventListener('click', closeLeadModal);
   leadModal?.addEventListener('click', (event) => { if (event.target === leadModal) closeLeadModal(); });
 
+  profileForm?.addEventListener('submit', handleProfileFormSubmit);
+
   tarifaForm?.addEventListener('submit', handleTarifaFormSubmit);
   cancelarEdicionBtn?.addEventListener('click', () => resetTariffForm());
   tarifaList?.addEventListener('click', handleTarifaListAction);
 
   leadList?.addEventListener('click', handleLeadListAction);
+  teamLeadList?.addEventListener('click', handleLeadListAction);
   leadFilter?.addEventListener('change', renderAdminLeadList);
+
+  userForm?.addEventListener('submit', handleUserFormSubmit);
+  cancelUserEdit?.addEventListener('click', () => resetUserForm());
+  userRole?.addEventListener('change', () => {
+    const role = userRole.value;
+    toggleManagedUsersField(role);
+    const selected = editingUser ? (getUserByUsername(editingUser)?.managedUsers || []) : [];
+    populateManagedUserOptions(role === 'lider' ? selected : []);
+  });
+  userListContainer?.addEventListener('click', handleUserListAction);
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
@@ -1214,8 +2212,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const savedUser = loadSessionUser();
-  if (savedUser) {
-    setCurrentUser(savedUser, { persist: false });
+  if (savedUser?.username) {
+    const record = getUserByUsername(savedUser.username);
+    if (record) {
+      setCurrentUser(buildUserSnapshot(record), { persist: false });
+    } else {
+      persistSessionUser(null);
+      updateUIForRole();
+    }
   } else {
     updateUIForRole();
   }
