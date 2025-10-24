@@ -31,6 +31,45 @@ body {
 .brand { display:flex; align-items:center; gap: 12px; }
 .brand img { height: 42px; }
 .brand h1 { margin: 0; font-size: 20px; letter-spacing: .5px; font-weight: 600; }
+.hidden { display: none !important; }
+.user-info { display:flex; justify-content:flex-end; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.user-info .name { font-weight:600; }
+.role-tag { display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:12px; text-transform:uppercase; letter-spacing:.6px; }
+.role-tag[data-role="admin"] { background: rgba(78,143,202,0.15); border-color: rgba(78,143,202,0.55); }
+.role-tag[data-role="comercial"] { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.55); }
+.role-tag[data-role="basico"] { background: rgba(148,163,184,0.12); border-color: rgba(148,163,184,0.4); }
+.notice { background: rgba(15,21,34,0.85); border: 1px solid rgba(148,163,184,0.2); border-radius: var(--radius); padding: 18px; margin-bottom: 18px; }
+.notice h2, .notice h3 { margin-top:0; }
+.section-title { font-size: 18px; font-weight: 700; margin:0 0 8px; }
+.section-subtitle { font-size: 15px; font-weight: 600; margin: 16px 0 8px; }
+.stacked { display:flex; flex-direction:column; gap:12px; }
+.form-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:12px; }
+.form-grid .full { grid-column: 1 / -1; }
+textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:#0b1120; color:var(--light); min-height:88px; resize:vertical; }
+.data-table { width:100%; border-collapse:collapse; margin-top:12px; }
+.data-table th, .data-table td { border-bottom:1px solid rgba(255,255,255,0.08); padding:10px; text-align:left; font-size:13px; }
+.data-table tbody tr:hover { background: rgba(78,143,202,0.08); }
+.status-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+.status-pill[data-status="pendiente"] { background: rgba(244,178,55,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.45); }
+.status-pill[data-status="vendido"] { background: rgba(34,197,94,0.18); color:#86efac; border:1px solid rgba(34,197,94,0.45); }
+.lead-list { margin-top:12px; display:flex; flex-direction:column; gap:12px; }
+.lead-card { border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:12px 14px; background:#0b1120; }
+.lead-card header { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.lead-card .meta { font-size:12px; color:#93a0b5; }
+.lead-card .body { margin-top:8px; font-size:13px; line-height:1.45; }
+.lead-card footer { margin-top:12px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:12px; color:#93a0b5; }
+.modal { position:fixed; inset:0; background:rgba(11,15,23,0.85); display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); z-index:99; }
+.modal.hidden { display:none !important; }
+.modal .modal-content { background:#0f1522; border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px; max-width:420px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.45); }
+.modal .modal-content h3 { margin-top:0; }
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+.tile-actions { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
+.flex-between { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.login-hints { margin:0; padding-left:20px; color:#cbd5f5; font-size:14px; }
+.login-hints li + li { margin-top:6px; }
+.muted-link { color:#93a0b5; font-size:12px; }
+.tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.3); font-size:11px; letter-spacing:.4px; text-transform:uppercase; }
+.highlight { color:#fbbf24; font-weight:600; }
 .toolbar {
   display:grid;
   grid-template-columns: repeat(6, minmax(0,1fr));
@@ -97,6 +136,9 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <h1>Panel de Tarifas – Comerciales</h1>
       <span class="badge" style="margin-left:auto">100% Offline</span>
     </div>
+    <div class="user-info" id="userInfo">
+      <button class="primary" id="openLogin">Iniciar sesión</button>
+    </div>
     <div class="toolbar">
       <div class="card">
         <label class="label">Compañía</label>
@@ -141,42 +183,363 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
   </div>
 </header>
 
+<div id="loginModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3>Iniciar sesión</h3>
+    <p class="dim" style="margin-top:-4px;">Selecciona un perfil disponible e introduce sus credenciales.</p>
+    <form id="loginForm" class="stacked">
+      <div>
+        <label class="label" for="loginUser">Usuario</label>
+        <input id="loginUser" type="text" autocomplete="username" required />
+      </div>
+      <div>
+        <label class="label" for="loginPass">Contraseña</label>
+        <input id="loginPass" type="password" autocomplete="current-password" required />
+      </div>
+      <div class="dim" id="loginError" style="min-height:18px;"></div>
+      <div class="modal-actions">
+        <button type="button" class="smallbtn" id="cancelLogin">Cancelar</button>
+        <button type="submit" class="primary">Entrar</button>
+      </div>
+    </form>
+    <p class="muted-link">Perfiles disponibles: <code>admin</code>, <code>sofia</code>, <code>ana</code>.</p>
+  </div>
+</div>
+
+<div id="leadModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3 id="leadModalTitle">Enviar propuesta</h3>
+    <p class="dim">Tarifa seleccionada: <span class="highlight" id="leadTariffName"></span></p>
+    <form id="leadForm" class="stacked">
+      <input type="hidden" id="leadTariffId" />
+      <div>
+        <label class="label" for="clientName">Nombre del cliente</label>
+        <input id="clientName" type="text" placeholder="Nombre y apellidos" required />
+      </div>
+      <div>
+        <label class="label" for="clientContact">Datos de contacto</label>
+        <input id="clientContact" type="text" placeholder="Teléfono, email..." required />
+      </div>
+      <div>
+        <label class="label" for="clientNotes">Notas adicionales</label>
+        <textarea id="clientNotes" placeholder="Observaciones o necesidades específicas"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="smallbtn" id="cancelLead">Cancelar</button>
+        <button type="submit" class="primary">Enviar al administrador</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <main class="wrap">
+  <section id="authReminder" class="notice">
+    <div id="authNoticeAnonymous">
+      <h2 class="section-title">Acceso restringido</h2>
+      <p>Esta demo permite simular los tres perfiles principales: administrador, comercial y lector básico. Pulsa <strong>Iniciar sesión</strong> para usar uno de los perfiles disponibles.</p>
+      <ul class="login-hints">
+        <li><strong>Administrador:</strong> usuario <code>admin</code> · contraseña <code>admin123</code>.</li>
+        <li><strong>Comercial:</strong> usuario <code>sofia</code> · contraseña <code>comercial123</code>.</li>
+        <li><strong>Básico:</strong> usuario <code>ana</code> · contraseña <code>basico123</code>.</li>
+      </ul>
+    </div>
+    <div id="authNoticeBasic" class="hidden">
+      <h2 class="section-title">Modo lectura</h2>
+      <p>Has iniciado sesión como <span class="role-tag" data-role="basico">usuario básico</span>. Puedes consultar las tarifas disponibles, pero las acciones de edición y envío de ventas están deshabilitadas.</p>
+    </div>
+  </section>
+
+  <section id="commercialPanel" class="card hidden">
+    <h2 class="section-title">Mis oportunidades</h2>
+    <p class="dim">Selecciona una tarifa y pulsa <strong>Enviar propuesta</strong> para remitir los datos del cliente al administrador.</p>
+    <div id="commercialNotifications" class="notice hidden"></div>
+    <div id="commercialLeads" class="lead-list"></div>
+  </section>
+
+  <section id="adminPanel" class="card hidden">
+    <h2 class="section-title">Panel de administración</h2>
+    <p class="dim">Desde aquí puedes crear, editar o eliminar tarifas, así como revisar las oportunidades enviadas por los comerciales.</p>
+    <div class="section-subtitle">Gestión de tarifas</div>
+    <form id="tarifaForm" class="stacked">
+      <input type="hidden" id="tarifaId" />
+      <div class="form-grid">
+        <div>
+          <label class="label" for="tarifaCodigo">Código</label>
+          <input id="tarifaCodigo" type="text" required />
+        </div>
+        <div>
+          <label class="label" for="tarifaNombre">Nombre</label>
+          <input id="tarifaNombre" type="text" required />
+        </div>
+        <div>
+          <label class="label" for="tarifaCompania">Compañía</label>
+          <input id="tarifaCompania" type="text" required />
+        </div>
+        <div>
+          <label class="label" for="tarifaFamilia">Familia</label>
+          <input id="tarifaFamilia" type="text" required />
+        </div>
+        <div>
+          <label class="label" for="tarifaLineas">Líneas</label>
+          <input id="tarifaLineas" type="number" min="0" step="1" />
+        </div>
+        <div>
+          <label class="label" for="tarifaPrecio">Precio mensual</label>
+          <input id="tarifaPrecio" type="number" step="0.01" min="0" required />
+        </div>
+        <div>
+          <label class="label" for="tarifaMoneda">Moneda</label>
+          <input id="tarifaMoneda" type="text" value="EUR" />
+        </div>
+        <div>
+          <label class="label" for="tarifaPermanencia">Permanencia</label>
+          <input id="tarifaPermanencia" type="text" placeholder="Sí/No/meses" />
+        </div>
+        <div>
+          <label class="label" for="tarifaDesde">Vigente desde</label>
+          <input id="tarifaDesde" type="date" />
+        </div>
+        <div>
+          <label class="label" for="tarifaHasta">Vigente hasta</label>
+          <input id="tarifaHasta" type="date" />
+        </div>
+        <div class="full">
+          <label class="label" for="tarifaDescripcion">Descripción</label>
+          <textarea id="tarifaDescripcion" placeholder="Detalle comercial de la tarifa"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
+        <button type="submit" class="primary" id="guardarTarifa">Guardar tarifa</button>
+        <button type="button" class="smallbtn" id="cancelarEdicion">Cancelar</button>
+        <span class="dim" id="tarifaFormInfo"></span>
+      </div>
+    </form>
+    <div id="tarifaList"></div>
+
+    <hr class="sep" />
+    <div class="flex-between">
+      <div class="section-subtitle" style="margin:0;">Seguimiento de comerciales</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <label class="label" for="leadFilter" style="margin:0;">Filtrar por comercial</label>
+        <select id="leadFilter">
+          <option value="">Todos</option>
+        </select>
+      </div>
+    </div>
+    <div id="leadSummary" class="kpis" style="margin-top:12px;"></div>
+    <div id="leadList" class="lead-list"></div>
+  </section>
+
   <div class="grid" id="grid"></div>
   <p class="footer">Hecho con cariño en tonos <strong>azul</strong>, <strong>negro</strong> y <strong>blanco</strong>. Datos de tarifas embebidos – no requiere conexión.</p>
 </main>
 
 <script>
-const DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 12.5, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "FIBRA 300 Y 2 LINEAS CON LLAMADAS ILIMITADAS Y 50 GI COMPARTIDOS", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0002", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 99.9, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "qwe", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0003", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "zxc", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0004", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 258.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "rty", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0005", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 46.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "fgh", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0006", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 21.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "cvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0007", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 12.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "tyu", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0008", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 45.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0009", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 14.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "fvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0010", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 13.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "uik", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0011", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0012", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 57.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "pñl", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0013", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 912.5, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "R45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0014", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 999.9, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "RF43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0015", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 978.0, "compañia": "simyo", "familia": "MEDIA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "F34F", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0016", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 958.0, "compañia": "jazztel", "familia": "MEDIA", "moneda": "EUR", "permanencia": "no", "descripción": "34F45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0017", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 946.0, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "34F43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0018", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 921.0, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F3RF", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0019", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 997.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "656H", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0020", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 5745.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "9 meses", "descripción": "H768", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0021", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 6745.0, "compañia": "mm", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "no", "descripción": "5G34G", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0022", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 5868.0, "compañia": "pp", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "12 meses", "descripción": "F3RT", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0023", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 9999.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F324TG6", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0024", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 3858.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "EF5655", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}];
-const $ = sel => document.querySelector(sel);
-const grid = $('#grid');
-const countEl = $('#count');
-const uniq = (arr) => Array.from(new Set(arr.filter(x => x !== null && x !== undefined && x !== '' ))).sort((a,b)=> (''+a).localeCompare(''+b, 'es', {numeric:true}));
+const BASE_DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 12.5, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "FIBRA 300 Y 2 LINEAS CON LLAMADAS ILIMITADAS Y 50 GI COMPARTIDOS", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0002", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 99.9, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "qwe", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0003", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "zxc", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0004", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 258.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "rty", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0005", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 46.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "fgh", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0006", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 21.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "cvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0007", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 12.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "tyu", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0008", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 45.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0009", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 14.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "fvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0010", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 13.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "uik", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0011", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0012", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 57.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "pñl", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0013", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 912.5, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "R45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0014", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 999.9, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "RF43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0015", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 978.0, "compañia": "simyo", "familia": "MEDIA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "F34F", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0016", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 958.0, "compañia": "jazztel", "familia": "MEDIA", "moneda": "EUR", "permanencia": "no", "descripción": "34F45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0017", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 946.0, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "34F43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0018", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 921.0, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F3RF", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0019", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 997.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "656H", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0020", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 5745.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "9 meses", "descripción": "H768", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0021", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 6745.0, "compañia": "mm", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "no", "descripción": "5G34G", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0022", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 5868.0, "compañia": "pp", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "12 meses", "descripción": "F3RT", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0023", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 9999.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F324TG6", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0024", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 3858.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "EF5655", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}];
+
+const STORAGE_KEYS = {
+  tariffs: 'panel.tarifas.v1',
+  leads: 'panel.leads.v1',
+  session: 'panel.session.v1'
+};
+
+const USERS = [
+  { username: 'admin', password: 'admin123', role: 'admin', name: 'Alicia Admin' },
+  { username: 'sofia', password: 'comercial123', role: 'comercial', name: 'Sofía Comercial' },
+  { username: 'ana', password: 'basico123', role: 'basico', name: 'Ana Lectora' }
+];
+
+const ROLE_LABELS = { admin: 'Administrador', comercial: 'Comercial', basico: 'Básico' };
+
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+const uniq = (arr) => Array.from(new Set(arr.filter(x => x !== null && x !== undefined && x !== '')))
+  .sort((a, b) => ('' + a).localeCompare('' + b, 'es', { numeric: true }));
+
+let grid,
+  countEl,
+  authReminder,
+  authNoticeAnonymous,
+  authNoticeBasic,
+  adminPanel,
+  commercialPanel,
+  userInfo,
+  loginModal,
+  loginForm,
+  loginError,
+  loginUserInput,
+  loginPassInput,
+  leadModal,
+  leadForm,
+  leadTariffName,
+  leadTariffIdInput,
+  commercialNotifications,
+  commercialLeads,
+  leadSummary,
+  leadList,
+  leadFilter,
+  tarifaList,
+  tarifaForm,
+  tarifaFormInfo,
+  guardarTarifaBtn,
+  cancelarEdicionBtn,
+  tarifaCodigo,
+  tarifaNombre,
+  tarifaCompania,
+  tarifaFamilia,
+  tarifaLineas,
+  tarifaPrecio,
+  tarifaMoneda,
+  tarifaPermanencia,
+  tarifaDesde,
+  tarifaHasta,
+  tarifaDescripcion,
+  clientNameInput,
+  clientContactInput,
+  clientNotesInput;
+
+let currentUser = null;
+let tariffs = [];
+let leads = [];
+let editingTariffId = null;
+let commercialNoticeTimeout = null;
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function createId(prefix = 'id') {
+  return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
+}
+
+function normaliseTariff(item) {
+  const clone = { ...item };
+  clone.id = clone.id || clone.codigo || createId('tarifa');
+  clone.lineas = clone.lineas === '' || clone.lineas === undefined ? null : clone.lineas;
+  if (clone.lineas !== null) clone.lineas = Number(clone.lineas);
+  clone.precio = clone.precio === '' || clone.precio === undefined ? null : clone.precio;
+  if (clone.precio !== null) clone.precio = Number(clone.precio);
+  clone.moneda = clone.moneda || 'EUR';
+  return clone;
+}
+
+function loadTariffsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.tariffs);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(normaliseTariff);
+      }
+    }
+  } catch (error) {
+    console.warn('No se pudieron cargar las tarifas guardadas', error);
+  }
+  return BASE_DATA.map(normaliseTariff);
+}
+
+function saveTariffs() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.tariffs, JSON.stringify(tariffs));
+  } catch (error) {
+    console.warn('No se pudieron guardar las tarifas', error);
+  }
+}
+
+function loadLeadsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.leads);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(lead => ({
+          ...lead,
+          notified: lead.notified !== undefined ? lead.notified : true
+        }));
+      }
+    }
+  } catch (error) {
+    console.warn('No se pudieron cargar las oportunidades', error);
+  }
+  return [];
+}
+
+function saveLeads() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.leads, JSON.stringify(leads));
+  } catch (error) {
+    console.warn('No se pudieron guardar las oportunidades', error);
+  }
+}
+
+function loadSessionUser() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEYS.session);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {
+    console.warn('No se pudo restaurar la sesión', error);
+  }
+  return null;
+}
+
+function persistSessionUser(user) {
+  try {
+    if (user) {
+      sessionStorage.setItem(STORAGE_KEYS.session, JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem(STORAGE_KEYS.session);
+    }
+  } catch (error) {
+    console.warn('No se pudo actualizar la sesión', error);
+  }
+}
+
+function roleLabel(role) {
+  return ROLE_LABELS[role] || role;
+}
+
+function populateFilterOptions(preserve = true) {
+  const companiaSelect = $('#compania');
+  const familiaSelect = $('#familia');
+  const lineasSelect = $('#lineas');
+  if (!companiaSelect || !familiaSelect || !lineasSelect) return;
+  const previous = preserve
+    ? { compania: companiaSelect.value, familia: familiaSelect.value, lineas: lineasSelect.value }
+    : { compania: '', familia: '', lineas: '' };
+  const companias = uniq(tariffs.map(x => x['compañia'])).filter(Boolean);
+  const familias = uniq(tariffs.map(x => x['familia'])).filter(Boolean);
+  const lineas = uniq(tariffs.map(x => (x.lineas !== null && x.lineas !== undefined ? String(x.lineas) : ''))).filter(Boolean);
+  const fill = (select, values, placeholder) => {
+    select.innerHTML = `<option value="">${placeholder}</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
+  };
+  fill(companiaSelect, companias, 'Todas');
+  fill(familiaSelect, familias, 'Todas');
+  fill(lineasSelect, lineas, 'Todas');
+  if (preserve) {
+    companiaSelect.value = previous.compania || '';
+    familiaSelect.value = previous.familia || '';
+    lineasSelect.value = previous.lineas || '';
+  }
+}
 
 function initFilters() {
-  const companias = uniq(DATA.map(x => x['compañia']));
-  const familias = uniq(DATA.map(x => x['familia']));
-  const lineas = uniq(DATA.map(x => x['lineas']));
-  const fill = (id, values, placeholder='Todas') => {
-    const el = $(id);
-    el.innerHTML = `<option value="">${placeholder}</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
-  };
-  fill('#compania', companias, 'Todas');
-  fill('#familia', familias, 'Todas');
-  fill('#lineas', lineas, 'Todas');
-  $('#fecha').value = new Date().toISOString().slice(0,10);
+  populateFilterOptions(false);
+  const fecha = $('#fecha');
+  if (fecha) fecha.value = todayISO();
 }
 
 function iconSVG(kind) {
-  if (kind==='euro') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 5c-4.418 0-8 3.582-8 8s3.582 8 8 8" stroke="currentColor" stroke-width="2"/><path d="M3 10h8M3 14h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
-  if (kind==='calendar') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M3 10h18" stroke="currentColor" stroke-width="2"/></svg>`;
-  if (kind==='sim') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="2"/><path d="M7 12h10M7 16h10M7 8h6" stroke="currentColor" stroke-width="2"/></svg>`;
-  if (kind==='company') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21V7l9-4 9 4v14" stroke="currentColor" stroke-width="2"/><path d="M9 21V9h6v12" stroke="currentColor" stroke-width="2"/></svg>`;
+  if (kind === 'euro') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 5c-4.418 0-8 3.582-8 8s3.582 8 8 8" stroke="currentColor" stroke-width="2"/><path d="M3 10h8M3 14h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  if (kind === 'calendar') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M3 10h18" stroke="currentColor" stroke-width="2"/></svg>`;
+  if (kind === 'sim') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="2"/><path d="M7 12h10M7 16h10M7 8h6" stroke="currentColor" stroke-width="2"/></svg>`;
+  if (kind === 'company') return `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21V7l9-4 9 4v14" stroke="currentColor" stroke-width="2"/><path d="M9 21V9h6v12" stroke="currentColor" stroke-width="2"/></svg>`;
   return '';
 }
 
 function inVigencia(item, fecha) {
-  const d = (s) => s ? new Date(s) : null;
+  const d = (s) => (s ? new Date(s) : null);
   const f = new Date(fecha);
   const desde = d(item.vigente_desde), hasta = d(item.vigente_hasta);
   if (desde && f < desde) return false;
@@ -185,64 +548,677 @@ function inVigencia(item, fecha) {
 }
 
 function matchesFilters(item) {
-  const c = $('#compania').value;
-  const f = $('#familia').value;
-  const l = $('#lineas').value;
-  const pmax = parseFloat($('#precioMax').value);
-  const perm = $('#permanencia').value;
-  const fecha = $('#fecha').value;
-  if (c && item['compañia'] !== c) return false;
-  if (f && item['familia'] !== f) return false;
-  if (l && String(item['lineas']) !== String(l)) return false;
-  if (!isNaN(pmax) && item.precio != null && Number(item.precio) > pmax) return false;
-  if (perm && String(item.permanencia).toLowerCase() !== perm.toLowerCase()) return false;
+  const compania = $('#compania')?.value || '';
+  const familia = $('#familia')?.value || '';
+  const lineas = $('#lineas')?.value || '';
+  const precioMax = parseFloat($('#precioMax')?.value || '');
+  const permanencia = $('#permanencia')?.value || '';
+  const fecha = $('#fecha')?.value || '';
+  if (compania && item['compañia'] !== compania) return false;
+  if (familia && item['familia'] !== familia) return false;
+  if (lineas && String(item.lineas) !== String(lineas)) return false;
+  if (!Number.isNaN(precioMax) && item.precio != null && Number(item.precio) > precioMax) return false;
+  if (permanencia && String(item.permanencia || '').toLowerCase() !== permanencia.toLowerCase()) return false;
   if (fecha && !inVigencia(item, fecha)) return false;
   return true;
 }
 
-function euro(n, moneda) { 
-  try { return new Intl.NumberFormat('es-ES', {style: 'currency', currency: moneda||'EUR'}).format(n); }
-  catch(e) { return (n.toFixed? n.toFixed(2): n) + ' ' + (moneda||'EUR'); }
+function euro(n, moneda) {
+  if (n === null || n === undefined || Number.isNaN(n)) return '-';
+  try {
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: moneda || 'EUR' }).format(n);
+  } catch (error) {
+    return `${n} ${moneda || 'EUR'}`;
+  }
 }
 
-function render(data) {
+function renderTariffGrid(data) {
+  if (!grid) return;
   grid.innerHTML = '';
+  if (!data.length) {
+    const empty = document.createElement('div');
+    empty.className = 'tile';
+    empty.style.gridColumn = 'span 12 / span 12';
+    empty.innerHTML = `<div class="title">Sin resultados</div><p class="dim">No hay tarifas que coincidan con los filtros seleccionados.</p>`;
+    grid.appendChild(empty);
+    if (countEl) countEl.textContent = '0';
+    return;
+  }
   data.forEach(item => {
     const tile = document.createElement('div');
     tile.className = 'tile';
+    const precio = item.precio != null ? euro(item.precio, item.moneda) : '-';
     tile.innerHTML = `
       <div style="display:flex; align-items:center; gap:8px;">
         <span class="badge">${iconSVG('company')} ${item['compañia']}</span>
-        <span class="badge">${iconSVG('sim')} ${(item['lineas']||'-')} líneas</span>
-        <span class="badge">${iconSVG('calendar')} Vigente: ${item.vigente_desde||'-'} → ${item.vigente_hasta||'-'}</span>
+        <span class="badge">${iconSVG('sim')} ${(item.lineas ?? '-')} líneas</span>
+        <span class="badge">${iconSVG('calendar')} Vigente: ${item.vigente_desde || '-'} → ${item.vigente_hasta || '-'} </span>
       </div>
       <div class="title" style="margin-top:8px;">${item.nombre}</div>
-      <div class="dim" style="margin-top:4px;">Código: <strong>${item.codigo}</strong> · Familia: <strong>${item.familia}</strong> · Permanencia: <strong>${item.permanencia}</strong></div>
+      <div class="dim" style="margin-top:4px;">Código: <strong>${item.codigo}</strong> · Familia: <strong>${item.familia || '-'}</strong> · Permanencia: <strong>${item.permanencia || '-'}</strong></div>
       <hr class="sep" />
       <div style="display:flex; align-items:baseline; gap:8px;">
-        <div class="price">${euro(item.precio, item.moneda)}</div>
+        <div class="price">${precio}</div>
         <div class="dim">/ mes</div>
       </div>
       <div class="kpis">
-        <div class="kpi"><div class="label">Descripción</div><div>${item['descripción']||''}</div></div>
+        <div class="kpi"><div class="label">Descripción</div><div>${item['descripción'] || ''}</div></div>
       </div>
     `;
+    const actions = document.createElement('div');
+    actions.className = 'tile-actions';
+    if (currentUser?.role === 'comercial') {
+      const leadBtn = document.createElement('button');
+      leadBtn.className = 'primary';
+      leadBtn.textContent = 'Enviar propuesta';
+      leadBtn.addEventListener('click', () => openLeadModal(item));
+      actions.appendChild(leadBtn);
+    }
+    if (currentUser?.role === 'admin') {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'smallbtn';
+      editBtn.textContent = 'Editar';
+      editBtn.addEventListener('click', () => {
+        prefillTariffForm(item);
+        const targetTop = tarifaForm?.offsetTop || adminPanel?.offsetTop || 0;
+        window.scrollTo({ top: targetTop, behavior: 'smooth' });
+      });
+      actions.appendChild(editBtn);
+    }
+    if (actions.children.length) {
+      tile.appendChild(actions);
+    }
     grid.appendChild(tile);
   });
-  countEl.textContent = data.length;
+  if (countEl) countEl.textContent = String(data.length);
 }
 
 function aplicarFiltros() {
-  const filtered = DATA.filter(matchesFilters);
-  render(filtered);
+  const filtered = tariffs.filter(matchesFilters);
+  renderTariffGrid(filtered);
+}
+
+function resetTariffForm(options = {}) {
+  if (!tarifaForm) return;
+  tarifaForm.reset();
+  editingTariffId = null;
+  if (tarifaMoneda) tarifaMoneda.value = tarifaMoneda.getAttribute('value') || 'EUR';
+  if (!options.keepMessage && tarifaFormInfo) tarifaFormInfo.textContent = '';
+  if (guardarTarifaBtn) guardarTarifaBtn.textContent = 'Guardar tarifa';
+}
+
+function prefillTariffForm(tariff) {
+  if (!tarifaForm) return;
+  editingTariffId = tariff.id;
+  if (tarifaCodigo) tarifaCodigo.value = tariff.codigo || '';
+  if (tarifaNombre) tarifaNombre.value = tariff.nombre || '';
+  if (tarifaCompania) tarifaCompania.value = tariff['compañia'] || '';
+  if (tarifaFamilia) tarifaFamilia.value = tariff.familia || '';
+  if (tarifaLineas) tarifaLineas.value = tariff.lineas != null ? tariff.lineas : '';
+  if (tarifaPrecio) tarifaPrecio.value = tariff.precio != null ? tariff.precio : '';
+  if (tarifaMoneda) tarifaMoneda.value = tariff.moneda || 'EUR';
+  if (tarifaPermanencia) tarifaPermanencia.value = tariff.permanencia || '';
+  if (tarifaDesde) tarifaDesde.value = tariff.vigente_desde || '';
+  if (tarifaHasta) tarifaHasta.value = tariff.vigente_hasta || '';
+  if (tarifaDescripcion) tarifaDescripcion.value = tariff['descripción'] || '';
+  if (guardarTarifaBtn) guardarTarifaBtn.textContent = 'Actualizar tarifa';
+  if (tarifaFormInfo) tarifaFormInfo.textContent = `Editando la tarifa «${tariff.nombre}».`;
+}
+
+function handleTarifaFormSubmit(event) {
+  event.preventDefault();
+  if (!tarifaForm) return;
+  const entry = normaliseTariff({
+    id: editingTariffId || createId('tarifa'),
+    codigo: tarifaCodigo?.value.trim() || '',
+    nombre: tarifaNombre?.value.trim() || '',
+    precio: tarifaPrecio?.value !== '' ? Number(tarifaPrecio.value) : null,
+    'compañia': tarifaCompania?.value.trim() || '',
+    familia: tarifaFamilia?.value.trim() || '',
+    moneda: tarifaMoneda?.value.trim() || 'EUR',
+    permanencia: tarifaPermanencia?.value.trim() || '',
+    'descripción': tarifaDescripcion?.value.trim() || '',
+    lineas: tarifaLineas?.value !== '' ? Number(tarifaLineas.value) : null,
+    vigente_desde: tarifaDesde?.value || null,
+    vigente_hasta: tarifaHasta?.value || null
+  });
+  const index = tariffs.findIndex(t => t.id === entry.id);
+  const message = editingTariffId ? 'Tarifa actualizada correctamente.' : 'Tarifa creada correctamente.';
+  if (index >= 0) {
+    tariffs[index] = entry;
+  } else {
+    tariffs.push(entry);
+  }
+  saveTariffs();
+  populateFilterOptions(true);
+  aplicarFiltros();
+  renderTariffTable();
+  if (tarifaFormInfo) tarifaFormInfo.textContent = message;
+  resetTariffForm({ keepMessage: true });
+}
+
+function handleTarifaListAction(event) {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+  if (!action || !id) return;
+  const tariff = tariffs.find(t => t.id === id);
+  if (!tariff) return;
+  if (action === 'edit-tariff') {
+    prefillTariffForm(tariff);
+    const targetTop = tarifaForm?.offsetTop || adminPanel?.offsetTop || 0;
+    window.scrollTo({ top: targetTop, behavior: 'smooth' });
+  }
+  if (action === 'delete-tariff') {
+    if (confirm(`¿Seguro que deseas eliminar la tarifa «${tariff.nombre}»?`)) {
+      tariffs = tariffs.filter(t => t.id !== id);
+      saveTariffs();
+      populateFilterOptions(true);
+      aplicarFiltros();
+      renderTariffTable();
+      if (tarifaFormInfo) tarifaFormInfo.textContent = 'Tarifa eliminada.';
+      resetTariffForm();
+    }
+  }
+}
+
+function renderTariffTable() {
+  if (!tarifaList) return;
+  if (!tariffs.length) {
+    tarifaList.innerHTML = '<p class="dim">No hay tarifas registradas todavía.</p>';
+    return;
+  }
+  const rows = tariffs
+    .slice()
+    .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es'))
+    .map(t => {
+      const price = t.precio != null ? euro(t.precio, t.moneda) : '-';
+      const vigencia = `${t.vigente_desde || '-'}<br><span class="dim">${t.vigente_hasta || '-'}</span>`;
+      return `
+        <tr data-id="${t.id}">
+          <td><strong>${t.nombre}</strong><br><span class="dim">${t.codigo}</span></td>
+          <td>${t['compañia'] || '-'}</td>
+          <td>${price}</td>
+          <td>${t.lineas != null ? t.lineas : '-'}</td>
+          <td>${t.permanencia || '-'}</td>
+          <td>${vigencia}</td>
+          <td>
+            <button class="smallbtn" data-action="edit-tariff" data-id="${t.id}">Editar</button>
+            <button class="smallbtn" data-action="delete-tariff" data-id="${t.id}">Eliminar</button>
+          </td>
+        </tr>
+      `;
+    })
+    .join('');
+  tarifaList.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tarifa</th>
+          <th>Compañía</th>
+          <th>Precio</th>
+          <th>Líneas</th>
+          <th>Permanencia</th>
+          <th>Vigencia</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function populateLeadFilterOptions() {
+  if (!leadFilter) return;
+  const current = leadFilter.value;
+  const entries = Array.from(
+    new Map(leads.map(lead => [lead.commercial, lead.commercialName || lead.commercial]))
+  );
+  entries.sort((a, b) => a[1].localeCompare(b[1], 'es'));
+  leadFilter.innerHTML = '<option value="">Todos</option>' + entries.map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+  if (entries.some(([id]) => id === current)) {
+    leadFilter.value = current;
+  } else {
+    leadFilter.value = '';
+  }
+}
+
+function renderLeadSummary() {
+  if (!leadSummary) return;
+  if (!leads.length) {
+    leadSummary.innerHTML = '<div class="dim">Aún no hay oportunidades registradas.</div>';
+    populateLeadFilterOptions();
+    return;
+  }
+  const aggregate = leads.reduce((acc, lead) => {
+    if (!acc[lead.commercial]) {
+      acc[lead.commercial] = {
+        commercial: lead.commercial,
+        name: lead.commercialName || lead.commercial,
+        total: 0,
+        sold: 0
+      };
+    }
+    acc[lead.commercial].total += 1;
+    if (lead.status === 'vendido') acc[lead.commercial].sold += 1;
+    return acc;
+  }, {});
+  const cards = Object.values(aggregate)
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+    .map(info => `
+      <div class="kpi">
+        <div class="label">${info.name}</div>
+        <div><span class="highlight">${info.sold}</span> / ${info.total} ventas</div>
+      </div>
+    `)
+    .join('');
+  leadSummary.innerHTML = cards;
+  populateLeadFilterOptions();
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '-';
+  try {
+    return new Date(iso).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+  } catch (error) {
+    return iso;
+  }
+}
+
+function renderAdminLeadList() {
+  if (!leadList) return;
+  if (!leads.length) {
+    leadList.innerHTML = '<p class="dim">Sin oportunidades pendientes.</p>';
+    return;
+  }
+  const filter = leadFilter?.value || '';
+  const filtered = leads
+    .filter(lead => !filter || lead.commercial === filter)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  if (!filtered.length) {
+    leadList.innerHTML = '<p class="dim">No hay oportunidades para el comercial seleccionado.</p>';
+    return;
+  }
+  leadList.innerHTML = filtered
+    .map(lead => {
+      const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
+      const toggleLabel = lead.status === 'vendido' ? 'Marcar como pendiente' : 'Marcar como vendida';
+      return `
+        <div class="lead-card" data-id="${lead.id}">
+          <header>
+            <div>
+              <strong>${lead.clientName}</strong>
+              <span class="tag">${lead.tariffCodigo}</span>
+            </div>
+            <span class="status-pill" data-status="${lead.status}">${statusLabel}</span>
+          </header>
+          <div class="body">
+            <p><strong>Tarifa:</strong> ${lead.tariffNombre} · <strong>${lead.tariffCompania}</strong></p>
+            <p><strong>Contacto:</strong> ${lead.contact}</p>
+            ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
+          </div>
+          <footer>
+            <span>Comercial: <strong>${lead.commercialName}</strong></span>
+            <span>Creada: ${formatDateTime(lead.createdAt)} · Última actualización: ${formatDateTime(lead.updatedAt)}</span>
+            <div class="controls" style="margin-left:auto;">
+              <button class="smallbtn" data-action="toggle-status" data-id="${lead.id}">${toggleLabel}</button>
+            </div>
+          </footer>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function handleLeadListAction(event) {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+  if (!action || !id) return;
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+  if (action === 'toggle-status') {
+    lead.status = lead.status === 'vendido' ? 'pendiente' : 'vendido';
+    lead.updatedAt = new Date().toISOString();
+    if (lead.status === 'vendido') {
+      lead.notified = false;
+    } else {
+      lead.notified = true;
+    }
+    saveLeads();
+    renderLeadSummary();
+    renderAdminLeadList();
+  }
+}
+
+function hideCommercialNotifications() {
+  if (!commercialNotifications) return;
+  commercialNotifications.classList.add('hidden');
+  commercialNotifications.removeAttribute('data-mode');
+  commercialNotifications.innerHTML = '';
+}
+
+function showCommercialAlert(leadsToNotify) {
+  if (!commercialNotifications) return;
+  if (!leadsToNotify.length) {
+    if (commercialNotifications.dataset.mode === 'alert') {
+      hideCommercialNotifications();
+    }
+    return;
+  }
+  const list = leadsToNotify
+    .map(lead => `<li>${lead.tariffNombre} · cliente <strong>${lead.clientName}</strong></li>`)
+    .join('');
+  commercialNotifications.innerHTML = `
+    <h3 class="section-subtitle" style="margin-top:0;">Ventas confirmadas</h3>
+    <p>El administrador ha marcado como vendidas estas oportunidades:</p>
+    <ul class="login-hints">${list}</ul>
+  `;
+  commercialNotifications.classList.remove('hidden');
+  commercialNotifications.dataset.mode = 'alert';
+}
+
+function showCommercialFlash(message) {
+  if (!commercialNotifications) return;
+  commercialNotifications.innerHTML = `
+    <h3 class="section-subtitle" style="margin-top:0;">¡Perfecto!</h3>
+    <p>${message}</p>
+  `;
+  commercialNotifications.classList.remove('hidden');
+  commercialNotifications.dataset.mode = 'flash';
+  if (commercialNoticeTimeout) clearTimeout(commercialNoticeTimeout);
+  commercialNoticeTimeout = setTimeout(() => {
+    if (commercialNotifications.dataset.mode === 'flash') {
+      hideCommercialNotifications();
+    }
+  }, 4000);
+}
+
+function renderCommercialPanel() {
+  if (!commercialPanel || !commercialLeads) return;
+  const mine = leads
+    .filter(lead => lead.commercial === currentUser?.username)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const pendingAlerts = mine.filter(lead => lead.status === 'vendido' && !lead.notified);
+  if (pendingAlerts.length) {
+    showCommercialAlert(pendingAlerts);
+    pendingAlerts.forEach(lead => { lead.notified = true; });
+    saveLeads();
+  } else if (commercialNotifications?.dataset.mode === 'alert') {
+    hideCommercialNotifications();
+  }
+  if (!mine.length) {
+    commercialLeads.innerHTML = '<p class="dim">Aún no has enviado propuestas. Elige una tarifa y envía la primera.</p>';
+    return;
+  }
+  commercialLeads.innerHTML = mine
+    .map(lead => {
+      const statusLabel = lead.status === 'vendido' ? 'Vendida' : 'Pendiente';
+      return `
+        <div class="lead-card">
+          <header>
+            <div>
+              <strong>${lead.tariffNombre}</strong>
+              <span class="tag">${lead.tariffCodigo}</span>
+            </div>
+            <span class="status-pill" data-status="${lead.status}">${statusLabel}</span>
+          </header>
+          <div class="body">
+            <p><strong>Cliente:</strong> ${lead.clientName}</p>
+            <p><strong>Contacto:</strong> ${lead.contact}</p>
+            ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
+          </div>
+          <footer>
+            <span>Enviada: ${formatDateTime(lead.createdAt)}</span>
+            <span>Última actualización: ${formatDateTime(lead.updatedAt)}</span>
+          </footer>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function openLeadModal(tariff) {
+  if (!leadModal || !leadForm) return;
+  leadModal.classList.remove('hidden');
+  if (leadTariffName) leadTariffName.textContent = `${tariff.nombre} (${tariff.codigo})`;
+  leadForm.reset();
+  if (leadTariffIdInput) leadTariffIdInput.value = tariff.id;
+  setTimeout(() => clientNameInput?.focus(), 50);
+}
+
+function closeLeadModal() {
+  if (!leadModal || !leadForm) return;
+  leadModal.classList.add('hidden');
+  leadForm.reset();
+}
+
+function handleLeadFormSubmit(event) {
+  event.preventDefault();
+  const tariffId = leadTariffIdInput?.value;
+  if (!tariffId) return;
+  const tariff = tariffs.find(t => t.id === tariffId);
+  if (!tariff || !currentUser) return;
+  const lead = {
+    id: createId('lead'),
+    tariffId,
+    tariffCodigo: tariff.codigo,
+    tariffNombre: tariff.nombre,
+    tariffCompania: tariff['compañia'],
+    commercial: currentUser.username,
+    commercialName: currentUser.name,
+    clientName: clientNameInput?.value.trim() || '',
+    contact: clientContactInput?.value.trim() || '',
+    notes: clientNotesInput?.value.trim() || '',
+    status: 'pendiente',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    notified: true
+  };
+  leads.push(lead);
+  saveLeads();
+  renderLeadSummary();
+  renderAdminLeadList();
+  renderCommercialPanel();
+  showCommercialFlash('Tu propuesta se ha enviado al administrador.');
+  closeLeadModal();
+}
+
+function showLoginModal() {
+  if (!loginModal) return;
+  loginModal.classList.remove('hidden');
+  setTimeout(() => loginUserInput?.focus(), 50);
+}
+
+function hideLoginModal() {
+  if (!loginModal) return;
+  loginModal.classList.add('hidden');
+  if (loginError) loginError.textContent = '';
+  loginForm?.reset();
+}
+
+function handleLoginSubmit(event) {
+  event.preventDefault();
+  const username = loginUserInput?.value.trim().toLowerCase();
+  const password = loginPassInput?.value;
+  const user = USERS.find(u => u.username === username && u.password === password);
+  if (!user) {
+    if (loginError) loginError.textContent = 'Credenciales no válidas.';
+    return;
+  }
+  setCurrentUser({ username: user.username, role: user.role, name: user.name });
+  hideLoginModal();
+}
+
+function setCurrentUser(user, { persist = true } = {}) {
+  currentUser = user;
+  if (persist) {
+    persistSessionUser(user);
+  }
+  updateUIForRole();
+}
+
+function logout() {
+  setCurrentUser(null);
+}
+
+function updateUserInfo() {
+  if (!userInfo) return;
+  if (!currentUser) {
+    userInfo.innerHTML = '<button class="primary" id="openLogin">Iniciar sesión</button>';
+  } else {
+    userInfo.innerHTML = `
+      <span class="dim">Sesión iniciada:</span>
+      <span class="name">${currentUser.name}</span>
+      <span class="role-tag" data-role="${currentUser.role}">${roleLabel(currentUser.role)}</span>
+      <button class="smallbtn" id="logoutBtn">Cerrar sesión</button>
+    `;
+  }
+  const openBtn = $('#openLogin', userInfo);
+  if (openBtn) openBtn.addEventListener('click', showLoginModal);
+  const logoutBtn = $('#logoutBtn', userInfo);
+  if (logoutBtn) logoutBtn.addEventListener('click', logout);
+}
+
+function updateUIForRole() {
+  updateUserInfo();
+  if (!authReminder) return;
+  if (currentUser?.role !== 'comercial') {
+    hideCommercialNotifications();
+  }
+  if (!currentUser) {
+    authReminder.classList.remove('hidden');
+    authNoticeAnonymous?.classList.remove('hidden');
+    authNoticeBasic?.classList.add('hidden');
+    adminPanel?.classList.add('hidden');
+    commercialPanel?.classList.add('hidden');
+  } else if (currentUser.role === 'basico') {
+    authReminder.classList.remove('hidden');
+    authNoticeAnonymous?.classList.add('hidden');
+    authNoticeBasic?.classList.remove('hidden');
+    adminPanel?.classList.add('hidden');
+    commercialPanel?.classList.add('hidden');
+  } else if (currentUser.role === 'admin') {
+    authReminder.classList.add('hidden');
+    authNoticeAnonymous?.classList.add('hidden');
+    authNoticeBasic?.classList.add('hidden');
+    adminPanel?.classList.remove('hidden');
+    commercialPanel?.classList.add('hidden');
+    renderTariffTable();
+    renderLeadSummary();
+    renderAdminLeadList();
+  } else if (currentUser.role === 'comercial') {
+    authReminder.classList.add('hidden');
+    authNoticeAnonymous?.classList.add('hidden');
+    authNoticeBasic?.classList.add('hidden');
+    adminPanel?.classList.add('hidden');
+    commercialPanel?.classList.remove('hidden');
+    renderCommercialPanel();
+  }
+  aplicarFiltros();
+}
+
+function resetFilters() {
+  const compania = $('#compania');
+  const familia = $('#familia');
+  const lineas = $('#lineas');
+  const precioMax = $('#precioMax');
+  const permanencia = $('#permanencia');
+  const fecha = $('#fecha');
+  if (compania) compania.value = '';
+  if (familia) familia.value = '';
+  if (lineas) lineas.value = '';
+  if (precioMax) precioMax.value = '';
+  if (permanencia) permanencia.value = '';
+  if (fecha) fecha.value = todayISO();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  grid = $('#grid');
+  countEl = $('#count');
+  authReminder = $('#authReminder');
+  authNoticeAnonymous = $('#authNoticeAnonymous');
+  authNoticeBasic = $('#authNoticeBasic');
+  adminPanel = $('#adminPanel');
+  commercialPanel = $('#commercialPanel');
+  userInfo = $('#userInfo');
+  loginModal = $('#loginModal');
+  loginForm = $('#loginForm');
+  loginError = $('#loginError');
+  loginUserInput = $('#loginUser');
+  loginPassInput = $('#loginPass');
+  leadModal = $('#leadModal');
+  leadForm = $('#leadForm');
+  leadTariffName = $('#leadTariffName');
+  leadTariffIdInput = $('#leadTariffId');
+  commercialNotifications = $('#commercialNotifications');
+  commercialLeads = $('#commercialLeads');
+  leadSummary = $('#leadSummary');
+  leadList = $('#leadList');
+  leadFilter = $('#leadFilter');
+  tarifaList = $('#tarifaList');
+  tarifaForm = $('#tarifaForm');
+  tarifaFormInfo = $('#tarifaFormInfo');
+  guardarTarifaBtn = $('#guardarTarifa');
+  cancelarEdicionBtn = $('#cancelarEdicion');
+  tarifaCodigo = $('#tarifaCodigo');
+  tarifaNombre = $('#tarifaNombre');
+  tarifaCompania = $('#tarifaCompania');
+  tarifaFamilia = $('#tarifaFamilia');
+  tarifaLineas = $('#tarifaLineas');
+  tarifaPrecio = $('#tarifaPrecio');
+  tarifaMoneda = $('#tarifaMoneda');
+  tarifaPermanencia = $('#tarifaPermanencia');
+  tarifaDesde = $('#tarifaDesde');
+  tarifaHasta = $('#tarifaHasta');
+  tarifaDescripcion = $('#tarifaDescripcion');
+  clientNameInput = $('#clientName');
+  clientContactInput = $('#clientContact');
+  clientNotesInput = $('#clientNotes');
+
+  tariffs = loadTariffsFromStorage();
+  leads = loadLeadsFromStorage();
+
   initFilters();
-  render(DATA);
-  $('#filtrar').addEventListener('click', aplicarFiltros);
-  $('#limpiar').addEventListener('click', () => { document.querySelectorAll('select,input').forEach(el => { if(el.type==='date') el.value = new Date().toISOString().slice(0,10); else el.value=''; }); render(DATA); });
-  $('#imprimir').addEventListener('click', () => window.print());
+  aplicarFiltros();
+  renderLeadSummary();
+  renderAdminLeadList();
+  renderCommercialPanel();
+
+  $('#filtrar')?.addEventListener('click', aplicarFiltros);
+  $('#limpiar')?.addEventListener('click', () => { resetFilters(); aplicarFiltros(); });
+  $('#imprimir')?.addEventListener('click', () => window.print());
+
+  loginForm?.addEventListener('submit', handleLoginSubmit);
+  $('#cancelLogin')?.addEventListener('click', hideLoginModal);
+  loginModal?.addEventListener('click', (event) => { if (event.target === loginModal) hideLoginModal(); });
+
+  leadForm?.addEventListener('submit', handleLeadFormSubmit);
+  $('#cancelLead')?.addEventListener('click', closeLeadModal);
+  leadModal?.addEventListener('click', (event) => { if (event.target === leadModal) closeLeadModal(); });
+
+  tarifaForm?.addEventListener('submit', handleTarifaFormSubmit);
+  cancelarEdicionBtn?.addEventListener('click', () => resetTariffForm());
+  tarifaList?.addEventListener('click', handleTarifaListAction);
+
+  leadList?.addEventListener('click', handleLeadListAction);
+  leadFilter?.addEventListener('change', renderAdminLeadList);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      hideLoginModal();
+      closeLeadModal();
+    }
+  });
+
+  const savedUser = loadSessionUser();
+  if (savedUser) {
+    setCurrentUser(savedUser, { persist: false });
+  } else {
+    updateUIForRole();
+  }
 });
 </script>
 </body>
