@@ -86,6 +86,14 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .reward-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
 .reward-thumb.placeholder { color:#cbd5f5; font-size:12px; text-transform:uppercase; letter-spacing:.6px; font-weight:600; }
 .reward-thumb.placeholder span { opacity:0.7; }
+.upload-dropzone { position:relative; width:100%; border:1px dashed rgba(148,163,184,0.35); background:rgba(15,23,42,0.6); border-radius:14px; padding:18px; text-align:center; cursor:pointer; transition:border-color .2s ease, background .2s ease; display:flex; align-items:center; justify-content:center; min-height:160px; margin-top:8px; }
+.upload-dropzone input[type="file"] { display:none; }
+.upload-dropzone .upload-placeholder { color:#a8b3c7; display:flex; flex-direction:column; gap:6px; font-size:13px; max-width:260px; line-height:1.4; }
+.upload-dropzone .upload-placeholder strong { color:#e2e8f0; font-weight:600; font-size:14px; }
+.upload-dropzone.dragover { border-color:rgba(78,143,202,0.75); background:rgba(78,143,202,0.18); }
+.upload-dropzone.has-image { padding:0; border-style:solid; border-color:rgba(78,143,202,0.55); background:#0b1120; }
+.upload-dropzone.has-image img { display:block; width:100%; height:100%; object-fit:cover; border-radius:12px; }
+.upload-actions { margin-top:8px; display:flex; justify-content:flex-end; }
 .reward-card .title { font-size:17px; font-weight:700; }
 .reward-card .cost { font-size:14px; color:#fbbf24; font-weight:600; }
 .reward-card .validity { font-size:12px; color:#a8b3c7; }
@@ -728,8 +736,20 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
             <input id="rewardValidUntil" type="date" />
           </div>
           <div class="full">
-            <label class="label" for="rewardImage">Imagen destacada (URL)</label>
-            <input id="rewardImage" type="url" placeholder="https://..." />
+            <label class="label" for="rewardImage">Imagen destacada</label>
+            <input id="rewardImage" type="text" placeholder="https://..." />
+            <div id="rewardImageDropzone" class="upload-dropzone" tabindex="0">
+              <input id="rewardImageFile" type="file" accept="image/*" />
+              <div class="upload-placeholder">
+                <strong>Arrastra una imagen aquí</strong>
+                <span>O haz clic para seleccionar un archivo desde tu equipo. También puedes pegar una URL en el campo superior.</span>
+              </div>
+              <img id="rewardImagePreview" class="hidden" alt="Vista previa de la imagen de la recompensa" />
+            </div>
+            <div class="upload-actions hidden" id="rewardImageActions">
+              <button type="button" class="smallbtn hidden" id="rewardImageClear">Quitar imagen</button>
+            </div>
+            <p class="dim" style="margin-top:6px;">Puedes usar una URL o subir una imagen arrastrándola sobre el recuadro.</p>
           </div>
           <div class="full">
             <label class="label" for="rewardDescription">Descripción</label>
@@ -1162,6 +1182,11 @@ let grid,
   rewardValidFromInput,
   rewardValidUntilInput,
   rewardImageInput,
+  rewardImageDropzone,
+  rewardImageFileInput,
+  rewardImagePreview,
+  rewardImageClearBtn,
+  rewardImageActions,
   rewardDescriptionInput,
   rewardList,
   clientNameInput,
@@ -2431,10 +2456,132 @@ function renderAdminRewards() {
     .join('');
 }
 
+function rewardImageValueIsPreviewable(value) {
+  return /^https?:\/\//i.test(value) || /^data:image\//i.test(value);
+}
+
+function refreshRewardImagePreview(value) {
+  if (!rewardImageDropzone) return;
+  const placeholder = rewardImageDropzone.querySelector('.upload-placeholder');
+  const previewValue = value && rewardImageValueIsPreviewable(value) ? value : '';
+  if (previewValue) {
+    rewardImageDropzone.classList.add('has-image');
+    if (rewardImagePreview) {
+      rewardImagePreview.src = previewValue;
+      rewardImagePreview.classList.remove('hidden');
+    }
+    placeholder?.classList.add('hidden');
+    rewardImageClearBtn?.classList.remove('hidden');
+    rewardImageActions?.classList.remove('hidden');
+  } else {
+    rewardImageDropzone.classList.remove('has-image');
+    if (rewardImagePreview) {
+      rewardImagePreview.src = '';
+      rewardImagePreview.classList.add('hidden');
+    }
+    placeholder?.classList.remove('hidden');
+    rewardImageClearBtn?.classList.add('hidden');
+    rewardImageActions?.classList.add('hidden');
+  }
+}
+
+function setRewardImageValue(value) {
+  if (rewardImageInput) {
+    rewardImageInput.value = value || '';
+  }
+  refreshRewardImagePreview(value || '');
+  if (rewardImageFileInput) {
+    rewardImageFileInput.value = '';
+  }
+}
+
+function resetRewardImageField() {
+  setRewardImageValue('');
+}
+
+function handleRewardImageFile(file) {
+  if (!file) return;
+  if (!file.type?.startsWith('image/')) {
+    if (rewardFormInfo) rewardFormInfo.textContent = 'Solo se permiten archivos de imagen.';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = reader.result;
+    if (typeof result === 'string') {
+      setRewardImageValue(result);
+      if (rewardFormInfo) rewardFormInfo.textContent = 'Imagen cargada desde tu equipo.';
+    }
+  };
+  reader.onerror = () => {
+    if (rewardFormInfo) rewardFormInfo.textContent = 'No se pudo leer la imagen seleccionada.';
+  };
+  reader.readAsDataURL(file);
+}
+
+function setupRewardImageUploader() {
+  if (!rewardImageDropzone) return;
+  const preventDefaults = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  ['dragenter', 'dragover'].forEach(eventName => {
+    rewardImageDropzone.addEventListener(eventName, (event) => {
+      preventDefaults(event);
+      rewardImageDropzone.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'dragend'].forEach(eventName => {
+    rewardImageDropzone.addEventListener(eventName, (event) => {
+      preventDefaults(event);
+      if (eventName === 'dragleave') {
+        const related = event.relatedTarget;
+        if (related && rewardImageDropzone.contains(related)) {
+          return;
+        }
+      }
+      rewardImageDropzone.classList.remove('dragover');
+    });
+  });
+  rewardImageDropzone.addEventListener('drop', (event) => {
+    preventDefaults(event);
+    rewardImageDropzone.classList.remove('dragover');
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      handleRewardImageFile(file);
+    }
+  });
+  rewardImageDropzone.addEventListener('click', () => {
+    rewardImageFileInput?.click();
+  });
+  rewardImageDropzone.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      rewardImageFileInput?.click();
+    }
+  });
+  rewardImageFileInput?.addEventListener('change', () => {
+    const file = rewardImageFileInput.files?.[0];
+    if (file) {
+      handleRewardImageFile(file);
+    }
+  });
+  rewardImageClearBtn?.addEventListener('click', () => {
+    resetRewardImageField();
+    if (rewardFormInfo) rewardFormInfo.textContent = 'Se eliminó la imagen asociada.';
+  });
+  rewardImageInput?.addEventListener('input', () => {
+    const value = rewardImageInput.value.trim();
+    refreshRewardImagePreview(value);
+  });
+  refreshRewardImagePreview(rewardImageInput?.value.trim() || '');
+}
+
 function resetRewardForm() {
   rewardForm?.reset();
   if (rewardIdInput) rewardIdInput.value = '';
   if (rewardFormInfo) rewardFormInfo.textContent = '';
+  resetRewardImageField();
 }
 
 function fillRewardForm(reward) {
@@ -2444,7 +2591,7 @@ function fillRewardForm(reward) {
   if (rewardPointsInput) rewardPointsInput.value = reward.pointsCost;
   if (rewardValidFromInput) rewardValidFromInput.value = reward.validFrom || '';
   if (rewardValidUntilInput) rewardValidUntilInput.value = reward.validUntil || '';
-  if (rewardImageInput) rewardImageInput.value = reward.imageUrl || '';
+  setRewardImageValue(reward.imageUrl || '');
   if (rewardDescriptionInput) rewardDescriptionInput.value = reward.description || '';
   if (rewardFormInfo) rewardFormInfo.textContent = 'Editando recompensa existente.';
 }
@@ -2455,8 +2602,8 @@ function handleRewardFormSubmit(event) {
   const title = rewardTitleInput?.value.trim();
   const pointsValue = Number(rewardPointsInput?.value || 0);
   const imageUrl = rewardImageInput?.value.trim() || '';
-  if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
-    if (rewardFormInfo) rewardFormInfo.textContent = 'La imagen debe ser una URL válida que comience por http o https.';
+  if (imageUrl && !rewardImageValueIsPreviewable(imageUrl)) {
+    if (rewardFormInfo) rewardFormInfo.textContent = 'La imagen debe ser una URL válida o un archivo de imagen.';
     return;
   }
   if (!title) {
@@ -4704,6 +4851,11 @@ document.addEventListener('DOMContentLoaded', () => {
   rewardValidFromInput = $('#rewardValidFrom');
   rewardValidUntilInput = $('#rewardValidUntil');
   rewardImageInput = $('#rewardImage');
+  rewardImageDropzone = $('#rewardImageDropzone');
+  rewardImageFileInput = $('#rewardImageFile');
+  rewardImagePreview = $('#rewardImagePreview');
+  rewardImageClearBtn = $('#rewardImageClear');
+  rewardImageActions = $('#rewardImageActions');
   rewardDescriptionInput = $('#rewardDescription');
   rewardList = $('#rewardList');
   clientNameInput = $('#clientName');
@@ -4751,6 +4903,8 @@ document.addEventListener('DOMContentLoaded', () => {
   userListContainer = $('#userList');
   saveUserBtn = $('#saveUserBtn');
   cancelUserEdit = $('#cancelUserEdit');
+
+  setupRewardImageUploader();
 
   users = loadUsersFromStorage();
   tariffs = loadTariffsFromStorage();
