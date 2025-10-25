@@ -62,9 +62,22 @@ kground .2s ease, transform .2s ease, box-shadow .2s ease; }
 .notification-dot { position:absolute; top:8px; right:8px; width:10px; height:10px; border-radius:50%; background:#f87171; box-shad
 ow:0 0 0 2px rgba(15,23,42,0.85); display:none; }
 .notification-bell.has-unread .notification-dot { display:block; }
-.notification-dropdown { position:absolute; top:54px; right:0; width:320px; max-width:calc(100vw - 32px); background:#0f1522; bord
-er:1px solid rgba(148,163,184,0.2); border-radius:16px; box-shadow:0 18px 44px rgba(15,23,42,0.55); padding:16px; display:flex; fl
-ex-direction:column; gap:12px; z-index:90; }
+.notification-dropdown {
+  position:absolute;
+  top:54px;
+  right:0;
+  width:min(520px, calc(100vw - 32px));
+  max-height:calc(100vh - 120px);
+  background:#0f1522;
+  border:1px solid rgba(148,163,184,0.2);
+  border-radius:16px;
+  box-shadow:0 18px 44px rgba(15,23,42,0.55);
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  z-index:90;
+  overflow:hidden;
+}
 .notification-dropdown.hidden { display:none !important; }
 .notification-dropdown-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .notification-dropdown-header span { font-weight:700; font-size:15px; }
@@ -84,6 +97,65 @@ x; display:flex; flex-direction:column; gap:4px; font-size:13px; color:#e2e8f0; 
 .notification-footer { display:flex; justify-content:flex-end; }
 .notification-footer button { border:none; background:transparent; color:#60a5fa; font-size:13px; cursor:pointer; }
 .notification-footer button:hover { text-decoration:underline; }
+.message-center { display:flex; flex-direction:column; height:100%; }
+.message-center__inner { display:flex; flex-direction:column; gap:12px; padding:16px; height:100%; }
+.message-center__header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.message-center__title { font-weight:700; font-size:16px; }
+.message-center__status { font-size:12px; color:#94a3b8; display:block; margin-top:2px; }
+.message-center__tabs { display:flex; gap:8px; flex-wrap:wrap; }
+.message-center__tabs button { flex:1 1 auto; border:none; background:rgba(15,23,42,0.65); color:#cbd5f5; border-radius:999px; padding:6px 12px; font-weight:600; cursor:pointer; transition:background .2s ease, color .2s ease, box-shadow .2s ease; }
+.message-center__tabs button.active { background:var(--primary); color:#fff; box-shadow:0 6px 18px rgba(78,143,202,0.35); }
+.message-center__tabs button:focus-visible { outline:2px solid rgba(148,163,184,0.6); outline-offset:2px; }
+.message-center__body { flex:1; display:flex; flex-direction:column; gap:12px; min-height:0; }
+.message-center__panel { display:flex; flex-direction:column; gap:12px; min-height:0; }
+.message-center__panel.hidden { display:none !important; }
+.message-center__split { display:flex; flex-direction:column; gap:12px; min-height:0; }
+.message-center__threads { background:rgba(15,23,42,0.6); border:1px solid rgba(148,163,184,0.2); border-radius:12px; padding:12px; max-height:320px; overflow:auto; }
+.message-center__threads.hidden { display:none !important; }
+.message-center__new-thread { margin-bottom:12px; display:flex; flex-direction:column; gap:6px; }
+.message-thread-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.message-thread-item { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid rgba(148,163,184,0.2); background:rgba(15,23,42,0.55); cursor:pointer; transition:background .2s ease, border-color .2s ease; }
+.message-thread-item:hover { background:rgba(78,143,202,0.18); border-color:rgba(78,143,202,0.4); }
+.message-thread-item.active { border-color:rgba(78,143,202,0.6); box-shadow:0 6px 18px rgba(78,143,202,0.25); background:rgba(30,64,175,0.28); }
+.message-thread-item__meta { font-size:11px; color:#94a3b8; margin-top:4px; }
+.message-thread-item__badge { background:#ef4444; color:#fff; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:600; }
+.message-center__conversation { flex:1; display:flex; flex-direction:column; gap:12px; min-height:0; }
+.message-center__conversation-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.message-center__message-list { flex:1; display:flex; flex-direction:column; gap:10px; overflow:auto; padding:12px; border-radius:12px; border:1px solid rgba(148,163,184,0.2); background:rgba(15,23,42,0.55); }
+.message-item { display:flex; flex-direction:column; gap:4px; max-width:100%; }
+.message-item--outgoing { align-items:flex-end; }
+.message-item--incoming { align-items:flex-start; }
+.message-item__body { padding:10px 14px; border-radius:14px; background:rgba(59,130,246,0.2); border:1px solid rgba(59,130,246,0.45); color:#e2e8f0; line-height:1.4; }
+.message-item--outgoing .message-item__body { background:linear-gradient(135deg, rgba(99,102,241,0.55), rgba(59,130,246,0.45)); border-color:rgba(99,102,241,0.65); }
+.message-item--incoming .message-item__body { background:rgba(15,23,42,0.75); border-color:rgba(148,163,184,0.3); }
+.message-item__meta { font-size:11px; color:#94a3b8; }
+.message-center__form { display:flex; flex-direction:column; gap:10px; }
+.message-center__form textarea { min-height:72px; resize:vertical; }
+.message-center__form-actions { display:flex; justify-content:flex-end; }
+.message-center__empty { border:1px dashed rgba(148,163,184,0.3); border-radius:12px; padding:16px; text-align:center; color:#94a3b8; }
+.message-center__scroll { display:flex; flex-direction:column; gap:12px; max-height:360px; overflow:auto; padding-right:4px; }
+.message-offer-admin { border:1px solid rgba(148,163,184,0.2); border-radius:12px; padding:12px; background:rgba(15,23,42,0.55); }
+.message-offer-admin.hidden { display:none !important; }
+.message-offer-card { border:1px solid rgba(148,163,184,0.2); border-radius:12px; padding:12px 14px; background:rgba(15,23,42,0.55); display:flex; flex-direction:column; gap:8px; }
+.message-offer-card--unread { border-color:rgba(59,130,246,0.55); box-shadow:0 6px 18px rgba(59,130,246,0.25); }
+.message-offer-card header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.message-offer-card footer { font-size:12px; color:#94a3b8; display:flex; flex-wrap:wrap; gap:8px; }
+.message-offer-tags { display:flex; gap:6px; flex-wrap:wrap; font-size:11px; }
+.message-offer-tags .tag { background:rgba(59,130,246,0.16); border-color:rgba(59,130,246,0.35); color:#bfdbfe; }
+.message-offer-actions { display:flex; gap:8px; }
+.message-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:4px 8px; border-radius:999px; background:rgba(148,163,184,0.15); border:1px solid rgba(148,163,184,0.25); color:#cbd5f5; }
+.message-badge[data-variant="success"] { background:rgba(34,197,94,0.18); border-color:rgba(34,197,94,0.4); color:#bbf7d0; }
+.message-badge[data-variant="warning"] { background:rgba(251,191,36,0.18); border-color:rgba(251,191,36,0.35); color:#fde68a; }
+.message-center__subtitle { font-size:12px; color:#94a3b8; }
+.message-budgets-note { font-size:12px; color:#94a3b8; }
+.message-center__panel .lead-card { margin:0; }
+.message-center__panel .actions { display:flex; gap:8px; flex-wrap:wrap; }
+.message-center__panel .actions button { flex:0 0 auto; }
+@media (min-width: 720px) {
+  .message-center__split { flex-direction:row; align-items:stretch; }
+  .message-center__threads { flex:0 0 220px; }
+  .message-center__conversation { flex:1; }
+}
 .user-info .avatar { width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.25); }
 .user-info .name { font-weight:600; }
 .role-tag { display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:12px; text-transform:uppercase; letter-spacing:.6px; }
@@ -587,13 +659,99 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 7 2 7H4s2-2 2-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 19a2 2 0 1 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="notification-dropdown hidden" id="notificationDropdown" role="dialog" aria-modal="false">
-          <div class="notification-dropdown-header">
-            <span>Notificaciones</span>
-            <button type="button" class="close-notifications" id="closeNotifications" aria-label="Cerrar notificaciones">×</button>
-          </div>
-          <ul class="notification-list" id="notificationList"></ul>
-          <div class="notification-footer">
-            <button type="button" id="markNotificationsRead">Marcar como leídas</button>
+          <div class="message-center" id="messageCenter">
+            <div class="message-center__inner">
+              <div class="message-center__header">
+                <div>
+                  <span class="message-center__title">Centro de mensajes</span>
+                  <span class="message-center__status" id="messageCenterStatus"></span>
+                </div>
+                <button type="button" class="close-notifications" id="closeNotifications" aria-label="Cerrar centro de mensajes">×</button>
+              </div>
+              <div class="message-center__tabs" id="messageCenterTabs" role="tablist">
+                <button type="button" class="active" data-tab="messages" role="tab">Mensajes</button>
+                <button type="button" data-tab="budgets" role="tab">Presupuestos</button>
+                <button type="button" data-tab="offers" role="tab">Ofertas</button>
+                <button type="button" data-tab="notifications" role="tab">Automatizadas</button>
+              </div>
+              <div class="message-center__body">
+                <section class="message-center__panel" data-tab-panel="messages" role="tabpanel">
+                  <div class="message-center__split">
+                    <aside class="message-center__threads hidden" id="messageThreadSidebar">
+                      <div class="message-center__new-thread hidden" id="messageNewThread">
+                        <label class="label" for="messageNewThreadSelect">Iniciar conversación</label>
+                        <select id="messageNewThreadSelect"></select>
+                      </div>
+                      <ul class="message-thread-list" id="messageThreadList"></ul>
+                    </aside>
+                    <div class="message-center__conversation">
+                      <div id="messageEmptyState" class="message-center__empty"></div>
+                      <div id="messageConversation" class="hidden">
+                        <div class="message-center__conversation-header">
+                          <div>
+                            <strong id="messageConversationTitle"></strong>
+                            <div class="dim" id="messageConversationMeta"></div>
+                          </div>
+                        </div>
+                        <div class="message-center__message-list" id="messageList"></div>
+                        <form id="messageForm" class="message-center__form">
+                          <textarea id="messageInput" placeholder="Escribe tu mensaje" autocomplete="off"></textarea>
+                          <div class="message-center__form-actions">
+                            <button type="submit" class="primary">Enviar mensaje</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="message-center__panel hidden" data-tab-panel="budgets" role="tabpanel">
+                  <div class="message-center__scroll" id="messageBudgetsList"></div>
+                </section>
+                <section class="message-center__panel hidden" data-tab-panel="offers" role="tabpanel">
+                  <div id="messageOfferAdminTools" class="message-offer-admin hidden">
+                    <form id="messageOfferForm" class="stacked">
+                      <div class="form-grid">
+                        <div class="full">
+                          <label class="label" for="messageOfferTitle">Título de la oferta</label>
+                          <input id="messageOfferTitle" type="text" placeholder="Ej. Promo fibra + móvil" />
+                        </div>
+                        <div class="full">
+                          <label class="label" for="messageOfferAudience">Destinatarios</label>
+                          <select id="messageOfferAudience">
+                            <option value="all">Todos los usuarios autorizados</option>
+                            <option value="comercial">Solo comerciales</option>
+                            <option value="cliente">Solo clientes</option>
+                            <option value="lider">Jefes de equipo</option>
+                            <option value="user">Usuario concreto</option>
+                          </select>
+                        </div>
+                        <div class="full hidden" id="messageOfferUserField">
+                          <label class="label" for="messageOfferUser">Usuario destino</label>
+                          <select id="messageOfferUser"></select>
+                        </div>
+                      </div>
+                      <div>
+                        <label class="label" for="messageOfferDescription">Detalles de la oferta</label>
+                        <textarea id="messageOfferDescription" placeholder="Incluye condiciones, duración y precio"></textarea>
+                      </div>
+                      <div class="message-center__form-actions">
+                        <button type="submit" class="primary">Publicar oferta</button>
+                      </div>
+                    </form>
+                    <p class="small-hint" id="messageOfferInfo"></p>
+                  </div>
+                  <div class="message-center__scroll" id="messageOffersList"></div>
+                </section>
+                <section class="message-center__panel hidden" data-tab-panel="notifications" role="tabpanel">
+                  <div class="message-center__scroll">
+                    <ul class="notification-list" id="notificationList"></ul>
+                  </div>
+                  <div class="notification-footer">
+                    <button type="button" id="markNotificationsRead">Marcar como leídas</button>
+                  </div>
+                </section>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -740,13 +898,38 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
     <h3>Solicitar presupuesto a medida</h3>
     <p class="dim" style="margin-top:-4px;">Cuéntanos las necesidades del cliente para que el administrador prepare una oferta personalizada.</p>
     <form id="customBudgetForm" class="stacked">
-      <div>
-        <label class="label" for="customBudgetSummary">Resumen de necesidades</label>
-        <textarea id="customBudgetSummary" required placeholder="Ej. Fibra 600 Mbps, 3 líneas ilimitadas, TV con Netflix"></textarea>
-      </div>
-      <div>
-        <label class="label" for="customBudgetContact">Forma de contacto preferida</label>
-        <input id="customBudgetContact" type="text" placeholder="Teléfono o email de contacto" />
+      <div class="form-grid">
+        <div>
+          <label class="label" for="customBudgetClientType">Tipo de cliente</label>
+          <select id="customBudgetClientType">
+            <option value="directo">Cliente directo</option>
+            <option value="plan-amigo">Plan amigo</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="customBudgetBudgetRange">Presupuesto estimado</label>
+          <select id="customBudgetBudgetRange">
+            <option value="">Sin preferencia</option>
+            <option value="hasta-40">Hasta 40 €/mes</option>
+            <option value="40-60">Entre 40 € y 60 €/mes</option>
+            <option value="60-80">Entre 60 € y 80 €/mes</option>
+            <option value="mas-80">Más de 80 €/mes</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="customBudgetDueDate">Fecha objetivo</label>
+          <input id="customBudgetDueDate" type="date" />
+        </div>
+        <div class="full">
+          <label class="label" for="customBudgetSummary">Resumen y necesidades principales</label>
+          <textarea id="customBudgetSummary" required placeholder="Ej. Fibra 600 Mbps, 3 líneas ilimitadas, TV con Netflix"></textarea>
+          <p class="small-hint">Incluye servicios imprescindibles, combinaciones deseadas y condicionantes del cliente.</p>
+        </div>
+        <div class="full">
+          <label class="label" for="customBudgetContact">Forma de contacto preferida</label>
+          <input id="customBudgetContact" type="text" placeholder="Teléfono o email de contacto" />
+          <p class="small-hint">Un teléfono o correo donde podamos enviar la propuesta definitiva.</p>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="smallbtn" id="cancelCustomBudget">Cancelar</button>
@@ -1265,6 +1448,8 @@ const STORAGE_KEYS = {
   notifications: 'panel.notificaciones.v1',
   callRequests: 'panel.llamadas.v1',
   customBudgets: 'panel.presupuestos.v1',
+  messages: 'panel.mensajes.v1',
+  offers: 'panel.ofertas.v1',
   session: 'panel.session.v2',
   users: 'panel.usuarios.v1'
 };
@@ -1300,6 +1485,9 @@ const DEFAULT_USERS = [
 
 const ROLE_LABELS = { admin: 'Administrador', comercial: 'Comercial', basico: 'Básico', lider: 'Responsable de equipo', cliente: 'Cliente' };
 const CLIENT_ROLE = 'cliente';
+const ADMIN_GROUP_ID = '__admins__';
+const MESSAGE_ALLOWED_ROLES = ['admin', 'comercial', 'lider', CLIENT_ROLE];
+const MESSAGE_RECIPIENT_ROLES = ['comercial', 'lider', CLIENT_ROLE];
 const TARIFF_TYPE_LABELS = {
   C: 'Fibra y móvil',
   F: 'Solo fibra',
@@ -1669,6 +1857,9 @@ let grid,
   customBudgetModal,
   customBudgetForm,
   customBudgetSummaryInput,
+  customBudgetClientTypeInput,
+  customBudgetBudgetRangeInput,
+  customBudgetDueDateInput,
   customBudgetContactInput,
   callRequestModal,
   callRequestForm,
@@ -1681,6 +1872,30 @@ let grid,
   notificationDropdown,
   notificationList,
   notificationDot,
+  messageCenter,
+  messageCenterTabs,
+  messageCenterStatus,
+  messageThreadSidebar,
+  messageThreadList,
+  messageNewThread,
+  messageNewThreadSelect,
+  messageConversation,
+  messageConversationTitle,
+  messageConversationMeta,
+  messageEmptyState,
+  messageList,
+  messageForm,
+  messageInput,
+  messageBudgetsList,
+  messageOffersList,
+  messageOfferAdminTools,
+  messageOfferForm,
+  messageOfferTitleInput,
+  messageOfferAudienceSelect,
+  messageOfferUserField,
+  messageOfferUserSelect,
+  messageOfferDescriptionInput,
+  messageOfferInfo,
   markNotificationsReadBtn,
   closeNotificationsBtn,
   callRequestButton,
@@ -1726,6 +1941,12 @@ let rewards = [];
 let notifications = [];
 let callRequests = [];
 let customBudgets = [];
+let messageThreads = [];
+let messageOffers = [];
+let messageTabButtons = [];
+let messageTabPanels = {};
+let messageCenterActiveTab = 'messages';
+let selectedMessageThreadId = '';
 let editingTariffId = null;
 let editingUser = null;
 let commercialNoticeTimeout = null;
@@ -1758,6 +1979,7 @@ function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   renderCommercialPanel();
   renderTeamPanel();
   renderNotifications();
+  renderMessageCenter();
   populateAiFiberOptions();
   if (refreshAi && aiLastQuery) {
     runAiSearch(aiLastQuery, { preserveFormState: true });
@@ -3161,9 +3383,237 @@ function normaliseCustomBudget(raw) {
     createdByRole: raw.createdByRole || '',
     resolvedBy: raw.resolvedBy || '',
     resolvedByName: raw.resolvedByName || '',
-    resolvedAt: raw.resolvedAt || raw.resolved_at || null
+    resolvedAt: raw.resolvedAt || raw.resolved_at || null,
+    clientType: raw.clientType === 'plan-amigo' ? 'plan-amigo' : 'directo',
+    budgetRange: (raw.budgetRange || '').toString().trim(),
+    dueDate: raw.dueDate || raw.deadline || ''
   };
   return entry;
+}
+
+function messageThreadIdForUser(username) {
+  return `thread-${(username || '').toLowerCase()}`;
+}
+
+function messageReadKeyForUser(user) {
+  if (!user) return '';
+  return user.role === 'admin' ? ADMIN_GROUP_ID : user.username;
+}
+
+function normaliseMessageEntry(raw, participant) {
+  if (!raw) return null;
+  const body = (raw.body || raw.message || '').toString().trim();
+  if (!body) return null;
+  const sender = (raw.sender || raw.from || '').toString().trim();
+  const senderRole = raw.senderRole || (sender === ADMIN_GROUP_ID ? 'admin' : (getUserByUsername(sender)?.role || ''));
+  let recipient = (raw.recipient || raw.to || '').toString().trim();
+  let recipientRole = raw.recipientRole || '';
+  if (!recipient) {
+    recipient = senderRole === 'admin' ? (participant || '') : ADMIN_GROUP_ID;
+  }
+  if (!recipientRole) {
+    if (recipient === ADMIN_GROUP_ID) {
+      recipientRole = 'admin';
+    } else {
+      recipientRole = getUserByUsername(recipient)?.role || '';
+    }
+  }
+  const readBy = Array.isArray(raw.readBy) ? Array.from(new Set(raw.readBy.filter(Boolean))) : [];
+  return {
+    id: raw.id || createId('msg'),
+    body,
+    createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
+    sender,
+    senderRole,
+    recipient,
+    recipientRole,
+    readBy
+  };
+}
+
+function normaliseMessageThread(raw) {
+  if (!raw) return null;
+  const participant = (raw.user || raw.participant || raw.username || '').toString().trim();
+  if (!participant) return null;
+  const id = raw.id || messageThreadIdForUser(participant);
+  const messages = Array.isArray(raw.messages)
+    ? raw.messages.map(item => normaliseMessageEntry(item, participant)).filter(Boolean)
+    : [];
+  messages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  const createdAt = raw.createdAt || raw.created_at || (messages[0]?.createdAt || new Date().toISOString());
+  const updatedAt = raw.updatedAt || raw.updated_at || (messages[messages.length - 1]?.createdAt || createdAt);
+  return { id, user: participant, createdAt, updatedAt, messages };
+}
+
+function loadMessageThreadsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.messages);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normaliseMessageThread).filter(Boolean);
+  } catch (error) {
+    console.warn('No se pudieron cargar los mensajes internos', error);
+    return [];
+  }
+}
+
+  function saveMessageThreads() {
+    if (remoteState.enabled) {
+      scheduleRemoteSync();
+    }
+    try {
+      localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(messageThreads));
+    } catch (error) {
+      console.warn('No se pudieron guardar los mensajes internos', error);
+    }
+}
+
+function normaliseOffer(raw) {
+  if (!raw) return null;
+  const title = (raw.title || raw.titulo || '').toString().trim();
+  const description = (raw.description || raw.detalle || raw.detalles || '').toString().trim();
+  if (!title && !description) return null;
+  const audience = (raw.audience || raw.target || 'all').toString().trim() || 'all';
+  const targetUser = (raw.targetUser || raw.username || '').toString().trim();
+  const readBy = Array.isArray(raw.readBy) ? Array.from(new Set(raw.readBy.filter(Boolean))) : [];
+  return {
+    id: raw.id || createId('offer'),
+    title,
+    description,
+    audience,
+    targetUser,
+    createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
+    createdBy: raw.createdBy || raw.owner || '',
+    readBy
+  };
+}
+
+function loadOffersFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.offers);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normaliseOffer).filter(Boolean);
+  } catch (error) {
+    console.warn('No se pudieron cargar las ofertas internas', error);
+    return [];
+  }
+}
+
+  function saveOffers() {
+    if (remoteState.enabled) {
+      scheduleRemoteSync();
+    }
+    try {
+      localStorage.setItem(STORAGE_KEYS.offers, JSON.stringify(messageOffers));
+    } catch (error) {
+      console.warn('No se pudieron guardar las ofertas internas', error);
+    }
+  }
+
+function offerAppliesToUser(offer, user) {
+  if (!offer || !user) return false;
+  if (user.role === 'admin') return true;
+  switch (offer.audience) {
+    case 'all':
+      return MESSAGE_ALLOWED_ROLES.includes(user.role) && user.role !== 'admin';
+    case 'comercial':
+      return user.role === 'comercial';
+    case 'cliente':
+      return user.role === CLIENT_ROLE;
+    case 'lider':
+      return user.role === 'lider';
+    case 'user':
+      return Boolean(offer.targetUser) && offer.targetUser === user.username;
+    default:
+      return false;
+  }
+}
+
+function getOfferRecipients(offer) {
+  if (!offer) return [];
+  const eligible = users.filter(user => MESSAGE_ALLOWED_ROLES.includes(user.role) && user.role !== 'admin');
+  if (offer.audience === 'all') {
+    return eligible.map(user => user.username);
+  }
+  if (offer.audience === 'user') {
+    return eligible.filter(user => user.username === offer.targetUser).map(user => user.username);
+  }
+  return eligible.filter(user => offerAppliesToUser(offer, user)).map(user => user.username);
+}
+
+function countUnreadOffersForUser(user) {
+  if (!user) return 0;
+  const key = user.username;
+  return messageOffers.reduce((total, offer) => {
+    if (!offerAppliesToUser(offer, user)) return total;
+    const readBy = Array.isArray(offer.readBy) ? offer.readBy : [];
+    const identifier = user.role === 'admin' ? key : key;
+    return readBy.includes(identifier) ? total : total + 1;
+  }, 0);
+}
+
+function hasUnreadOffersForUser(user) {
+  return countUnreadOffersForUser(user) > 0;
+}
+
+  function markOffersAsReadForUser(user) {
+    if (!user) return false;
+    const key = user.username;
+    let updated = false;
+    messageOffers.forEach(offer => {
+      if (!offerAppliesToUser(offer, user)) return;
+      if (!Array.isArray(offer.readBy)) {
+        offer.readBy = [];
+      }
+      if (!offer.readBy.includes(key)) {
+        offer.readBy.push(key);
+        updated = true;
+      }
+    });
+    if (updated) {
+      saveOffers();
+    }
+    return updated;
+  }
+
+function clientTypeLabel(type) {
+  return type === 'plan-amigo' ? 'Plan amigo' : 'Cliente directo';
+}
+
+function offerAudienceLabel(offer) {
+  if (!offer) return 'Todos los perfiles';
+  switch (offer.audience) {
+    case 'comercial':
+      return 'Solo comerciales';
+    case 'cliente':
+      return 'Solo clientes';
+    case 'lider':
+      return 'Jefes de equipo';
+    case 'user': {
+      const target = getUserByUsername(offer.targetUser);
+      return target ? `Oferta para ${userDisplayName(target)}` : 'Oferta personalizada';
+    }
+    default:
+      return 'Todos los perfiles';
+  }
+}
+
+function budgetRangeLabel(range) {
+  switch (range) {
+    case 'hasta-40':
+      return 'Hasta 40 €/mes';
+    case '40-60':
+      return 'Entre 40 € y 60 €/mes';
+    case '60-80':
+      return 'Entre 60 € y 80 €/mes';
+    case 'mas-80':
+      return 'Más de 80 €/mes';
+    default:
+      return '';
+  }
 }
 
 function loadCustomBudgetsFromStorage() {
@@ -3241,27 +3691,23 @@ function renderNotifications() {
   const relevant = notifications
     .filter(notification => notificationAppliesToUser(notification, currentUser))
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-  const hasUnread = relevant.some(notification => !notification.read);
-  notificationButton.classList.toggle('has-unread', hasUnread);
-  if (notificationDot) {
-    notificationDot.style.display = hasUnread ? 'block' : 'none';
-  }
   if (!relevant.length) {
     notificationList.innerHTML = '<li class="notification-empty">Sin notificaciones pendientes</li>';
-    return;
+  } else {
+    notificationList.innerHTML = relevant
+      .map(notification => {
+        const time = formatDateTime(notification.createdAt);
+        const itemClass = notification.read ? 'notification-item' : 'notification-item unread';
+        return `
+          <li class="${itemClass}" data-id="${notification.id}">
+            <div class="notification-message">${escapeHtml(notification.message)}</div>
+            <div class="notification-time">${escapeHtml(time)}</div>
+          </li>
+        `;
+      })
+      .join('');
   }
-  notificationList.innerHTML = relevant
-    .map(notification => {
-      const time = formatDateTime(notification.createdAt);
-      const itemClass = notification.read ? 'notification-item' : 'notification-item unread';
-      return `
-        <li class="${itemClass}" data-id="${notification.id}">
-          <div class="notification-message">${escapeHtml(notification.message)}</div>
-          <div class="notification-time">${escapeHtml(time)}</div>
-        </li>
-      `;
-    })
-    .join('');
+  updateNotificationBadge();
 }
 
 function showNotifications() {
@@ -3316,6 +3762,7 @@ function markCurrentNotificationsAsRead() {
   }
   saveNotifications();
   renderNotifications();
+  updateNotificationBadge();
 }
 
 function handleGlobalClickForNotifications(event) {
@@ -3345,17 +3792,23 @@ function closeCustomBudgetModal() {
 function handleCustomBudgetSubmit(event) {
   event.preventDefault();
   if (!customBudgetForm) return;
-  if (!currentUser || !['comercial', CLIENT_ROLE, 'lider'].includes(currentUser.role)) {
+  if (!currentUser || !(currentUser.role === 'comercial' || currentUser.role === CLIENT_ROLE)) {
     closeCustomBudgetModal();
     return;
   }
   const summary = customBudgetSummaryInput?.value.trim() || '';
   if (!summary) return;
   const contact = customBudgetContactInput?.value.trim() || '';
+  const clientType = customBudgetClientTypeInput?.value === 'plan-amigo' ? 'plan-amigo' : 'directo';
+  const budgetRange = customBudgetBudgetRangeInput?.value || '';
+  const dueDate = customBudgetDueDateInput?.value || '';
   const now = new Date().toISOString();
   const entry = normaliseCustomBudget({
     summary,
     contact,
+    clientType,
+    budgetRange,
+    dueDate,
     status: 'pendiente',
     createdAt: now,
     updatedAt: now,
@@ -3366,9 +3819,95 @@ function handleCustomBudgetSubmit(event) {
   customBudgets.unshift(entry);
   saveCustomBudgets();
   renderCustomBudgetInbox();
-  notifyAdmins(`Nueva solicitud de presupuesto a medida de ${entry.createdByName || 'un usuario'}.`, { id: entry.id, kind: 'custom-budget' });
+  renderMessageCenterBudgets();
+  const requesterLabel = entry.createdByName || 'un usuario';
+  const typeLabel = clientTypeLabel(entry.clientType);
+  notifyAdmins(`Nueva solicitud de presupuesto a medida (${typeLabel}) de ${requesterLabel}.`, { id: entry.id, kind: 'custom-budget' });
   pushNotification({ user: currentUser.username, message: 'Tu solicitud de presupuesto a medida ha sido enviada al administrador.', type: 'success', meta: { id: entry.id } });
   closeCustomBudgetModal();
+}
+
+function formatCustomBudgetCard(entry, { showActions = false } = {}) {
+  if (!entry) return '';
+  const status = entry.status === 'resuelto' ? 'vendido' : 'pendiente';
+  const statusText = entry.status === 'resuelto' ? 'Resuelto' : 'Pendiente';
+  const requester = entry.createdByName || entry.createdBy || 'Cliente';
+  const contactInfo = entry.contact
+    ? `<div class="dim">Contacto: ${escapeHtml(entry.contact)}</div>`
+    : '<div class="dim">Sin datos de contacto adicionales</div>';
+  const budgetLabel = budgetRangeLabel(entry.budgetRange);
+  const badgeItems = [
+    `<span class="message-badge" data-variant="${entry.clientType === 'plan-amigo' ? 'success' : 'warning'}">${escapeHtml(clientTypeLabel(entry.clientType))}</span>`,
+    budgetLabel ? `<span class="message-badge">${escapeHtml(budgetLabel)}</span>` : ''
+  ].filter(Boolean);
+  const badges = badgeItems.length ? `<div class="message-offer-tags">${badgeItems.join('')}</div>` : '';
+  const dueInfo = entry.dueDate ? `<div class="dim">Fecha objetivo: ${escapeHtml(formatDate(entry.dueDate))}</div>` : '';
+  const footerInfo = entry.status === 'resuelto'
+    ? `<span>Resuelto por ${escapeHtml(entry.resolvedByName || entry.resolvedBy || 'administración')} · ${escapeHtml(formatDateTime(entry.resolvedAt || entry.updatedAt))}</span>`
+    : `<span>Última actualización: ${escapeHtml(formatDateTime(entry.updatedAt || entry.createdAt))}</span>`;
+  let actions = '';
+  if (showActions) {
+    const buttons = entry.status === 'pendiente'
+      ? `<button class="smallbtn" data-action="budget-complete" data-id="${escapeHtml(entry.id)}">Marcar resuelto</button>
+         <button class="smallbtn danger" data-action="budget-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`
+      : `<button class="smallbtn danger" data-action="budget-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`;
+    actions = `<div class="actions">${buttons}</div>`;
+  }
+  const infoForRequester = showActions
+    ? ''
+    : `<div class="message-budgets-note">${entry.status === 'resuelto' ? 'El administrador ha compartido una propuesta personalizada.' : 'Tu solicitud está en revisión por el equipo administrador.'}</div>`;
+  return `
+    <article class="lead-card" data-id="${escapeHtml(entry.id)}">
+      <header>
+        <div>
+          <strong>${escapeHtml(entry.summary || 'Solicitud de presupuesto')}</strong>
+          <div class="meta">Solicitado por ${escapeHtml(requester)}</div>
+          ${badges}
+        </div>
+        <span class="status-pill" data-status="${status}">${statusText}</span>
+      </header>
+      <div class="body">
+        ${contactInfo}
+        ${dueInfo}
+        <div class="dim">Creado: ${escapeHtml(formatDateTime(entry.createdAt))}</div>
+      </div>
+      <footer>
+        ${footerInfo}
+      </footer>
+      ${infoForRequester}
+      ${actions}
+    </article>
+  `;
+}
+
+function formatOfferCard(offer, { isAdmin = false, unread = false } = {}) {
+  if (!offer) return '';
+  const classes = ['message-offer-card'];
+  if (unread) classes.push('message-offer-card--unread');
+  const creatorRecord = offer.createdBy ? getUserByUsername(offer.createdBy) : null;
+  const creatorName = creatorRecord ? userDisplayName(creatorRecord) : (offer.createdBy || 'Administración');
+  const audienceTag = `<span class="tag">${escapeHtml(offerAudienceLabel(offer))}</span>`;
+  const headerBadges = `<div class="message-offer-tags">${audienceTag}</div>`;
+  const description = offer.description
+    ? `<div>${escapeHtml(offer.description)}</div>`
+    : '<div class="dim">Sin descripción adicional.</div>';
+  const footer = `<footer>Publicada el ${escapeHtml(formatDateTime(offer.createdAt))} · ${escapeHtml(creatorName)}</footer>`;
+  const actions = isAdmin
+    ? `<div class="message-offer-actions"><button class="smallbtn danger" data-action="offer-delete" data-id="${escapeHtml(offer.id)}">Eliminar</button></div>`
+    : '';
+  return `
+    <article class="${classes.join(' ')}" data-id="${escapeHtml(offer.id)}">
+      <header>
+        <div>
+          <strong>${escapeHtml(offer.title || 'Oferta personalizada')}</strong>
+          ${headerBadges}
+        </div>
+        ${actions}
+      </header>
+      ${description}
+      ${footer}
+    </article>
+  `;
 }
 
 function renderCustomBudgetInbox() {
@@ -3387,44 +3926,7 @@ function renderCustomBudgetInbox() {
   const items = customBudgets
     .slice()
     .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
-  customBudgetList.innerHTML = items
-    .map(entry => {
-      const status = entry.status === 'resuelto' ? 'vendido' : 'pendiente';
-      const statusText = entry.status === 'resuelto' ? 'Resuelto' : 'Pendiente';
-      const requester = entry.createdByName || entry.createdBy || 'Cliente';
-      const contactInfo = entry.contact
-        ? `<div class="dim">Contacto: ${escapeHtml(entry.contact)}</div>`
-        : '<div class="dim">Sin datos de contacto adicionales</div>';
-      const footerInfo = entry.status === 'resuelto'
-        ? `<span>Resuelto por ${escapeHtml(entry.resolvedByName || entry.resolvedBy || 'administración')} · ${escapeHtml(formatDateTime(entry.resolvedAt || entry.updatedAt))}</span>`
-        : `<span>Última actualización: ${escapeHtml(formatDateTime(entry.updatedAt || entry.createdAt))}</span>`;
-      const actions = entry.status === 'pendiente'
-        ? `<button class="smallbtn" data-action="budget-complete" data-id="${escapeHtml(entry.id)}">Marcar resuelto</button>
-            <button class="smallbtn danger" data-action="budget-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`
-        : `<button class="smallbtn danger" data-action="budget-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`;
-      return `
-        <article class="lead-card" data-id="${escapeHtml(entry.id)}">
-          <header>
-            <div>
-              <strong>${escapeHtml(entry.summary)}</strong>
-              <div class="meta">Solicitado por ${escapeHtml(requester)}</div>
-            </div>
-            <span class="status-pill" data-status="${status}">${statusText}</span>
-          </header>
-          <div class="body">
-            ${contactInfo}
-            <div class="dim">Creado: ${escapeHtml(formatDateTime(entry.createdAt))}</div>
-          </div>
-          <footer>
-            ${footerInfo}
-          </footer>
-          <div class="actions">
-            ${actions}
-          </div>
-        </article>
-      `;
-    })
-    .join('');
+  customBudgetList.innerHTML = items.map(entry => formatCustomBudgetCard(entry, { showActions: true })).join('');
 }
 
 function handleCustomBudgetAction(event) {
@@ -3445,6 +3947,7 @@ function handleCustomBudgetAction(event) {
     entry.updatedAt = now;
     saveCustomBudgets();
     renderCustomBudgetInbox();
+    renderMessageCenterBudgets();
     if (entry.createdBy) {
       pushNotification({ user: entry.createdBy, message: 'Tu solicitud de presupuesto a medida ha sido atendida por el administrador.', type: 'info', meta: { id: entry.id } });
     }
@@ -3457,10 +3960,590 @@ function handleCustomBudgetAction(event) {
     const [removed] = customBudgets.splice(index, 1);
     saveCustomBudgets();
     renderCustomBudgetInbox();
+    renderMessageCenterBudgets();
     if (removed?.createdBy) {
       pushNotification({ user: removed.createdBy, message: 'Tu solicitud de presupuesto a medida se ha cerrado.', type: 'warning', meta: { id: removed.id } });
     }
   }
+}
+
+function messageThreadAppliesToUser(thread, user) {
+  if (!thread || !user) return false;
+  if (user.role === 'admin') return true;
+  return thread.user === user.username;
+}
+
+function getMessageThreadById(id) {
+  if (!id) return null;
+  return messageThreads.find(thread => thread.id === id) || null;
+}
+
+function ensureMessageThreadForUser(username) {
+  if (!username) return null;
+  const threadId = messageThreadIdForUser(username);
+  let thread = getMessageThreadById(threadId);
+  if (thread) return thread;
+  const participant = getUserByUsername(username);
+  if (!participant || !MESSAGE_RECIPIENT_ROLES.includes(participant.role)) return null;
+  const now = new Date().toISOString();
+  thread = { id: threadId, user: username, createdAt: now, updatedAt: now, messages: [] };
+  messageThreads.push(thread);
+  saveMessageThreads();
+  return thread;
+}
+
+function countUnreadMessagesInThread(thread, user) {
+  if (!thread || !user) return 0;
+  if (!Array.isArray(thread.messages)) return 0;
+  if (user.role === 'admin') {
+    return thread.messages.filter(message => message.recipientRole === 'admin' && !(Array.isArray(message.readBy) && message.readBy.includes(ADMIN_GROUP_ID))).length;
+  }
+  return thread.messages.filter(message => message.recipient === user.username && !(Array.isArray(message.readBy) && message.readBy.includes(user.username))).length;
+}
+
+function countUnreadMessagesForUser(user) {
+  if (!user) return 0;
+  return messageThreads.reduce((total, thread) => {
+    if (!messageThreadAppliesToUser(thread, user)) return total;
+    return total + countUnreadMessagesInThread(thread, user);
+  }, 0);
+}
+
+function hasUnreadMessagesForUser(user) {
+  return countUnreadMessagesForUser(user) > 0;
+}
+
+function markThreadAsRead(thread, user) {
+  if (!thread || !user) return false;
+  let updated = false;
+  if (!Array.isArray(thread.messages)) return false;
+  if (user.role === 'admin') {
+    thread.messages.forEach(message => {
+      if (message.recipientRole === 'admin') {
+        if (!Array.isArray(message.readBy)) {
+          message.readBy = [];
+        }
+        if (!message.readBy.includes(ADMIN_GROUP_ID)) {
+          message.readBy.push(ADMIN_GROUP_ID);
+          updated = true;
+        }
+      }
+    });
+  } else {
+    thread.messages.forEach(message => {
+      if (message.recipient === user.username) {
+        if (!Array.isArray(message.readBy)) {
+          message.readBy = [];
+        }
+        if (!message.readBy.includes(user.username)) {
+          message.readBy.push(user.username);
+          updated = true;
+        }
+      }
+    });
+  }
+  if (updated) {
+    saveMessageThreads();
+  }
+  return updated;
+}
+
+function canCurrentUserSendMessages() {
+  if (!currentUser) return false;
+  return MESSAGE_ALLOWED_ROLES.includes(currentUser.role);
+}
+
+function getEligibleMessageUsers() {
+  return users
+    .filter(user => MESSAGE_RECIPIENT_ROLES.includes(user.role))
+    .sort((a, b) => userDisplayName(a).localeCompare(userDisplayName(b), 'es'));
+}
+
+function populateMessageOfferUserOptions() {
+  if (!messageOfferUserSelect) return;
+  const eligible = getEligibleMessageUsers();
+  if (!eligible.length) {
+    messageOfferUserSelect.innerHTML = '<option value="">Sin usuarios disponibles</option>';
+    return;
+  }
+  const options = eligible
+    .map(user => `<option value="${escapeHtml(user.username)}">${escapeHtml(userDisplayName(user))}</option>`)
+    .join('');
+  messageOfferUserSelect.innerHTML = `<option value="">Selecciona usuario</option>${options}`;
+}
+
+function ensureSelectedAdminThread() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  if (selectedMessageThreadId) {
+    const existing = getMessageThreadById(selectedMessageThreadId);
+    if (existing && MESSAGE_RECIPIENT_ROLES.includes(getUserByUsername(existing.user)?.role || '')) {
+      return;
+    }
+  }
+  const sorted = messageThreads
+    .filter(thread => MESSAGE_RECIPIENT_ROLES.includes(getUserByUsername(thread.user)?.role || ''))
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+  selectedMessageThreadId = sorted.length ? sorted[0].id : '';
+}
+
+function renderMessageThreads() {
+  if (!messageThreadSidebar || !messageThreadList) return;
+  if (!currentUser || currentUser.role !== 'admin') {
+    messageThreadSidebar.classList.add('hidden');
+    messageThreadList.innerHTML = '';
+    if (messageNewThread) messageNewThread.classList.add('hidden');
+    return;
+  }
+  const threads = messageThreads
+    .filter(thread => MESSAGE_RECIPIENT_ROLES.includes(getUserByUsername(thread.user)?.role || ''))
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+  ensureSelectedAdminThread();
+  if (messageNewThread && messageNewThreadSelect) {
+    messageNewThread.classList.remove('hidden');
+    populateMessageOfferUserOptions();
+    messageNewThreadSelect.value = '';
+  }
+  if (!threads.length) {
+    messageThreadSidebar.classList.remove('hidden');
+    messageThreadList.innerHTML = '<li class="notification-empty">Aún no hay conversaciones con los usuarios.</li>';
+    return;
+  }
+  messageThreadSidebar.classList.remove('hidden');
+  messageThreadList.innerHTML = threads
+    .map(thread => {
+      const userRecord = getUserByUsername(thread.user);
+      const name = userDisplayName(userRecord) || thread.user;
+      const unreadCount = countUnreadMessagesInThread(thread, currentUser);
+      const lastMessage = Array.isArray(thread.messages) && thread.messages.length
+        ? thread.messages[thread.messages.length - 1]
+        : null;
+      const previewText = lastMessage
+        ? `${lastMessage.body.slice(0, 60)}${lastMessage.body.length > 60 ? '…' : ''}`
+        : 'Sin mensajes todavía';
+      const timeStamp = lastMessage ? lastMessage.createdAt : thread.updatedAt || thread.createdAt;
+      const time = formatDateTime(timeStamp);
+      const badge = unreadCount ? `<span class="message-thread-item__badge">${unreadCount}</span>` : '';
+      const activeClass = thread.id === selectedMessageThreadId ? ' active' : '';
+      return `
+        <li class="message-thread-item${activeClass}" data-thread-id="${escapeHtml(thread.id)}">
+          <div>
+            <strong>${escapeHtml(name)}</strong>
+            <div class="message-thread-item__meta">${escapeHtml(previewText)} · ${escapeHtml(time)}</div>
+          </div>
+          ${badge}
+        </li>
+      `;
+    })
+    .join('');
+}
+
+function scrollMessageListToBottom() {
+  if (!messageList) return;
+  messageList.scrollTop = messageList.scrollHeight;
+}
+
+function renderMessageConversation() {
+  if (!messageConversation || !messageEmptyState) return;
+  if (!currentUser) {
+    messageConversation.classList.add('hidden');
+    messageEmptyState.classList.remove('hidden');
+    messageEmptyState.textContent = 'Inicia sesión para conversar con el equipo administrador.';
+    if (messageForm) {
+      messageForm.classList.add('hidden');
+    }
+    return;
+  }
+  let thread = null;
+  if (currentUser.role === 'admin') {
+    ensureSelectedAdminThread();
+    thread = getMessageThreadById(selectedMessageThreadId);
+  } else {
+    thread = ensureMessageThreadForUser(currentUser.username);
+  }
+  const canSend = canCurrentUserSendMessages() && (currentUser.role !== 'admin' || Boolean(thread));
+  if (!thread) {
+    messageConversation.classList.add('hidden');
+    messageEmptyState.classList.remove('hidden');
+    messageEmptyState.innerHTML = currentUser.role === 'admin'
+      ? 'Selecciona un usuario de la lista para iniciar una conversación.'
+      : 'Todavía no hay mensajes con la administración. ¡Empieza uno y te responderemos en breve!';
+    if (messageForm) {
+      messageForm.classList.toggle('hidden', !canSend);
+      if (messageInput) {
+        messageInput.disabled = !canSend;
+        messageInput.placeholder = canSend ? 'Escribe tu mensaje' : 'Tu rol no permite enviar mensajes directos.';
+      }
+    }
+    return;
+  }
+  messageEmptyState.classList.add('hidden');
+  messageConversation.classList.remove('hidden');
+  if (messageForm) {
+    messageForm.classList.remove('hidden');
+  }
+  const partnerRecord = getUserByUsername(thread.user);
+  if (currentUser.role === 'admin') {
+    if (messageConversationTitle) {
+      messageConversationTitle.textContent = partnerRecord ? userDisplayName(partnerRecord) : thread.user;
+    }
+    if (messageConversationMeta) {
+      const roleText = partnerRecord ? roleLabel(partnerRecord.role) : '';
+      messageConversationMeta.textContent = roleText ? `${roleText} · ${thread.user}` : thread.user;
+    }
+  } else {
+    if (messageConversationTitle) {
+      messageConversationTitle.textContent = 'Equipo administrador';
+    }
+    if (messageConversationMeta) {
+      const adminUsers = getAdminUsernames();
+      messageConversationMeta.textContent = adminUsers.length ? `Responde ${adminUsers.join(', ')}` : 'Contacto interno';
+    }
+  }
+  if (messageInput) {
+    messageInput.disabled = !canSend;
+    messageInput.placeholder = canSend
+      ? 'Escribe tu mensaje'
+      : currentUser.role === 'admin'
+        ? 'Selecciona un usuario para continuar.'
+        : 'Tu rol no permite enviar mensajes directos.';
+  }
+  const messages = Array.isArray(thread.messages) ? thread.messages : [];
+  if (!messages.length) {
+    messageList.innerHTML = '<div class="dim">Todavía no hay mensajes en esta conversación.</div>';
+  } else {
+    messageList.innerHTML = messages
+      .map(message => {
+        const isOutgoing = currentUser.role === 'admin'
+          ? message.senderRole === 'admin'
+          : message.sender === currentUser.username;
+        const senderRecord = message.sender ? getUserByUsername(message.sender) : null;
+        const senderName = senderRecord
+          ? userDisplayName(senderRecord)
+          : message.senderRole === 'admin'
+            ? 'Administración'
+            : (message.sender || 'Usuario');
+        const meta = `${senderName} · ${formatDateTime(message.createdAt)}`;
+        const directionClass = isOutgoing ? 'message-item--outgoing' : 'message-item--incoming';
+        return `
+          <div class="message-item ${directionClass}">
+            <div class="message-item__meta">${escapeHtml(meta)}</div>
+            <div class="message-item__body">${escapeHtml(message.body)}</div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+  if (messageCenterActiveTab === 'messages' && markThreadAsRead(thread, currentUser)) {
+    updateNotificationBadge();
+  }
+  scrollMessageListToBottom();
+}
+
+function renderMessageCenterBudgets() {
+  if (!messageBudgetsList) return;
+  if (!currentUser) {
+    messageBudgetsList.innerHTML = '<div class="message-center__empty">Inicia sesión para consultar tus solicitudes de presupuesto.</div>';
+    return;
+  }
+  const isAdmin = currentUser.role === 'admin';
+  const relevant = (isAdmin ? customBudgets.slice() : customBudgets.filter(entry => entry.createdBy === currentUser.username))
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+  if (!relevant.length) {
+    messageBudgetsList.innerHTML = '<div class="message-center__empty">No hay presupuestos registrados todavía.</div>';
+    return;
+  }
+  messageBudgetsList.innerHTML = relevant
+    .map(entry => formatCustomBudgetCard(entry, { showActions: isAdmin }))
+    .join('');
+}
+
+  function renderMessageOffers(markAsRead = false) {
+    if (!messageOffersList) return;
+    if (!currentUser) {
+      messageOfferAdminTools?.classList.add('hidden');
+      messageOffersList.innerHTML = '<div class="message-center__empty">Inicia sesión para revisar las ofertas disponibles.</div>';
+      return;
+    }
+    const isAdmin = currentUser.role === 'admin';
+    if (isAdmin) {
+      messageOfferAdminTools?.classList.remove('hidden');
+      populateMessageOfferUserOptions();
+    } else {
+      messageOfferAdminTools?.classList.add('hidden');
+    }
+    if (markAsRead && !isAdmin) {
+      markOffersAsReadForUser(currentUser);
+    }
+    const offersToShow = (isAdmin ? messageOffers.slice() : messageOffers.filter(offer => offerAppliesToUser(offer, currentUser)))
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    if (!offersToShow.length) {
+      messageOffersList.innerHTML = '<div class="message-center__empty">No hay ofertas nuevas por el momento.</div>';
+    } else {
+      messageOffersList.innerHTML = offersToShow
+        .map(offer => {
+          const unread = !isAdmin && !(Array.isArray(offer.readBy) && offer.readBy.includes(currentUser.username));
+          return formatOfferCard(offer, { isAdmin, unread });
+        })
+        .join('');
+    }
+  }
+
+function updateMessageTabState() {
+  if (messageCenterTabs && !messageTabButtons.length) {
+    messageTabButtons = Array.from(messageCenterTabs.querySelectorAll('button[data-tab]'));
+  }
+  if (messageCenter && !Object.keys(messageTabPanels).length) {
+    $$("[data-tab-panel]", messageCenter).forEach(panel => {
+      if (panel?.dataset?.tabPanel) {
+        messageTabPanels[panel.dataset.tabPanel] = panel;
+      }
+    });
+  }
+  messageTabButtons.forEach(button => {
+    const tab = button.dataset.tab || '';
+    const isActive = tab === messageCenterActiveTab;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  Object.entries(messageTabPanels).forEach(([key, panel]) => {
+    if (!panel) return;
+    if (key === messageCenterActiveTab) {
+      panel.classList.remove('hidden');
+    } else {
+      panel.classList.add('hidden');
+    }
+  });
+}
+
+function renderMessageCenter() {
+  if (!messageCenter) return;
+  updateMessageTabState();
+  renderMessageThreads();
+  renderMessageCenterBudgets();
+  renderMessageOffers(messageCenterActiveTab === 'offers');
+  renderMessageConversation();
+  updateNotificationBadge();
+}
+
+function setMessageCenterTab(tab) {
+  const validTabs = ['messages', 'budgets', 'offers', 'notifications'];
+  const targetTab = validTabs.includes(tab) ? tab : 'messages';
+  if (messageCenterActiveTab === targetTab) {
+    if (targetTab === 'messages') {
+      renderMessageConversation();
+    }
+    if (targetTab === 'offers') {
+      renderMessageOffers(true);
+    }
+    if (targetTab === 'budgets') {
+      renderMessageCenterBudgets();
+    }
+    if (targetTab === 'notifications') {
+      renderNotifications();
+    }
+    updateMessageTabState();
+    return;
+  }
+  messageCenterActiveTab = targetTab;
+  updateMessageTabState();
+  if (targetTab === 'offers') {
+    renderMessageOffers(true);
+  } else if (targetTab === 'budgets') {
+    renderMessageCenterBudgets();
+  } else if (targetTab === 'messages') {
+    renderMessageConversation();
+  } else if (targetTab === 'notifications') {
+    renderNotifications();
+  }
+  updateNotificationBadge();
+}
+
+function updateNotificationBadge() {
+  if (!notificationButton) return;
+  const unreadNotifications = notifications
+    .filter(notification => notificationAppliesToUser(notification, currentUser))
+    .filter(notification => !notification.read).length;
+  const unreadMessages = countUnreadMessagesForUser(currentUser);
+  const unreadOffers = countUnreadOffersForUser(currentUser);
+  const highlight = Boolean(unreadNotifications || unreadMessages || unreadOffers);
+  notificationButton.classList.toggle('has-unread', highlight);
+  if (notificationDot) {
+    notificationDot.style.display = highlight ? 'block' : 'none';
+  }
+  if (messageCenterStatus) {
+    const parts = [];
+    if (unreadMessages) parts.push(`${unreadMessages} mensaje${unreadMessages === 1 ? '' : 's'}`);
+    if (unreadOffers) parts.push(`${unreadOffers} oferta${unreadOffers === 1 ? '' : 's'}`);
+    if (unreadNotifications) parts.push(`${unreadNotifications} aviso automatizado${unreadNotifications === 1 ? '' : 's'}`);
+    messageCenterStatus.textContent = parts.length ? `Pendientes: ${parts.join(' · ')}` : 'Sin pendientes';
+  }
+}
+
+function handleMessageTabClick(event) {
+  const button = event.target.closest('button[data-tab]');
+  if (!button) return;
+  event.preventDefault();
+  setMessageCenterTab(button.dataset.tab || 'messages');
+}
+
+function handleMessageThreadClick(event) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  const item = event.target.closest('.message-thread-item[data-thread-id]');
+  if (!item) return;
+  selectedMessageThreadId = item.dataset.threadId || '';
+  renderMessageThreads();
+  renderMessageConversation();
+  updateNotificationBadge();
+}
+
+function handleMessageFormSubmit(event) {
+  event.preventDefault();
+  if (!messageForm || !messageInput || !currentUser) return;
+  const body = messageInput.value.trim();
+  if (!body) return;
+  if (!canCurrentUserSendMessages()) return;
+  let thread = null;
+  let recipient = '';
+  let recipientRole = '';
+  const now = new Date().toISOString();
+  if (currentUser.role === 'admin') {
+    thread = getMessageThreadById(selectedMessageThreadId);
+    if (!thread) return;
+    const participant = getUserByUsername(thread.user);
+    if (!participant || !MESSAGE_RECIPIENT_ROLES.includes(participant.role)) return;
+    recipient = participant.username;
+    recipientRole = participant.role;
+  } else {
+    thread = ensureMessageThreadForUser(currentUser.username);
+    if (!thread) return;
+    recipient = ADMIN_GROUP_ID;
+    recipientRole = 'admin';
+  }
+  const message = {
+    id: createId('msg'),
+    body,
+    createdAt: now,
+    sender: currentUser.username,
+    senderRole: currentUser.role,
+    recipient,
+    recipientRole,
+    readBy: [currentUser.role === 'admin' ? ADMIN_GROUP_ID : currentUser.username]
+  };
+  if (!Array.isArray(thread.messages)) {
+    thread.messages = [];
+  }
+  thread.messages.push(message);
+  thread.updatedAt = now;
+  saveMessageThreads();
+  messageInput.value = '';
+  if (currentUser.role === 'admin') {
+    const recipientUser = getUserByUsername(recipient);
+    if (recipientUser) {
+      pushNotification({ user: recipientUser.username, message: 'Tienes un nuevo mensaje del administrador.', type: 'info', meta: { kind: 'message', threadId: thread.id } });
+    }
+  } else {
+    const senderName = userDisplayName(currentUser) || currentUser.username;
+    notifyAdmins(`Nuevo mensaje de ${senderName}.`, { kind: 'message', threadId: thread.id });
+  }
+  renderMessageThreads();
+  renderMessageConversation();
+  updateNotificationBadge();
+}
+
+function handleMessageNewThreadChange(event) {
+  const value = event.target.value;
+  if (!value) return;
+  const thread = ensureMessageThreadForUser(value);
+  if (!thread) {
+    event.target.value = '';
+    return;
+  }
+  selectedMessageThreadId = thread.id;
+  renderMessageThreads();
+  renderMessageConversation();
+  updateNotificationBadge();
+  event.target.value = '';
+}
+
+function handleOfferAudienceChange() {
+  if (!messageOfferAudienceSelect) return;
+  const value = messageOfferAudienceSelect.value;
+  if (messageOfferInfo) {
+    messageOfferInfo.textContent = '';
+  }
+  if (messageOfferUserField) {
+    if (value === 'user') {
+      messageOfferUserField.classList.remove('hidden');
+      populateMessageOfferUserOptions();
+    } else {
+      messageOfferUserField.classList.add('hidden');
+      if (messageOfferUserSelect) {
+        messageOfferUserSelect.value = '';
+      }
+    }
+  }
+}
+
+function handleOfferFormSubmit(event) {
+  event.preventDefault();
+  if (!messageOfferForm || !currentUser || currentUser.role !== 'admin') return;
+  const title = messageOfferTitleInput?.value.trim() || '';
+  const description = messageOfferDescriptionInput?.value.trim() || '';
+  const audience = messageOfferAudienceSelect?.value || 'all';
+  let targetUser = '';
+  if (audience === 'user') {
+    targetUser = messageOfferUserSelect?.value.trim() || '';
+    if (!targetUser) {
+      messageOfferInfo && (messageOfferInfo.textContent = 'Selecciona un usuario destinatario.');
+      return;
+    }
+  }
+  if (!title) {
+    messageOfferInfo && (messageOfferInfo.textContent = 'Añade un título para la oferta.');
+    return;
+  }
+  const offer = normaliseOffer({
+    title,
+    description,
+    audience,
+    targetUser,
+    createdAt: new Date().toISOString(),
+    createdBy: currentUser.username,
+    readBy: [currentUser.username]
+  });
+  if (!offer) return;
+  messageOffers.unshift(offer);
+  saveOffers();
+  messageOfferForm.reset();
+  if (messageOfferUserField) {
+    messageOfferUserField.classList.add('hidden');
+  }
+  if (messageOfferInfo) {
+    messageOfferInfo.textContent = 'Oferta publicada correctamente.';
+  }
+  const recipients = getOfferRecipients(offer);
+  const notificationMessage = offer.title
+    ? `Nueva oferta disponible: ${offer.title}`
+    : 'Nueva oferta personalizada disponible.';
+  recipients.forEach(username => {
+    pushNotification({ user: username, message: notificationMessage, type: 'info', meta: { kind: 'offer', id: offer.id } });
+  });
+  renderMessageOffers(messageCenterActiveTab === 'offers');
+  updateNotificationBadge();
+}
+
+function handleOfferListAction(event) {
+  const button = event.target.closest('button[data-action]');
+  if (!button || !currentUser || currentUser.role !== 'admin') return;
+  const { action, id } = button.dataset;
+  if (action !== 'offer-delete' || !id) return;
+  if (!confirm('¿Seguro que deseas eliminar esta oferta?')) return;
+  const index = messageOffers.findIndex(offer => offer.id === id);
+  if (index === -1) return;
+  messageOffers.splice(index, 1);
+  saveOffers();
+  renderMessageOffers(messageCenterActiveTab === 'offers');
+  updateNotificationBadge();
 }
 
 function openCallRequestModal() {
@@ -4556,6 +5639,17 @@ function handleStorageEvent(event) {
   if (event.key === STORAGE_KEYS.customBudgets) {
     customBudgets = loadCustomBudgetsFromStorage();
     renderCustomBudgetInbox();
+    renderMessageCenterBudgets();
+    updateNotificationBadge();
+  }
+  if (event.key === STORAGE_KEYS.messages) {
+    messageThreads = loadMessageThreadsFromStorage();
+    renderMessageCenter();
+  }
+  if (event.key === STORAGE_KEYS.offers) {
+    messageOffers = loadOffersFromStorage();
+    renderMessageOffers(messageCenterActiveTab === 'offers');
+    updateNotificationBadge();
   }
   if (event.key === STORAGE_KEYS.users) {
     users = loadUsersFromStorage();
@@ -4571,6 +5665,7 @@ function handleStorageEvent(event) {
     } else {
       updateUserInfo();
     }
+    renderMessageCenter();
   }
 }
 
@@ -5124,6 +6219,15 @@ function formatDateTime(iso) {
   if (!iso) return '-';
   try {
     return new Date(iso).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+  } catch (error) {
+    return iso;
+  }
+}
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  try {
+    return new Date(iso).toLocaleDateString('es-ES', { dateStyle: 'medium' });
   } catch (error) {
     return iso;
   }
@@ -6619,12 +7723,13 @@ function updateUserInfo() {
 function updateUIForRole() {
   updateUserInfo();
   renderNotifications();
+  renderMessageCenter();
   if (!authReminder) return;
   if (!currentUser) {
     adminActiveTab = 'sales';
   }
   if (customBudgetButton) {
-    const canRequestBudget = Boolean(currentUser && ['comercial', 'lider', CLIENT_ROLE].includes(currentUser.role));
+    const canRequestBudget = Boolean(currentUser && (currentUser.role === 'comercial' || currentUser.role === CLIENT_ROLE));
     customBudgetButton.classList.toggle('hidden', !canRequestBudget);
   }
   if (callRequestButton) {
@@ -7292,6 +8397,9 @@ document.addEventListener('DOMContentLoaded', () => {
   customBudgetModal = $('#customBudgetModal');
   customBudgetForm = $('#customBudgetForm');
   customBudgetSummaryInput = $('#customBudgetSummary');
+  customBudgetClientTypeInput = $('#customBudgetClientType');
+  customBudgetBudgetRangeInput = $('#customBudgetBudgetRange');
+  customBudgetDueDateInput = $('#customBudgetDueDate');
   customBudgetContactInput = $('#customBudgetContact');
   callRequestModal = $('#callRequestModal');
   callRequestForm = $('#callRequestForm');
@@ -7304,6 +8412,30 @@ document.addEventListener('DOMContentLoaded', () => {
   notificationDropdown = $('#notificationDropdown');
   notificationList = $('#notificationList');
   notificationDot = $('#notificationDot');
+  messageCenter = $('#messageCenter');
+  messageCenterTabs = $('#messageCenterTabs');
+  messageCenterStatus = $('#messageCenterStatus');
+  messageThreadSidebar = $('#messageThreadSidebar');
+  messageThreadList = $('#messageThreadList');
+  messageNewThread = $('#messageNewThread');
+  messageNewThreadSelect = $('#messageNewThreadSelect');
+  messageConversation = $('#messageConversation');
+  messageConversationTitle = $('#messageConversationTitle');
+  messageConversationMeta = $('#messageConversationMeta');
+  messageEmptyState = $('#messageEmptyState');
+  messageList = $('#messageList');
+  messageForm = $('#messageForm');
+  messageInput = $('#messageInput');
+  messageBudgetsList = $('#messageBudgetsList');
+  messageOffersList = $('#messageOffersList');
+  messageOfferAdminTools = $('#messageOfferAdminTools');
+  messageOfferForm = $('#messageOfferForm');
+  messageOfferTitleInput = $('#messageOfferTitle');
+  messageOfferAudienceSelect = $('#messageOfferAudience');
+  messageOfferUserField = $('#messageOfferUserField');
+  messageOfferUserSelect = $('#messageOfferUser');
+  messageOfferDescriptionInput = $('#messageOfferDescription');
+  messageOfferInfo = $('#messageOfferInfo');
   markNotificationsReadBtn = $('#markNotificationsRead');
   closeNotificationsBtn = $('#closeNotifications');
   callRequestButton = $('#callRequestButton');
@@ -7354,6 +8486,8 @@ document.addEventListener('DOMContentLoaded', () => {
   notifications = loadNotificationsFromStorage();
   callRequests = loadCallRequestsFromStorage();
   customBudgets = loadCustomBudgetsFromStorage();
+  messageThreads = loadMessageThreadsFromStorage();
+  messageOffers = loadOffersFromStorage();
 
   resetUserForm();
 
@@ -7447,6 +8581,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   markNotificationsReadBtn?.addEventListener('click', markCurrentNotificationsAsRead);
   closeNotificationsBtn?.addEventListener('click', hideNotifications);
+  messageCenterTabs?.addEventListener('click', handleMessageTabClick);
+  messageThreadList?.addEventListener('click', handleMessageThreadClick);
+  messageForm?.addEventListener('submit', handleMessageFormSubmit);
+  messageNewThreadSelect?.addEventListener('change', handleMessageNewThreadChange);
+  messageOfferAudienceSelect?.addEventListener('change', handleOfferAudienceChange);
+  messageOfferForm?.addEventListener('submit', handleOfferFormSubmit);
+  messageOffersList?.addEventListener('click', handleOfferListAction);
 
   customBudgetButton?.addEventListener('click', openCustomBudgetModal);
   customBudgetForm?.addEventListener('submit', handleCustomBudgetSubmit);
