@@ -103,6 +103,13 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .reward-card.unlocked::after { content:''; position:absolute; inset:auto -40% -40% auto; width:160px; height:160px; background: radial-gradient(circle at center, rgba(34,197,94,0.35), transparent 70%); pointer-events:none; }
 .reward-card.locked { opacity:0.65; }
 .reward-card .tag { align-self:flex-start; }
+.reward-card.out-of-stock {
+  border-color: rgba(239,68,68,0.45);
+  box-shadow: none;
+}
+.reward-card.out-of-stock .cost {
+  color: #fca5a5;
+}
 .reward-status { display:flex; gap:6px; align-items:center; font-size:12px; color:#cbd5f5; }
 .requests-list { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
 .request-item { background:#0b1120; border:1px solid rgba(148,163,184,0.18); border-radius:14px; padding:12px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
@@ -728,6 +735,11 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
             <input id="rewardPoints" type="number" min="1" step="1" required />
           </div>
           <div>
+            <label class="label" for="rewardUnits">Unidades en stock</label>
+            <input id="rewardUnits" type="number" min="0" step="1" placeholder="Ej. 100" />
+            <p class="dim" style="margin-top:6px;">Deja vacío si no hay límite de unidades.</p>
+          </div>
+          <div>
             <label class="label" for="rewardValidFrom">Disponible desde</label>
             <input id="rewardValidFrom" type="date" />
           </div>
@@ -865,6 +877,8 @@ const STORAGE_KEYS = {
   session: 'panel.session.v2',
   users: 'panel.usuarios.v1'
 };
+
+const REWARD_LOW_STOCK_THRESHOLD = 15;
 
 const DEFAULT_USERS = [
   {
@@ -1179,6 +1193,7 @@ let grid,
   rewardIdInput,
   rewardTitleInput,
   rewardPointsInput,
+  rewardUnitsInput,
   rewardValidFromInput,
   rewardValidUntilInput,
   rewardImageInput,
@@ -1857,12 +1872,21 @@ function normaliseReward(raw) {
   if (!title) return null;
   const pointsCost = Number.isFinite(points) && points > 0 ? Math.round(points) : 0;
   if (pointsCost <= 0) return null;
+  let totalUnits = null;
+  const rawUnits = raw.totalUnits ?? raw.units ?? raw.stock ?? raw.existencias ?? raw.availableUnits ?? raw.quantity ?? raw.stockUnits;
+  if (rawUnits !== null && rawUnits !== undefined && rawUnits !== '') {
+    const parsedUnits = Number.parseInt(rawUnits, 10);
+    if (Number.isFinite(parsedUnits) && parsedUnits >= 0) {
+      totalUnits = parsedUnits;
+    }
+  }
   const reward = {
     id: raw.id || createId('reward'),
     title,
     pointsCost,
     description: (raw.description || raw.descripcion || raw['descripción'] || '').trim(),
     imageUrl: (raw.imageUrl || raw.image || raw.img || '').trim(),
+    totalUnits,
     validFrom: raw.validFrom || raw.valid_from || '',
     validUntil: raw.validUntil || raw.valid_until || '',
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
@@ -2127,6 +2151,49 @@ function formatRewardValidity(reward) {
   return 'Disponibilidad abierta';
 }
 
+function getRewardStockState(reward) {
+  if (!reward) return null;
+  const total = typeof reward.totalUnits === 'number' && Number.isFinite(reward.totalUnits) && reward.totalUnits >= 0
+    ? reward.totalUnits
+    : null;
+  if (total === null) return null;
+  const consumed = Array.isArray(reward.requests) ? reward.requests.length : 0;
+  const remaining = Math.max(0, total - consumed);
+  return {
+    total,
+    consumed,
+    remaining,
+    outOfStock: remaining <= 0,
+    lowStock: remaining > 0 && remaining < REWARD_LOW_STOCK_THRESHOLD
+  };
+}
+
+function formatRewardStockBadge(reward) {
+  const state = getRewardStockState(reward);
+  if (!state) {
+    return { markup: '', outOfStock: false, lowStock: false, text: '', className: '', state: null };
+  }
+  let text = '';
+  let className = 'tag';
+  if (state.outOfStock) {
+    text = 'Sin stock';
+    className = 'tag tag-error';
+  } else if (state.lowStock) {
+    text = `Quedan ${state.remaining} unidades`;
+    className = 'tag tag-warning';
+  } else {
+    text = `${state.remaining} de ${state.total} unidades disponibles`;
+  }
+  return {
+    markup: `<span class="${className}">${text}</span>`,
+    outOfStock: state.outOfStock,
+    lowStock: state.lowStock,
+    text,
+    className,
+    state
+  };
+}
+
 function populateReferralTariffs() {
   if (!referralTariffSelect) return;
   const options = tariffs
@@ -2299,14 +2366,35 @@ function renderClientRewards(record) {
       if (pending.length) statusParts.push(`${pending.length} pendiente${pending.length !== 1 ? 's' : ''}`);
       if (delivered.length) statusParts.push(`${delivered.length} entregada${delivered.length !== 1 ? 's' : ''}`);
       const statusText = statusParts.length ? statusParts.join(' · ') : 'Sin canjear';
-      const cardClass = unlocked ? 'reward-card unlocked' : 'reward-card locked';
+      const stockBadge = formatRewardStockBadge(reward);
+      const cardClasses = ['reward-card'];
+      const outOfStock = stockBadge.outOfStock;
+      if (unlocked && !outOfStock) {
+        cardClasses.push('unlocked');
+      } else {
+        cardClasses.push('locked');
+      }
+      if (outOfStock) {
+        cardClasses.push('out-of-stock');
+      }
+      const cardClass = cardClasses.join(' ');
       let actionButton = `<button type="button" class="smallbtn" disabled>Necesitas ${reward.pointsCost} pts</button>`;
-      if (unlocked && !hasPending) {
+      if (outOfStock) {
+        actionButton = '<button type="button" class="smallbtn" disabled>Sin stock</button>';
+      } else if (unlocked && !hasPending) {
         actionButton = `<button type="button" class="primary" data-action="redeem-reward" data-id="${reward.id}">Canjear por ${reward.pointsCost} pts</button>`;
       } else if (hasPending) {
         actionButton = '<button type="button" class="smallbtn" disabled>Solicitud en curso</button>';
       }
       const description = reward.description ? `<p class="dim">${reward.description}</p>` : '';
+      const statusPieces = [];
+      if (stockBadge.markup && (stockBadge.outOfStock || stockBadge.lowStock)) {
+        statusPieces.push(stockBadge.markup);
+      }
+      if (statusText) statusPieces.push(`<span>${statusText}</span>`);
+      const statusMarkup = statusPieces.length
+        ? `<div class="reward-status">${statusPieces.join('')}</div>`
+        : '';
       return `
         <div class="${cardClass}" data-id="${reward.id}">
           ${imageMarkup}
@@ -2314,7 +2402,7 @@ function renderClientRewards(record) {
           <div class="cost">${formatPoints(reward.pointsCost)}</div>
           <div class="validity">${formatRewardValidity(reward)}</div>
           ${description}
-          <div class="reward-status">${statusText}</div>
+          ${statusMarkup}
           <div class="actions">${actionButton}</div>
         </div>
       `;
@@ -2358,6 +2446,11 @@ function handleRewardRedemption(rewardId) {
   const record = getUserByUsername(currentUser.username);
   if (!record) return;
   ensureUserPointsStructure(record);
+  const stockState = getRewardStockState(reward);
+  if (stockState?.outOfStock) {
+    showCommercialFlash('Esta recompensa está sin stock por el momento.');
+    return;
+  }
   if (record.pointsBalance < reward.pointsCost) {
     showCommercialFlash('Todavía no tienes puntos suficientes para esta recompensa.');
     return;
@@ -2399,7 +2492,8 @@ function renderAdminRewards() {
       const active = isRewardActive(reward, today);
       const total = reward.requests.length;
       const pending = reward.requests.filter(entry => entry.status !== 'entregado').length;
-      const statusText = total
+      const stockBadge = formatRewardStockBadge(reward);
+      const requestsSummary = total
         ? `${total} solicitud${total !== 1 ? 'es' : ''} (${pending} pendiente${pending !== 1 ? 's' : ''})`
         : 'Sin solicitudes por ahora';
       const description = reward.description ? `<p class="dim">${reward.description}</p>` : '';
@@ -2436,7 +2530,23 @@ function renderAdminRewards() {
               `;
             }).join('')}</div>`
         : '<div class="empty-state">Nadie ha solicitado esta recompensa todavía.</div>';
-      const cardClass = active ? 'reward-card unlocked' : 'reward-card locked';
+      const cardClasses = ['reward-card'];
+      const outOfStock = stockBadge.outOfStock;
+      if (active && !outOfStock) {
+        cardClasses.push('unlocked');
+      } else {
+        cardClasses.push('locked');
+      }
+      if (outOfStock) {
+        cardClasses.push('out-of-stock');
+      }
+      const cardClass = cardClasses.join(' ');
+      const statusPieces = [];
+      if (stockBadge.markup) statusPieces.push(stockBadge.markup);
+      if (requestsSummary) statusPieces.push(`<span>${requestsSummary}</span>`);
+      const statusMarkup = statusPieces.length
+        ? `<div class="reward-status">${statusPieces.join('')}</div>`
+        : '';
       return `
         <div class="${cardClass}" data-id="${reward.id}">
           ${imageMarkup}
@@ -2444,7 +2554,7 @@ function renderAdminRewards() {
           <div class="cost">${formatPoints(reward.pointsCost)}</div>
           <div class="validity">${formatRewardValidity(reward)}</div>
           ${description}
-          <div class="reward-status">${statusText}</div>
+          ${statusMarkup}
           <div class="actions">
             <button class="smallbtn" data-action="edit-reward" data-id="${reward.id}">Editar</button>
             <button class="smallbtn danger" data-action="delete-reward" data-id="${reward.id}">Eliminar</button>
@@ -2580,6 +2690,7 @@ function setupRewardImageUploader() {
 function resetRewardForm() {
   rewardForm?.reset();
   if (rewardIdInput) rewardIdInput.value = '';
+  if (rewardUnitsInput) rewardUnitsInput.value = '';
   if (rewardFormInfo) rewardFormInfo.textContent = '';
   resetRewardImageField();
 }
@@ -2589,6 +2700,7 @@ function fillRewardForm(reward) {
   if (rewardIdInput) rewardIdInput.value = reward.id;
   if (rewardTitleInput) rewardTitleInput.value = reward.title;
   if (rewardPointsInput) rewardPointsInput.value = reward.pointsCost;
+  if (rewardUnitsInput) rewardUnitsInput.value = reward.totalUnits ?? '';
   if (rewardValidFromInput) rewardValidFromInput.value = reward.validFrom || '';
   if (rewardValidUntilInput) rewardValidUntilInput.value = reward.validUntil || '';
   setRewardImageValue(reward.imageUrl || '');
@@ -2601,7 +2713,17 @@ function handleRewardFormSubmit(event) {
   if (!rewardForm) return;
   const title = rewardTitleInput?.value.trim();
   const pointsValue = Number(rewardPointsInput?.value || 0);
+  const unitsRaw = (rewardUnitsInput?.value ?? '').trim();
+  let totalUnits = null;
   const imageUrl = rewardImageInput?.value.trim() || '';
+  if (unitsRaw) {
+    const parsedUnits = Number.parseInt(unitsRaw, 10);
+    if (!Number.isFinite(parsedUnits) || parsedUnits < 0) {
+      if (rewardFormInfo) rewardFormInfo.textContent = 'Las unidades deben ser un número igual o mayor que cero.';
+      return;
+    }
+    totalUnits = parsedUnits;
+  }
   if (imageUrl && !rewardImageValueIsPreviewable(imageUrl)) {
     if (rewardFormInfo) rewardFormInfo.textContent = 'La imagen debe ser una URL válida o un archivo de imagen.';
     return;
@@ -2628,6 +2750,7 @@ function handleRewardFormSubmit(event) {
     existing.validFrom = rewardValidFromInput?.value || '';
     existing.validUntil = rewardValidUntilInput?.value || '';
     existing.imageUrl = imageUrl;
+    existing.totalUnits = totalUnits;
     existing.updatedAt = now;
     if (rewardFormInfo) rewardFormInfo.textContent = 'Recompensa actualizada correctamente.';
   } else {
@@ -2637,6 +2760,7 @@ function handleRewardFormSubmit(event) {
       pointsCost: Math.round(pointsValue),
       description: rewardDescriptionInput?.value.trim() || '',
       imageUrl,
+      totalUnits,
       validFrom: rewardValidFromInput?.value || '',
       validUntil: rewardValidUntilInput?.value || '',
       createdAt: now,
@@ -4848,6 +4972,7 @@ document.addEventListener('DOMContentLoaded', () => {
   rewardIdInput = $('#rewardId');
   rewardTitleInput = $('#rewardTitle');
   rewardPointsInput = $('#rewardPoints');
+  rewardUnitsInput = $('#rewardUnits');
   rewardValidFromInput = $('#rewardValidFrom');
   rewardValidUntilInput = $('#rewardValidUntil');
   rewardImageInput = $('#rewardImage');
