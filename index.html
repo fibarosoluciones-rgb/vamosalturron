@@ -296,6 +296,11 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .range-switcher button { border:none; background:transparent; color:#e2e8f0; font-size:13px; font-weight:600; padding:6px 14px; border-radius:999px; cursor:pointer; transition:background .2s ease, color .2s ease, box-shadow .2s ease; }
 .range-switcher button.active { background:var(--primary); color:#fff; box-shadow:0 6px 18px rgba(78,143,202,0.35); }
 .range-switcher button:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.admin-sales-totals { display:flex; flex-wrap:wrap; gap:12px; }
+.admin-total-card { flex:1 1 220px; display:flex; flex-direction:column; gap:6px; padding:16px; border-radius:16px; border:1px solid rgba(59,130,246,0.35); background:linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(15,23,42,0.65) 100%); box-shadow:0 12px 30px rgba(30,64,175,0.25); }
+.admin-total-card .total-heading { font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; }
+.admin-total-card .total-number { font-size:32px; font-weight:800; line-height:1; color:#fff; }
+.admin-total-card .total-breakdown { font-size:13px; color:#cbd5f5; }
 .admin-stats-group { margin-top:18px; display:flex; flex-direction:column; gap:12px; }
 
 @media (max-width: 768px) {
@@ -690,6 +695,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       </div>
       <div class="admin-stats-group">
         <div class="section-subtitle" style="margin:0;">Ranking de técnicos por comisión</div>
+        <div id="adminSalesTotals" class="admin-sales-totals hidden" aria-live="polite"></div>
         <div id="adminSalesStats" class="stats-grid"></div>
       </div>
       <div class="admin-stats-group">
@@ -1207,6 +1213,7 @@ let grid,
   directClientSection,
   directClientList,
   directClientEmpty,
+  adminSalesTotals,
   adminSalesStats,
   adminClientStats,
   adminSalesRangeControls,
@@ -2242,6 +2249,10 @@ function revokeInstallationPoints(lead) {
 
 function formatPoints(value) {
   return `${Math.max(0, Math.round(value || 0)).toLocaleString('es-ES')} pts`;
+}
+
+function formatInteger(value) {
+  return Math.max(0, Math.round(Number(value) || 0)).toLocaleString('es-ES');
 }
 
 function formatPointsDelta(value) {
@@ -3815,12 +3826,23 @@ function collectAdminSalesMetrics(rangeKey) {
         fiberSales: 0,
         mobileLines: 0,
         commission: 0,
-        photo: record?.photo || ''
+        photo: record?.photo || '',
+        role: record?.role || null
       });
-    } else if (record?.photo && !technicians.get(key).photo) {
-      technicians.get(key).photo = record.photo;
     }
-    return technicians.get(key);
+    const entry = technicians.get(key);
+    if (record) {
+      if (record.photo && !entry.photo) {
+        entry.photo = record.photo;
+      }
+      if (record.role) {
+        entry.role = record.role;
+      }
+    }
+    if (fallbackName && !entry.name) {
+      entry.name = fallbackName;
+    }
+    return entry;
   };
 
   const ensureClient = (username, record, fallbackName = '') => {
@@ -3925,6 +3947,7 @@ function collectAdminSalesMetrics(rangeKey) {
 
   const technicianList = Array.from(technicians.values()).map(entry => ({
     ...entry,
+    role: entry.role || '',
     kpi: getKpiStatus(entry.packSales)
   }));
 
@@ -4035,7 +4058,23 @@ function renderAdminSalesStats() {
     });
   }
   const { technicians, clients } = collectAdminSalesMetrics(rangeKey);
-  const sortedTechnicians = technicians
+  const technicianEntries = technicians.filter(entry => entry.role !== CLIENT_ROLE);
+  const totalFiber = technicianEntries.reduce((sum, entry) => sum + (entry.fiberSales || 0), 0);
+  const totalMobile = technicianEntries.reduce((sum, entry) => sum + (entry.mobileLines || 0), 0);
+  const totalServices = totalFiber + totalMobile;
+
+  if (adminSalesTotals) {
+    adminSalesTotals.innerHTML = `
+      <div class="admin-total-card">
+        <span class="total-heading">Ventas totales instaladas</span>
+        <span class="total-number">${formatInteger(totalServices)}</span>
+        <span class="total-breakdown">${formatInteger(totalFiber)} fibras · ${formatInteger(totalMobile)} líneas móviles</span>
+      </div>
+    `;
+    adminSalesTotals.classList.remove('hidden');
+  }
+
+  const sortedTechnicians = technicianEntries
     .filter(entry => entry.totalSales > 0 || entry.commission > 0)
     .sort((a, b) => {
       if (b.commission !== a.commission) return b.commission - a.commission;
@@ -5301,6 +5340,7 @@ document.addEventListener('DOMContentLoaded', () => {
   directClientSection = $('#directClientSection');
   directClientList = $('#directClientList');
   directClientEmpty = $('#directClientEmpty');
+  adminSalesTotals = $('#adminSalesTotals');
   adminSalesStats = $('#adminSalesStats');
   adminClientStats = $('#adminClientStats');
   adminSalesRangeControls = $('#adminSalesRangeControls');
