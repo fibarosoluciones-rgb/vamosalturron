@@ -316,6 +316,18 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .ai-preferences .full { grid-column:1 / -1; }
 .ai-lines-field.hidden, .ai-tv-field.hidden { display:none !important; }
 .ai-lines-field, .ai-tv-field { transition:opacity .2s ease; }
+.ai-wizard { display:flex; flex-direction:column; gap:16px; background:rgba(15,23,42,0.55); border:1px solid rgba(148,163,184,0.18); border-radius:16px; padding:18px; box-shadow:0 12px 30px rgba(8,11,19,0.35); }
+.ai-question { font-size:18px; font-weight:700; letter-spacing:.3px; }
+.ai-options { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); }
+.ai-option-btn { border:1px solid rgba(148,163,184,0.28); background:rgba(15,23,42,0.85); color:#e2e8f0; padding:14px; border-radius:14px; text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:6px; transition:border-color .2s ease, background .2s ease, transform .15s ease, box-shadow .2s ease; }
+.ai-option-btn:hover { border-color:rgba(78,143,202,0.55); background:rgba(37,56,86,0.85); transform:translateY(-2px); box-shadow:0 16px 30px rgba(15,23,42,0.35); }
+.ai-option-title { font-size:16px; font-weight:700; }
+.ai-option-description { font-size:13px; color:#a8b3c7; }
+.ai-wizard-actions { justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.ai-wizard-actions .smallbtn.hidden { display:none; }
+.ai-summary { display:flex; flex-direction:column; gap:10px; background:rgba(11,17,32,0.6); border:1px dashed rgba(148,163,184,0.25); border-radius:14px; padding:14px; }
+.ai-summary-item { font-size:14px; color:#e2e8f0; display:flex; flex-direction:column; gap:2px; }
+.ai-summary-label { font-size:12px; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; }
 @media (min-width: 768px) {
   .ai-results { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -828,51 +840,16 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 <main class="wrap">
   <section id="aiPanel" class="card">
     <h2 class="section-title">Buscador inteligente de tarifas</h2>
-    <p class="dim">Selecciona tus preferencias y generaremos propuestas ajustadas a la velocidad de fibra, líneas móviles y plataformas disponibles.</p>
-    <form id="aiSearchForm" class="stacked ai-filter-form">
-      <div class="ai-preferences">
-        <div>
-          <label class="label" for="aiFiberSpeed">Velocidad de fibra</label>
-          <select id="aiFiberSpeed">
-            <option value="">Cualquier velocidad</option>
-          </select>
-        </div>
-        <div>
-          <label class="label" for="aiMobilePreference">¿Incluye líneas móviles?</label>
-          <select id="aiMobilePreference">
-            <option value="no">Sin líneas móviles</option>
-            <option value="yes">Sí, añadir líneas móviles</option>
-          </select>
-        </div>
-        <div class="ai-lines-field hidden" id="aiLinesField">
-          <label class="label" for="aiMobileLines">Número de líneas</label>
-          <select id="aiMobileLines"></select>
-        </div>
-        <div>
-          <label class="label" for="aiTvPreference">¿Quieres TV o plataformas?</label>
-          <select id="aiTvPreference">
-            <option value="no">Sin TV / plataformas</option>
-            <option value="yes">Sí, incluir plataformas</option>
-          </select>
-        </div>
-        <div class="ai-tv-field hidden" id="aiTvField">
-          <label class="label" for="aiTvPlatform">Selecciona plataforma</label>
-          <select id="aiTvPlatform">
-            <option value="agiletv">Agile TV</option>
-            <option value="netflix">Netflix</option>
-            <option value="hbomax">HBO Max</option>
-            <option value="disney+">Disney+</option>
-            <option value="primevideo">Amazon Prime Video</option>
-            <option value="dazn">DAZN</option>
-            <option value="movistar+">Movistar Plus+</option>
-          </select>
-        </div>
+    <p class="dim">Responde a cada pregunta y generaremos propuestas ajustadas a fibra, líneas móviles y plataformas disponibles.</p>
+    <div id="aiWizard" class="ai-wizard">
+      <div class="ai-question" id="aiWizardQuestion"></div>
+      <div class="ai-options" id="aiWizardOptions"></div>
+      <div class="inline-actions ai-wizard-actions">
+        <button type="button" class="smallbtn hidden" id="aiWizardBack">Volver</button>
+        <span class="dim" id="aiWizardHint">Responde paso a paso para afinar las recomendaciones.</span>
+        <button type="button" class="smallbtn" id="aiWizardReset">Empezar de nuevo</button>
       </div>
-      <div class="inline-actions" style="justify-content:flex-end;">
-        <button type="button" class="smallbtn" id="aiSearchClear">Limpiar</button>
-        <button type="submit" class="primary">Buscar tarifas</button>
-      </div>
-    </form>
+    </div>
     <div id="aiResults" class="ai-results"></div>
   </section>
 
@@ -1292,6 +1269,26 @@ const KNOWN_TV_PLATFORMS = [
   { id: 'movistarplus', label: 'Movistar Plus+', pattern: /movistar\s*\+|movistar\s*plus/i }
 ];
 
+const AI_WIZARD_SERVICE_OPTIONS = [
+  { value: 'fiber', label: 'Solo fibra', description: 'Internet en casa sin líneas móviles.' },
+  { value: 'mobile', label: 'Solo móvil', description: 'Tarifas móviles independientes.' },
+  { value: 'bundle', label: 'Fibra + móvil', description: 'Convergentes con todo incluido.' }
+];
+
+const AI_WIZARD_PRODUCT_FOCUS = {
+  fiber: ['F'],
+  mobile: ['M', 'N', 'P'],
+  bundle: ['C']
+};
+
+const AI_WIZARD_LINE_OPTIONS = [
+  { value: 1, label: '1 línea móvil' },
+  { value: 2, label: '2 líneas móviles' },
+  { value: 3, label: '3 líneas móviles' },
+  { value: 4, label: '4 líneas móviles' },
+  { value: 5, label: '5 o más líneas móviles' }
+];
+
 // Configuración de bonos por packs (productos con código que comienza por "C")
 const KPI_THRESHOLDS = [
   { sales: 3, bonus: 30 },
@@ -1613,6 +1610,12 @@ let grid,
   aiTvField,
   aiResults,
   aiClearBtn,
+  aiWizard,
+  aiWizardQuestion,
+  aiWizardOptions,
+  aiWizardReset,
+  aiWizardBack,
+  aiWizardHint,
   customBudgetModal,
   customBudgetForm,
   customBudgetSummaryInput,
@@ -1677,6 +1680,8 @@ let editingTariffId = null;
 let editingUser = null;
 let commercialNoticeTimeout = null;
 let aiLastQuery = null;
+let aiWizardState = null;
+let aiWizardHistory = [];
 let adminActiveTab = 'sales';
 let adminSalesRange = 'month';
 let adminTabButtons = [];
@@ -2104,7 +2109,8 @@ function normaliseAiRequirements(input) {
     wantsMobile: false,
     wantsTv: false,
     tvPlatform: '',
-    tvLabel: ''
+    tvLabel: '',
+    productFocus: ''
   };
   if (!input) return base;
   if (typeof input === 'string') {
@@ -2115,7 +2121,8 @@ function normaliseAiRequirements(input) {
       wantsMobile: parsed.lines != null,
       wantsTv: false,
       tvPlatform: '',
-      tvLabel: ''
+      tvLabel: '',
+      productFocus: ''
     };
   }
   const clone = { ...base };
@@ -2145,6 +2152,10 @@ function normaliseAiRequirements(input) {
       clone.tvPlatform = normalised;
       clone.tvLabel = input.tvLabel || platform;
     }
+  }
+  const focus = (input.productFocus || input.serviceType || '').toString().trim().toLowerCase();
+  if (focus && Object.prototype.hasOwnProperty.call(AI_WIZARD_PRODUCT_FOCUS, focus)) {
+    clone.productFocus = focus;
   }
   return clone;
 }
@@ -2229,7 +2240,8 @@ function aiRequirementsAreEmpty(requirements) {
     && !requirements.fiberMbps
     && !requirements.unlimitedMinutes
     && !requirements.wantsTv
-    && !requirements.wantsMobile;
+    && !requirements.wantsMobile
+    && !requirements.productFocus;
 }
 
 function populateAiLinesOptions() {
@@ -2246,6 +2258,214 @@ function populateAiLinesOptions() {
   } else {
     aiMobileLinesSelect.value = '1';
   }
+}
+
+function createInitialAiWizardState() {
+  return {
+    step: 'service',
+    serviceType: '',
+    lines: null,
+    wantsTv: null
+  };
+}
+
+function describeAiWizardService(value) {
+  const option = AI_WIZARD_SERVICE_OPTIONS.find(item => item.value === value);
+  return option ? option.label : '';
+}
+
+function describeAiWizardLines(value) {
+  if (!Number.isFinite(value)) return '';
+  const option = AI_WIZARD_LINE_OPTIONS.find(item => Number(item.value) === value);
+  return option ? option.label : `${value} líneas móviles`;
+}
+
+function renderAiWizardSummary() {
+  if (!aiWizardState || !aiWizardQuestion || !aiWizardOptions) return;
+  const pieces = [];
+  const serviceLabel = describeAiWizardService(aiWizardState.serviceType);
+  if (serviceLabel) {
+    pieces.push(`
+      <div class="ai-summary-item">
+        <span class="ai-summary-label">Preferencia</span>
+        <span>${escapeHtml(serviceLabel)}</span>
+      </div>
+    `);
+  }
+  if (aiWizardState.serviceType === 'bundle' && Number.isFinite(aiWizardState.lines)) {
+    pieces.push(`
+      <div class="ai-summary-item">
+        <span class="ai-summary-label">Líneas móviles</span>
+        <span>${escapeHtml(describeAiWizardLines(aiWizardState.lines))}</span>
+      </div>
+    `);
+  }
+  if (aiWizardState.serviceType === 'bundle') {
+    pieces.push(`
+      <div class="ai-summary-item">
+        <span class="ai-summary-label">TV / Plataformas</span>
+        <span>${aiWizardState.wantsTv ? 'Incluidas' : 'Sin TV o plataformas'}</span>
+      </div>
+    `);
+  }
+  aiWizardQuestion.textContent = 'Estas son las mejores tarifas según tus respuestas';
+  aiWizardOptions.innerHTML = `
+    <div class="ai-summary">
+      ${pieces.join('')}
+      <p class="dim" style="margin:0;">Usa «Volver» para ajustar alguna respuesta o «Empezar de nuevo» para reiniciar la búsqueda.</p>
+    </div>
+  `;
+  if (aiWizardHint) {
+    aiWizardHint.textContent = 'Modifica tus respuestas con «Volver» o empieza otra búsqueda.';
+  }
+}
+
+function renderAiWizardStep() {
+  if (!aiWizardState || !aiWizardQuestion || !aiWizardOptions) return;
+  if (aiWizardState.step === 'summary') {
+    renderAiWizardSummary();
+    aiWizardBack?.classList.toggle('hidden', !aiWizardHistory.length);
+    return;
+  }
+  let optionsHtml = '';
+  if (aiWizardState.step === 'service') {
+    aiWizardQuestion.textContent = '¿Qué quieres?';
+    optionsHtml = AI_WIZARD_SERVICE_OPTIONS.map(option => `
+      <button type="button" class="ai-option-btn" data-value="${option.value}">
+        <span class="ai-option-title">${escapeHtml(option.label)}</span>
+        <span class="ai-option-description">${escapeHtml(option.description)}</span>
+      </button>
+    `).join('');
+    if (aiWizardHint) {
+      aiWizardHint.textContent = 'Elige el tipo de servicio que necesitas.';
+    }
+  }
+  if (aiWizardState.step === 'lines') {
+    aiWizardQuestion.textContent = '¿Cuántas líneas móviles necesitas?';
+    optionsHtml = AI_WIZARD_LINE_OPTIONS.map(option => `
+      <button type="button" class="ai-option-btn" data-value="${option.value}">
+        <span class="ai-option-title">${escapeHtml(option.label)}</span>
+      </button>
+    `).join('');
+    if (aiWizardHint) {
+      aiWizardHint.textContent = 'Selecciona el número de líneas que vas a contratar.';
+    }
+  }
+  if (aiWizardState.step === 'tv') {
+    aiWizardQuestion.textContent = '¿Quieres TV o plataformas?';
+    optionsHtml = `
+      <button type="button" class="ai-option-btn" data-value="yes">
+        <span class="ai-option-title">Sí, añadir TV o plataformas</span>
+        <span class="ai-option-description">Incluiremos paquetes con entretenimiento.</span>
+      </button>
+      <button type="button" class="ai-option-btn" data-value="no">
+        <span class="ai-option-title">No, solo fibra y móvil</span>
+        <span class="ai-option-description">Mostraremos propuestas sin TV ni plataformas.</span>
+      </button>
+    `;
+    if (aiWizardHint) {
+      aiWizardHint.textContent = 'Añade TV solo si necesitas plataformas de streaming.';
+    }
+  }
+  aiWizardOptions.innerHTML = optionsHtml;
+  aiWizardBack?.classList.toggle('hidden', !aiWizardHistory.length);
+}
+
+function startAiWizard({ resetResults = false } = {}) {
+  if (resetResults && aiResults) {
+    aiResults.innerHTML = '<p class="dim">Responde a las preguntas y te mostraremos las mejores opciones disponibles.</p>';
+  }
+  if (!aiWizard) return;
+  aiWizardState = createInitialAiWizardState();
+  aiWizardHistory = [];
+  renderAiWizardStep();
+}
+
+function wizardStateToRequirements() {
+  if (!aiWizardState) return normaliseAiRequirements({});
+  const focus = aiWizardState.serviceType || '';
+  const wantsMobile = focus !== 'fiber';
+  let lines = null;
+  if (focus === 'bundle') {
+    lines = Number.isFinite(aiWizardState.lines) ? aiWizardState.lines : null;
+  }
+  if (focus === 'mobile') {
+    lines = 1;
+  }
+  const input = {
+    productFocus: focus,
+    wantsMobile,
+    lines,
+    wantsTv: focus === 'bundle' ? Boolean(aiWizardState.wantsTv) : false
+  };
+  return normaliseAiRequirements(input);
+}
+
+function completeAiWizard() {
+  if (!aiWizardState) return;
+  aiWizardHistory.push(aiWizardState.step);
+  aiWizardState.step = 'summary';
+  renderAiWizardStep();
+  runAiSearch(wizardStateToRequirements(), { preserveFormState: true });
+}
+
+function handleAiWizardSelection(value) {
+  if (!aiWizardState) return;
+  if (aiWizardState.step === 'service') {
+    aiWizardState.serviceType = value;
+    aiWizardState.lines = null;
+    aiWizardState.wantsTv = null;
+    if (value === 'bundle') {
+      aiWizardHistory.push('service');
+      aiWizardState.step = 'lines';
+      renderAiWizardStep();
+      return;
+    }
+    completeAiWizard();
+    return;
+  }
+  if (aiWizardState.step === 'lines') {
+    const numberValue = Number(value);
+    aiWizardState.lines = Number.isFinite(numberValue) ? numberValue : null;
+    aiWizardHistory.push('lines');
+    aiWizardState.step = 'tv';
+    renderAiWizardStep();
+    return;
+  }
+  if (aiWizardState.step === 'tv') {
+    aiWizardState.wantsTv = value === 'yes';
+    completeAiWizard();
+  }
+}
+
+function handleAiWizardOptionClick(event) {
+  const button = event.target.closest('button.ai-option-btn');
+  if (!button) return;
+  const value = button.dataset.value;
+  if (!value) return;
+  handleAiWizardSelection(value);
+}
+
+function aiWizardGoBack() {
+  if (!aiWizardState || !aiWizardHistory.length) return;
+  const previous = aiWizardHistory.pop();
+  if (aiWizardState.step === 'summary') {
+    if (previous === 'tv') {
+      aiWizardState.wantsTv = null;
+    } else if (previous === 'lines') {
+      aiWizardState.lines = null;
+    } else if (previous === 'service') {
+      aiWizardState.serviceType = '';
+      aiWizardState.lines = null;
+      aiWizardState.wantsTv = null;
+    }
+  } else if (aiWizardState.step === 'tv') {
+    aiWizardState.wantsTv = null;
+  } else if (aiWizardState.step === 'lines') {
+    aiWizardState.lines = null;
+  }
+  aiWizardState.step = previous;
+  renderAiWizardStep();
 }
 
 function populateAiFiberOptions() {
@@ -2471,8 +2691,13 @@ function buildAiRecommendations(input) {
   if (!dataset.length) {
     return { requirements, items: [] };
   }
+  const focusTypes = requirements.productFocus ? AI_WIZARD_PRODUCT_FOCUS[requirements.productFocus] || null : null;
   const pool = dataset.filter(tariff => {
     if (!tariff) return false;
+    if (focusTypes && focusTypes.length) {
+      const type = tariff.tipo || detectTariffType(tariff);
+      if (!focusTypes.includes(type)) return false;
+    }
     const linesAvailable = tariffLines(tariff);
     if (requirements.lines && linesAvailable < requirements.lines) return false;
     if (requirements.wantsMobile && Number.isFinite(linesAvailable) && linesAvailable < (requirements.lines || 1)) return false;
@@ -2549,12 +2774,12 @@ function focusTariffCard(tariffId) {
 function renderAiResults(result) {
   if (!aiResults) return;
   if (!result) {
-    aiResults.innerHTML = '<p class="dim">Selecciona tus preferencias y pulsa «Buscar tarifas».</p>';
+    aiResults.innerHTML = '<p class="dim">Responde a las preguntas y te mostraremos las mejores opciones disponibles.</p>';
     clearAiHighlights();
     return;
   }
   if (!Array.isArray(result.items) || !result.items.length) {
-    aiResults.innerHTML = '<p class="dim">No hemos encontrado tarifas que cumplan esas preferencias. Ajusta los filtros y vuelve a intentarlo.</p>';
+    aiResults.innerHTML = '<p class="dim">No hemos encontrado tarifas que cumplan esas preferencias. Ajusta tus respuestas y vuelve a intentarlo.</p>';
     clearAiHighlights();
     return;
   }
@@ -2615,9 +2840,7 @@ function resetAiSearch() {
   aiLastQuery = null;
   applyAiRequirementsToForm(normaliseAiRequirements({}));
   clearAiHighlights();
-  if (aiResults) {
-    aiResults.innerHTML = '<p class="dim">Selecciona tus preferencias y pulsa «Buscar tarifas».</p>';
-  }
+  startAiWizard({ resetResults: true });
 }
 
 function handleAiResultsClick(event) {
@@ -6878,6 +7101,12 @@ document.addEventListener('DOMContentLoaded', () => {
   aiTvField = $('#aiTvField');
   aiResults = $('#aiResults');
   aiClearBtn = $('#aiSearchClear');
+  aiWizard = $('#aiWizard');
+  aiWizardQuestion = $('#aiWizardQuestion');
+  aiWizardOptions = $('#aiWizardOptions');
+  aiWizardReset = $('#aiWizardReset');
+  aiWizardBack = $('#aiWizardBack');
+  aiWizardHint = $('#aiWizardHint');
   customBudgetModal = $('#customBudgetModal');
   customBudgetForm = $('#customBudgetForm');
   customBudgetSummaryInput = $('#customBudgetSummary');
@@ -7025,6 +7254,9 @@ document.addEventListener('DOMContentLoaded', () => {
   aiResults?.addEventListener('click', handleAiResultsClick);
   aiMobilePreferenceSelect?.addEventListener('change', handleAiMobilePreferenceChange);
   aiTvPreferenceSelect?.addEventListener('change', handleAiTvPreferenceChange);
+  aiWizardOptions?.addEventListener('click', handleAiWizardOptionClick);
+  aiWizardReset?.addEventListener('click', () => resetAiSearch());
+  aiWizardBack?.addEventListener('click', aiWizardGoBack);
 
   notificationButton?.addEventListener('click', (event) => {
     event.preventDefault();
