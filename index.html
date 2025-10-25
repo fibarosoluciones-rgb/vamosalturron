@@ -148,6 +148,13 @@ x; display:flex; flex-direction:column; gap:4px; font-size:13px; color:#e2e8f0; 
 .message-badge[data-variant="warning"] { background:rgba(251,191,36,0.18); border-color:rgba(251,191,36,0.35); color:#fde68a; }
 .message-center__subtitle { font-size:12px; color:#94a3b8; }
 .message-budgets-note { font-size:12px; color:#94a3b8; }
+.message-budget-response { margin-top:10px; padding:12px; border-radius:12px; border:1px solid rgba(59,130,246,0.35); background:rgba(30,64,175,0.18); display:flex; flex-direction:column; gap:8px; }
+.message-budget-response__header { display:flex; flex-direction:column; gap:4px; }
+.message-budget-response__title { font-weight:700; font-size:14px; color:#bfdbfe; }
+.message-budget-response__meta { font-size:11px; color:#94a3b8; display:flex; flex-wrap:wrap; gap:6px; }
+.message-budget-response__body { font-size:13px; color:#e2e8f0; }
+.message-budget-response__actions { display:flex; flex-wrap:wrap; gap:8px; }
+.message-budget-response__actions button { flex:0 0 auto; }
 .message-center__panel .lead-card { margin:0; }
 .message-center__panel .actions { display:flex; gap:8px; flex-wrap:wrap; }
 .message-center__panel .actions button { flex:0 0 auto; }
@@ -934,6 +941,28 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <div class="modal-actions">
         <button type="button" class="smallbtn" id="cancelCustomBudget">Cancelar</button>
         <button type="submit" class="primary">Enviar solicitud</button>
+      </div>
+    </form>
+</div>
+</div>
+
+<div id="budgetResponseModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3>Responder solicitud de presupuesto</h3>
+    <p class="dim" id="budgetResponseSummary"></p>
+    <p class="dim" id="budgetResponseContact"></p>
+    <form id="budgetResponseForm" class="stacked">
+      <div>
+        <label class="label" for="budgetResponseTariff">Tarifa propuesta</label>
+        <select id="budgetResponseTariff" required></select>
+      </div>
+      <div>
+        <label class="label" for="budgetResponseMessage">Mensaje adicional</label>
+        <textarea id="budgetResponseMessage" placeholder="Detalles de la oferta o condiciones especiales"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="smallbtn" id="cancelBudgetResponse">Cancelar</button>
+        <button type="submit" class="primary">Enviar respuesta</button>
       </div>
     </form>
   </div>
@@ -1861,6 +1890,12 @@ let grid,
   customBudgetBudgetRangeInput,
   customBudgetDueDateInput,
   customBudgetContactInput,
+  budgetResponseModal,
+  budgetResponseForm,
+  budgetResponseTariffSelect,
+  budgetResponseMessageInput,
+  budgetResponseSummary,
+  budgetResponseContact,
   callRequestModal,
   callRequestForm,
   callRequestNameInput,
@@ -1963,6 +1998,7 @@ let clientTariffTab = 'destacadas';
 let pendingTariffScrollTarget = '';
 let lastRenderedTariffs = [];
 let notificationsOpen = false;
+let activeBudgetResponseId = '';
 
 function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   if (!domReady) return;
@@ -3371,11 +3407,12 @@ function saveCallRequests() {
 
 function normaliseCustomBudget(raw) {
   if (!raw) return null;
+  const statusValue = (raw.status || '').toString().trim();
   const entry = {
     id: raw.id || createId('pres'),
     summary: (raw.summary || raw.descripcion || '').trim(),
     contact: (raw.contact || raw.contacto || '').trim(),
-    status: raw.status === 'resuelto' ? 'resuelto' : 'pendiente',
+    status: statusValue === 'resuelto' ? 'resuelto' : (statusValue === 'respondido' ? 'respondido' : 'pendiente'),
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.updated_at || new Date().toISOString(),
     createdBy: raw.createdBy || '',
@@ -3386,7 +3423,19 @@ function normaliseCustomBudget(raw) {
     resolvedAt: raw.resolvedAt || raw.resolved_at || null,
     clientType: raw.clientType === 'plan-amigo' ? 'plan-amigo' : 'directo',
     budgetRange: (raw.budgetRange || '').toString().trim(),
-    dueDate: raw.dueDate || raw.deadline || ''
+    dueDate: raw.dueDate || raw.deadline || '',
+    proposalTariffId: raw.proposalTariffId || raw.responseTariffId || '',
+    proposalTariffCodigo: raw.proposalTariffCodigo || raw.responseTariffCodigo || '',
+    proposalTariffName: raw.proposalTariffName || raw.responseTariffName || '',
+    proposalTariffCompany: raw.proposalTariffCompany || raw.responseTariffCompany || '',
+    proposalMessage: (raw.proposalMessage || raw.responseMessage || '').toString().trim(),
+    proposalCreatedAt: raw.proposalCreatedAt || raw.responseCreatedAt || raw.respondedAt || null,
+    proposalCreatedBy: raw.proposalCreatedBy || raw.responseCreatedBy || '',
+    proposalCreatedByName: raw.proposalCreatedByName || raw.responseCreatedByName || '',
+    proposalLeadId: raw.proposalLeadId || '',
+    acceptedAt: raw.acceptedAt || null,
+    acceptedBy: raw.acceptedBy || '',
+    acceptedByName: raw.acceptedByName || ''
   };
   return entry;
 }
@@ -3827,10 +3876,15 @@ function handleCustomBudgetSubmit(event) {
   closeCustomBudgetModal();
 }
 
-function formatCustomBudgetCard(entry, { showActions = false } = {}) {
+function formatCustomBudgetCard(entry, { showActions = false, isOwner = false } = {}) {
   if (!entry) return '';
-  const status = entry.status === 'resuelto' ? 'vendido' : 'pendiente';
-  const statusText = entry.status === 'resuelto' ? 'Resuelto' : 'Pendiente';
+  const statusKey = entry.status === 'resuelto' ? 'resuelto' : (entry.status === 'respondido' ? 'respondido' : 'pendiente');
+  const statusMap = {
+    pendiente: { badge: 'pendiente', text: 'Pendiente' },
+    respondido: { badge: 'pendiente', text: 'Propuesta enviada' },
+    resuelto: { badge: 'vendido', text: 'Resuelto' }
+  };
+  const statusInfo = statusMap[statusKey] || statusMap.pendiente;
   const requester = entry.createdByName || entry.createdBy || 'Cliente';
   const contactInfo = entry.contact
     ? `<div class="dim">Contacto: ${escapeHtml(entry.contact)}</div>`
@@ -3842,20 +3896,73 @@ function formatCustomBudgetCard(entry, { showActions = false } = {}) {
   ].filter(Boolean);
   const badges = badgeItems.length ? `<div class="message-offer-tags">${badgeItems.join('')}</div>` : '';
   const dueInfo = entry.dueDate ? `<div class="dim">Fecha objetivo: ${escapeHtml(formatDate(entry.dueDate))}</div>` : '';
-  const footerInfo = entry.status === 'resuelto'
+  const footerInfo = statusKey === 'resuelto'
     ? `<span>Resuelto por ${escapeHtml(entry.resolvedByName || entry.resolvedBy || 'administración')} · ${escapeHtml(formatDateTime(entry.resolvedAt || entry.updatedAt))}</span>`
     : `<span>Última actualización: ${escapeHtml(formatDateTime(entry.updatedAt || entry.createdAt))}</span>`;
   let actions = '';
   if (showActions) {
-    const buttons = entry.status === 'pendiente'
-      ? `<button class="smallbtn" data-action="budget-complete" data-id="${escapeHtml(entry.id)}">Marcar resuelto</button>
-         <button class="smallbtn danger" data-action="budget-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`
-      : `<button class="smallbtn danger" data-action="budget-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`;
-    actions = `<div class="actions">${buttons}</div>`;
+    const respondLabel = entry.proposalTariffId ? 'Actualizar respuesta' : 'Responder';
+    const respondButton = statusKey !== 'resuelto'
+      ? `<button class="smallbtn" data-action="budget-respond" data-id="${escapeHtml(entry.id)}">${respondLabel}</button>`
+      : '';
+    const resolveButton = statusKey !== 'resuelto'
+      ? `<button class="smallbtn" data-action="budget-complete" data-id="${escapeHtml(entry.id)}">Marcar resuelto</button>`
+      : '';
+    const deleteButton = `<button class="smallbtn danger" data-action="budget-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`;
+    const buttons = [respondButton, resolveButton, deleteButton].filter(Boolean).join('');
+    actions = buttons ? `<div class="actions">${buttons}</div>` : '';
   }
-  const infoForRequester = showActions
-    ? ''
-    : `<div class="message-budgets-note">${entry.status === 'resuelto' ? 'El administrador ha compartido una propuesta personalizada.' : 'Tu solicitud está en revisión por el equipo administrador.'}</div>`;
+  let infoText = '';
+  if (!showActions) {
+    if (statusKey === 'resuelto') {
+      infoText = 'Esta solicitud ya se ha gestionado con éxito.';
+    } else if (statusKey === 'respondido') {
+      infoText = 'El administrador ha compartido una propuesta personalizada. Revisa los detalles y acepta si estás conforme.';
+    } else {
+      infoText = 'Tu solicitud está en revisión por el equipo administrador.';
+    }
+  }
+  const infoForRequester = infoText ? `<div class="message-budgets-note">${infoText}</div>` : '';
+  let responseBlock = '';
+  if (entry.proposalTariffId || entry.proposalTariffCodigo || entry.proposalTariffName || entry.proposalMessage) {
+    const titleParts = [];
+    if (entry.proposalTariffName) titleParts.push(entry.proposalTariffName);
+    if (entry.proposalTariffCodigo) titleParts.push(`(${entry.proposalTariffCodigo})`);
+    const title = titleParts.length ? titleParts.join(' ') : 'Propuesta enviada';
+    const metaPieces = [];
+    if (entry.proposalTariffCompany) metaPieces.push(entry.proposalTariffCompany);
+    if (entry.proposalCreatedByName || entry.proposalCreatedBy) {
+      metaPieces.push(`Por ${entry.proposalCreatedByName || entry.proposalCreatedBy}`);
+    }
+    if (entry.proposalCreatedAt) {
+      metaPieces.push(`Enviada ${formatDateTime(entry.proposalCreatedAt)}`);
+    }
+    const metaLabel = metaPieces.length
+      ? `<div class="message-budget-response__meta">${metaPieces.map(piece => escapeHtml(piece)).join(' · ')}</div>`
+      : '';
+    const acceptedMeta = entry.acceptedAt
+      ? `<div class="message-budget-response__meta">Aceptada por ${escapeHtml(entry.acceptedByName || entry.acceptedBy || 'cliente')} · ${escapeHtml(formatDateTime(entry.acceptedAt))}</div>`
+      : '';
+    const saleMeta = entry.proposalLeadId && statusKey === 'resuelto'
+      ? `<div class="message-budget-response__meta">Venta generada automáticamente.</div>`
+      : '';
+    const canAccept = !showActions && isOwner && statusKey === 'respondido' && !entry.acceptedAt;
+    const acceptButton = canAccept
+      ? `<div class="message-budget-response__actions"><button class="primary" data-action="budget-accept" data-id="${escapeHtml(entry.id)}">Aceptar propuesta</button></div>`
+      : '';
+    responseBlock = `
+      <div class="message-budget-response">
+        <div class="message-budget-response__header">
+          <span class="message-budget-response__title">${escapeHtml(title)}</span>
+          ${metaLabel}
+        </div>
+        ${entry.proposalMessage ? `<div class="message-budget-response__body">${escapeHtml(entry.proposalMessage)}</div>` : ''}
+        ${acceptedMeta}
+        ${saleMeta}
+        ${acceptButton}
+      </div>
+    `;
+  }
   return `
     <article class="lead-card" data-id="${escapeHtml(entry.id)}">
       <header>
@@ -3864,7 +3971,7 @@ function formatCustomBudgetCard(entry, { showActions = false } = {}) {
           <div class="meta">Solicitado por ${escapeHtml(requester)}</div>
           ${badges}
         </div>
-        <span class="status-pill" data-status="${status}">${statusText}</span>
+        <span class="status-pill" data-status="${statusInfo.badge}">${statusInfo.text}</span>
       </header>
       <div class="body">
         ${contactInfo}
@@ -3875,6 +3982,7 @@ function formatCustomBudgetCard(entry, { showActions = false } = {}) {
         ${footerInfo}
       </footer>
       ${infoForRequester}
+      ${responseBlock}
       ${actions}
     </article>
   `;
@@ -3937,6 +4045,10 @@ function handleCustomBudgetAction(event) {
   if (!id) return;
   const entry = customBudgets.find(item => item.id === id);
   if (!entry) return;
+  if (action === 'budget-respond') {
+    openBudgetResponseModal(entry);
+    return;
+  }
   if (action === 'budget-complete') {
     if (entry.status === 'resuelto') return;
     const now = new Date().toISOString();
@@ -3963,6 +4075,240 @@ function handleCustomBudgetAction(event) {
     renderMessageCenterBudgets();
     if (removed?.createdBy) {
       pushNotification({ user: removed.createdBy, message: 'Tu solicitud de presupuesto a medida se ha cerrado.', type: 'warning', meta: { id: removed.id } });
+    }
+  }
+}
+
+function findTariffForBudget(entry) {
+  if (!entry) return null;
+  if (entry.proposalTariffId) {
+    const byId = tariffs.find(item => item.id === entry.proposalTariffId);
+    if (byId) return byId;
+  }
+  if (entry.proposalTariffCodigo) {
+    const byCode = tariffs.find(item => item.codigo === entry.proposalTariffCodigo);
+    if (byCode) return byCode;
+  }
+  return null;
+}
+
+function populateBudgetResponseTariffOptions(selectedIdOrCode = '') {
+  if (!budgetResponseTariffSelect) return;
+  const items = tariffs.slice().sort((a, b) => {
+    const companyA = (a['compañia'] || '').toString().toLowerCase();
+    const companyB = (b['compañia'] || '').toString().toLowerCase();
+    if (companyA !== companyB) {
+      return companyA.localeCompare(companyB, 'es');
+    }
+    const nameA = (a.nombre || '').toString().toLowerCase();
+    const nameB = (b.nombre || '').toString().toLowerCase();
+    return nameA.localeCompare(nameB, 'es');
+  });
+  if (!items.length) {
+    budgetResponseTariffSelect.innerHTML = '<option value="">No hay tarifas registradas</option>';
+    budgetResponseTariffSelect.disabled = true;
+    return;
+  }
+  budgetResponseTariffSelect.disabled = false;
+  const options = ['<option value="">Selecciona una tarifa</option>'];
+  items.forEach(tariff => {
+    const company = tariff['compañia'] || 'Compañía sin nombre';
+    const name = tariff.nombre || 'Tarifa sin nombre';
+    const code = tariff.codigo ? ` (${tariff.codigo})` : '';
+    options.push(`<option value="${escapeHtml(tariff.id)}">${escapeHtml(`${company} · ${name}${code}`)}</option>`);
+  });
+  budgetResponseTariffSelect.innerHTML = options.join('');
+  if (selectedIdOrCode) {
+    const match = items.find(item => item.id === selectedIdOrCode)
+      || items.find(item => item.codigo === selectedIdOrCode);
+    if (match) {
+      budgetResponseTariffSelect.value = match.id;
+    }
+  }
+}
+
+function openBudgetResponseModal(entry) {
+  if (!entry || !budgetResponseModal || !budgetResponseForm) return;
+  if (!currentUser || currentUser.role !== 'admin') return;
+  activeBudgetResponseId = entry.id;
+  populateBudgetResponseTariffOptions(entry.proposalTariffId || entry.proposalTariffCodigo || '');
+  if (budgetResponseMessageInput) {
+    budgetResponseMessageInput.value = entry.proposalMessage || '';
+  }
+  if (budgetResponseSummary) {
+    budgetResponseSummary.textContent = entry.summary
+      ? `Resumen: ${entry.summary}`
+      : 'Resumen sin especificar.';
+  }
+  if (budgetResponseContact) {
+    budgetResponseContact.textContent = entry.contact
+      ? `Contacto: ${entry.contact}`
+      : 'Sin datos de contacto adicionales.';
+  }
+  budgetResponseModal.classList.remove('hidden');
+  budgetResponseModal.setAttribute('aria-hidden', 'false');
+  setTimeout(() => budgetResponseTariffSelect?.focus(), 50);
+}
+
+function closeBudgetResponseModal() {
+  if (!budgetResponseModal) return;
+  budgetResponseModal.classList.add('hidden');
+  budgetResponseModal.setAttribute('aria-hidden', 'true');
+  budgetResponseForm?.reset();
+  if (budgetResponseTariffSelect) {
+    budgetResponseTariffSelect.disabled = false;
+    budgetResponseTariffSelect.innerHTML = '';
+  }
+  if (budgetResponseSummary) budgetResponseSummary.textContent = '';
+  if (budgetResponseContact) budgetResponseContact.textContent = '';
+  activeBudgetResponseId = '';
+}
+
+function handleBudgetResponseSubmit(event) {
+  event.preventDefault();
+  if (!currentUser || currentUser.role !== 'admin') return;
+  if (!activeBudgetResponseId) return;
+  const entry = customBudgets.find(item => item.id === activeBudgetResponseId);
+  if (!entry) return;
+  const tariffId = budgetResponseTariffSelect?.value;
+  if (!tariffId) {
+    alert('Selecciona una tarifa para enviar la propuesta.');
+    return;
+  }
+  const tariff = tariffs.find(item => item.id === tariffId);
+  if (!tariff) {
+    alert('La tarifa seleccionada ya no está disponible.');
+    populateBudgetResponseTariffOptions();
+    return;
+  }
+  const now = new Date().toISOString();
+  entry.proposalTariffId = tariff.id;
+  entry.proposalTariffCodigo = tariff.codigo || '';
+  entry.proposalTariffName = tariff.nombre || '';
+  entry.proposalTariffCompany = tariff['compañia'] || '';
+  entry.proposalMessage = budgetResponseMessageInput?.value.trim() || '';
+  entry.proposalCreatedAt = now;
+  entry.proposalCreatedBy = currentUser.username;
+  entry.proposalCreatedByName = userDisplayName(currentUser) || currentUser.username;
+  entry.status = 'respondido';
+  entry.updatedAt = now;
+  entry.acceptedAt = null;
+  entry.acceptedBy = '';
+  entry.acceptedByName = '';
+  entry.resolvedAt = null;
+  entry.resolvedBy = '';
+  entry.resolvedByName = '';
+  entry.proposalLeadId = '';
+  saveCustomBudgets();
+  renderCustomBudgetInbox();
+  renderMessageCenterBudgets();
+  updateNotificationBadge();
+  closeBudgetResponseModal();
+  if (entry.createdBy) {
+    pushNotification({ user: entry.createdBy, message: 'El administrador ha respondido a tu solicitud de presupuesto a medida.', type: 'info', meta: { id: entry.id } });
+  }
+}
+
+function acceptCustomBudgetProposal(entry) {
+  if (!entry) return null;
+  if (!currentUser || entry.createdBy !== currentUser.username) return null;
+  if (entry.acceptedAt && entry.proposalLeadId) {
+    return leads.find(lead => lead.id === entry.proposalLeadId) || null;
+  }
+  const tariff = findTariffForBudget(entry);
+  const now = new Date().toISOString();
+  const tariffId = tariff?.id || entry.proposalTariffId || createId('tarifa');
+  const tariffCodigo = tariff?.codigo || entry.proposalTariffCodigo || '';
+  const tariffNombre = tariff?.nombre || entry.proposalTariffName || 'Tarifa personalizada';
+  const tariffCompania = tariff?.['compañia'] || entry.proposalTariffCompany || '';
+  const ownerRecord = entry.createdBy ? getUserByUsername(entry.createdBy) : null;
+  const ownerRoleRaw = entry.createdByRole || ownerRecord?.role || 'comercial';
+  const ownerRole = ownerRoleRaw === 'admin' ? 'comercial' : ownerRoleRaw;
+  const isClient = ownerRole === CLIENT_ROLE;
+  const commercialUsername = entry.createdBy || currentUser.username;
+  const commercialName = ownerRecord ? userDisplayName(ownerRecord) : (entry.createdByName || commercialUsername);
+  const clientName = entry.summary || (isClient ? (entry.createdByName || entry.createdBy || 'Cliente') : 'Cliente del presupuesto');
+  const contact = entry.contact || '';
+  const notesParts = [];
+  if (entry.summary) notesParts.push(`Resumen: ${entry.summary}`);
+  if (entry.proposalMessage) notesParts.push(`Mensaje admin: ${entry.proposalMessage}`);
+  const notes = notesParts.join(' · ');
+  const lead = {
+    id: createId('lead'),
+    tariffId,
+    tariffCodigo,
+    tariffNombre,
+    tariffCompania,
+    commercial: commercialUsername,
+    commercialName,
+    clientName,
+    contact,
+    notes,
+    status: 'vendido',
+    createdAt: now,
+    updatedAt: now,
+    notified: true,
+    origin: isClient ? CLIENT_ROLE : (['comercial', 'lider'].includes(ownerRole) ? ownerRole : 'comercial'),
+    installed: false,
+    clientUsername: isClient ? commercialUsername : '',
+    referredBy: entry.clientType === 'plan-amigo' && isClient ? commercialUsername : '',
+    pointsLedger: { base: 0, referral: 0, awardedAt: null },
+    comments: [],
+    soldAt: now
+  };
+  leads.push(lead);
+  saveLeads();
+  renderLeadSummary();
+  renderAdminLeadList();
+  renderCommercialPanel();
+  renderTeamPanel();
+  renderAdminSalesStats();
+  entry.status = 'resuelto';
+  entry.resolvedAt = now;
+  entry.updatedAt = now;
+  entry.acceptedAt = now;
+  entry.acceptedBy = currentUser.username;
+  entry.acceptedByName = userDisplayName(currentUser) || currentUser.username;
+  entry.resolvedBy = entry.proposalCreatedBy || entry.resolvedBy || '';
+  entry.resolvedByName = entry.proposalCreatedByName || entry.resolvedByName || '';
+  entry.proposalLeadId = lead.id;
+  saveCustomBudgets();
+  renderCustomBudgetInbox();
+  renderMessageCenterBudgets();
+  updateNotificationBadge();
+  const requesterLabel = entry.createdByName || entry.createdBy || 'Cliente';
+  const tariffLabel = tariffNombre || tariffCodigo || 'Tarifa personalizada';
+  notifyAdmins(`El presupuesto de ${requesterLabel} ha sido aceptado (${tariffLabel}).`, { id: entry.id, leadId: lead.id, kind: 'custom-budget' });
+  pushNotification({ user: currentUser.username, message: 'Has aceptado la propuesta. La venta se registró automáticamente.', type: 'success', meta: { id: entry.id, leadId: lead.id } });
+  return lead;
+}
+
+function handleMessageBudgetAction(event) {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+  const { action, id } = button.dataset;
+  if (!action || !id) return;
+  const entry = customBudgets.find(item => item.id === id);
+  if (!entry) return;
+  if (currentUser?.role === 'admin' && ['budget-respond', 'budget-complete', 'budget-delete'].includes(action)) {
+    handleCustomBudgetAction(event);
+    return;
+  }
+  if (action === 'budget-accept') {
+    if (!currentUser || entry.createdBy !== currentUser.username) return;
+    if (entry.status !== 'respondido' || entry.acceptedAt) return;
+    if (!entry.proposalTariffId && !entry.proposalTariffCodigo) {
+      alert('La propuesta no incluye una tarifa válida. Contacta con el administrador.');
+      return;
+    }
+    if (!confirm('¿Aceptar la propuesta y registrar la venta automáticamente?')) return;
+    const lead = acceptCustomBudgetProposal(entry);
+    if (!lead) {
+      alert('No se pudo generar la venta automáticamente. Inténtalo de nuevo más tarde.');
+      return;
+    }
+    if (typeof showCommercialFlash === 'function') {
+      showCommercialFlash('Tu propuesta se ha convertido en una venta automáticamente.');
     }
   }
 }
@@ -4253,7 +4599,7 @@ function renderMessageCenterBudgets() {
     return;
   }
   messageBudgetsList.innerHTML = relevant
-    .map(entry => formatCustomBudgetCard(entry, { showActions: isAdmin }))
+    .map(entry => formatCustomBudgetCard(entry, { showActions: isAdmin, isOwner: !isAdmin && entry.createdBy === currentUser.username }))
     .join('');
 }
 
@@ -8401,6 +8747,12 @@ document.addEventListener('DOMContentLoaded', () => {
   customBudgetBudgetRangeInput = $('#customBudgetBudgetRange');
   customBudgetDueDateInput = $('#customBudgetDueDate');
   customBudgetContactInput = $('#customBudgetContact');
+  budgetResponseModal = $('#budgetResponseModal');
+  budgetResponseForm = $('#budgetResponseForm');
+  budgetResponseTariffSelect = $('#budgetResponseTariff');
+  budgetResponseMessageInput = $('#budgetResponseMessage');
+  budgetResponseSummary = $('#budgetResponseSummary');
+  budgetResponseContact = $('#budgetResponseContact');
   callRequestModal = $('#callRequestModal');
   callRequestForm = $('#callRequestForm');
   callRequestNameInput = $('#callRequestName');
@@ -8588,6 +8940,7 @@ document.addEventListener('DOMContentLoaded', () => {
   messageOfferAudienceSelect?.addEventListener('change', handleOfferAudienceChange);
   messageOfferForm?.addEventListener('submit', handleOfferFormSubmit);
   messageOffersList?.addEventListener('click', handleOfferListAction);
+  messageBudgetsList?.addEventListener('click', handleMessageBudgetAction);
 
   customBudgetButton?.addEventListener('click', openCustomBudgetModal);
   customBudgetForm?.addEventListener('submit', handleCustomBudgetSubmit);
@@ -8595,6 +8948,13 @@ document.addEventListener('DOMContentLoaded', () => {
   customBudgetModal?.addEventListener('click', (event) => {
     if (event.target === customBudgetModal) {
       closeCustomBudgetModal();
+    }
+  });
+  budgetResponseForm?.addEventListener('submit', handleBudgetResponseSubmit);
+  $('#cancelBudgetResponse')?.addEventListener('click', closeBudgetResponseModal);
+  budgetResponseModal?.addEventListener('click', (event) => {
+    if (event.target === budgetResponseModal) {
+      closeBudgetResponseModal();
     }
   });
   customBudgetList?.addEventListener('click', handleCustomBudgetAction);
@@ -8617,6 +8977,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeRequestModal();
       closeProfilePanel();
       closeCustomBudgetModal();
+      closeBudgetResponseModal();
       closeCallRequestModal();
       hideNotifications();
     }
