@@ -269,6 +269,9 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .admin-tab { margin-top:0; }
 .stats-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); }
 .stat-card { background:#0b1120; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; box-shadow:0 12px 30px rgba(0,0,0,0.25); }
+.stat-card[data-rank="1"] { border-color: rgba(34,197,94,0.45); box-shadow:0 16px 36px rgba(34,197,94,0.25); }
+.stat-card[data-rank="2"] { border-color: rgba(59,130,246,0.35); }
+.stat-card[data-rank="3"] { border-color: rgba(234,179,8,0.35); }
 .stat-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
 .stat-name { font-weight:600; font-size:16px; }
 .stat-rank { font-size:12px; color:#a8b3c7; }
@@ -277,6 +280,23 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .kpi-badge[data-state="pending"] { background: rgba(234,179,8,0.15); border-color: rgba(234,179,8,0.35); color:#facc15; }
 .stat-body { display:grid; gap:6px; font-size:13px; color:#a8b3c7; }
 .stat-body strong { color:#fff; }
+.stat-figure { font-size:28px; font-weight:700; color:#fff; line-height:1.1; }
+.stat-figure span { display:block; font-size:12px; font-weight:500; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; }
+.stat-metrics { display:grid; gap:4px; font-size:13px; color:#a8b3c7; }
+.stat-metric { display:flex; justify-content:space-between; align-items:center; }
+.stat-metric strong { color:#fff; }
+.stat-footnote { font-size:12px; color:#94a3b8; border-top:1px dashed rgba(255,255,255,0.08); padding-top:8px; }
+.stat-avatar { width:36px; height:36px; border-radius:50%; overflow:hidden; background:rgba(59,130,246,0.12); display:flex; align-items:center; justify-content:center; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#60a5fa; border:1px solid rgba(59,130,246,0.35); }
+.stat-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+.admin-stats-toolbar { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin:12px 0; }
+.admin-stats-toolbar .range-info { font-size:13px; color:#94a3b8; margin:4px 0 0; }
+.range-switcher { display:flex; align-items:center; gap:10px; }
+.range-switcher-label { font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; }
+.range-switcher-buttons { display:flex; gap:6px; background:rgba(15,23,42,0.6); border:1px solid rgba(148,163,184,0.18); padding:4px; border-radius:999px; }
+.range-switcher button { border:none; background:transparent; color:#e2e8f0; font-size:13px; font-weight:600; padding:6px 14px; border-radius:999px; cursor:pointer; transition:background .2s ease, color .2s ease, box-shadow .2s ease; }
+.range-switcher button.active { background:var(--primary); color:#fff; box-shadow:0 6px 18px rgba(78,143,202,0.35); }
+.range-switcher button:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.admin-stats-group { margin-top:18px; display:flex; flex-direction:column; gap:12px; }
 
 @media (max-width: 768px) {
   #commercialMetrics { padding: 16px; }
@@ -653,8 +673,29 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       </div>
       <div id="leadSummary" class="kpis" style="margin-top:12px;"></div>
       <div id="leadList" class="lead-list" style="margin-top:12px;"></div>
-      <div class="section-subtitle" style="margin:18px 0 8px;">Control de comisiones por técnico</div>
-      <div id="adminSalesStats" class="stats-grid"></div>
+      <div class="admin-stats-toolbar">
+        <div>
+          <div class="section-subtitle" style="margin:0;">Control de comisiones por técnico</div>
+          <p class="range-info" id="adminSalesRangeLabel">Datos del mes en curso</p>
+        </div>
+        <div class="range-switcher" id="adminSalesRangeControls">
+          <span class="range-switcher-label">Periodo</span>
+          <div class="range-switcher-buttons">
+            <button type="button" data-range="day">Día</button>
+            <button type="button" data-range="week">Semana</button>
+            <button type="button" data-range="month" class="active">Mes</button>
+            <button type="button" data-range="year">Año</button>
+          </div>
+        </div>
+      </div>
+      <div class="admin-stats-group">
+        <div class="section-subtitle" style="margin:0;">Ranking de técnicos por comisión</div>
+        <div id="adminSalesStats" class="stats-grid"></div>
+      </div>
+      <div class="admin-stats-group">
+        <div class="section-subtitle" style="margin:0;">Ranking de clientes por puntos</div>
+        <div id="adminClientStats" class="stats-grid"></div>
+      </div>
     </div>
 
     <div id="adminTariffsTab" class="admin-tab hidden">
@@ -1167,6 +1208,9 @@ let grid,
   directClientList,
   directClientEmpty,
   adminSalesStats,
+  adminClientStats,
+  adminSalesRangeControls,
+  adminSalesRangeLabel,
   adminTabs,
   adminSalesTab,
   adminTariffsTab,
@@ -1256,6 +1300,7 @@ let editingUser = null;
 let commercialNoticeTimeout = null;
 let aiLastQuery = '';
 let adminActiveTab = 'sales';
+let adminSalesRange = 'month';
 let adminTabButtons = [];
 let adminTabPanels = {};
 
@@ -1297,6 +1342,26 @@ function startOfMonth(date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+}
+
+function startOfWeek(date) {
+  const base = startOfDay(date);
+  const day = base.getDay();
+  const diff = (day + 6) % 7;
+  base.setDate(base.getDate() - diff);
+  return base;
+}
+
+function startOfYear(date) {
+  return new Date(date.getFullYear(), 0, 1);
+}
+
 function monthKeyFromDate(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
@@ -1307,6 +1372,55 @@ function monthLabel(date) {
   } catch (error) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }
+}
+
+function formatDateES(date, options = { day: '2-digit', month: 'short', year: 'numeric' }) {
+  try {
+    return date.toLocaleDateString('es-ES', options);
+  } catch (error) {
+    if (options?.month) {
+      return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+    }
+    return date.toISOString().slice(0, 10);
+  }
+}
+
+function describeRangeLabel(rangeKey, start, end) {
+  if (rangeKey === 'day') {
+    return `Datos de hoy (${formatDateES(start)})`;
+  }
+  if (rangeKey === 'week') {
+    const startLabel = formatDateES(start, { day: '2-digit', month: 'short' });
+    const endLabel = formatDateES(end, { day: '2-digit', month: 'short', year: 'numeric' });
+    return `Datos de la semana (${startLabel} – ${endLabel})`;
+  }
+  if (rangeKey === 'year') {
+    return `Datos del ${start.getFullYear()}`;
+  }
+  const monthText = formatDateES(start, { month: 'long', year: 'numeric' });
+  return `Datos del mes (${monthText})`;
+}
+
+function getTimeframeRange(rangeKey) {
+  const now = new Date();
+  const end = endOfDay(now);
+  let start;
+  switch (rangeKey) {
+    case 'day':
+      start = startOfDay(now);
+      break;
+    case 'week':
+      start = startOfWeek(now);
+      break;
+    case 'year':
+      start = startOfYear(now);
+      break;
+    case 'month':
+    default:
+      start = startOfMonth(now);
+      break;
+  }
+  return { start, end, label: describeRangeLabel(rangeKey, start, end) };
 }
 
 function normaliseUser(raw) {
@@ -2128,6 +2242,17 @@ function revokeInstallationPoints(lead) {
 
 function formatPoints(value) {
   return `${Math.max(0, Math.round(value || 0)).toLocaleString('es-ES')} pts`;
+}
+
+function formatPointsDelta(value) {
+  const numeric = Math.round(Number(value) || 0);
+  if (numeric > 0) {
+    return `+${formatPoints(numeric)}`;
+  }
+  if (numeric < 0) {
+    return `-${formatPoints(Math.abs(numeric))}`;
+  }
+  return formatPoints(0);
 }
 
 function isRewardActive(reward, referenceDate = todayISO()) {
@@ -3654,63 +3779,303 @@ function renderCommercialMetrics() {
   commercialMetrics.classList.remove('hidden');
 }
 
-function renderAdminSalesStats() {
-  if (!adminSalesStats) return;
-  const metricsMap = buildMonthlyMetrics();
-  const currentMonth = startOfMonth(new Date());
-  const key = monthKeyFromDate(currentMonth);
-  const entry = metricsMap.get(key);
-  if (!entry || !entry.perUser.size) {
-    adminSalesStats.innerHTML = '<p class="dim">Aún no hay ventas registradas este mes.</p>';
-    return;
+function statInitials(name = '') {
+  const parts = String(name || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!parts.length) return '?';
+  const letters = parts.slice(0, 2).map(part => part[0] || '');
+  const initials = letters.join('').toUpperCase();
+  return initials || '?';
+}
+
+function renderStatAvatarMarkup(name, photo) {
+  const safeName = escapeHtml(name || '');
+  if (photo) {
+    return `<div class="stat-avatar"><img src="${escapeHtml(photo)}" alt="Foto de ${safeName}" loading="lazy" /></div>`;
   }
-  const items = Array.from(entry.perUser.values())
-    .map(stats => ({
-      username: stats.username,
-      name: stats.name,
-      totalSales: stats.totalSales,
-      packSales: stats.packSales,
-      fiberSales: stats.fiberSales,
-      mobileLines: stats.mobileLines,
-      commission: stats.commission,
-      kpi: stats.kpi || getKpiStatus(stats.packSales)
-    }))
+  return `<div class="stat-avatar">${escapeHtml(statInitials(name))}</div>`;
+}
+
+function collectAdminSalesMetrics(rangeKey) {
+  const { start, end } = getTimeframeRange(rangeKey);
+  const technicians = new Map();
+  const clients = new Map();
+  const tariffIndex = new Map();
+
+  const ensureTechnician = (username, record, fallbackName) => {
+    const key = username || 'sin-asignar';
+    if (!technicians.has(key)) {
+      technicians.set(key, {
+        username: key,
+        name: fallbackName,
+        totalSales: 0,
+        packSales: 0,
+        fiberSales: 0,
+        mobileLines: 0,
+        commission: 0,
+        photo: record?.photo || ''
+      });
+    } else if (record?.photo && !technicians.get(key).photo) {
+      technicians.get(key).photo = record.photo;
+    }
+    return technicians.get(key);
+  };
+
+  const ensureClient = (username, record, fallbackName = '') => {
+    if (!username) return null;
+    if (!clients.has(username)) {
+      clients.set(username, {
+        username,
+        name: fallbackName || username,
+        totalSales: 0,
+        fiberSales: 0,
+        mobileLines: 0,
+        pointsNet: 0,
+        pointsEarned: 0,
+        pointsSpent: 0,
+        pointsEarnedFromLeads: 0,
+        pointsEarnedFromReferrals: 0,
+        photo: record?.photo || ''
+      });
+    }
+    const entry = clients.get(username);
+    if (record) {
+      entry.name = userDisplayName(record) || entry.name || username;
+      if (record.photo && !entry.photo) entry.photo = record.photo;
+    } else if (fallbackName) {
+      entry.name = fallbackName;
+    }
+    return entry;
+  };
+
+  leads.forEach(lead => {
+    if (lead.status !== 'vendido') return;
+    if (!lead.installed) return;
+    const referenceDate = parseDate(lead.pointsLedger?.awardedAt || lead.soldAt || lead.updatedAt);
+    if (!referenceDate) return;
+    if (referenceDate < start || referenceDate > end) return;
+    const metrics = computeLeadMetrics(lead, tariffIndex);
+
+    const username = lead.commercial || 'sin-asignar';
+    const userRecord = getUserByUsername(username);
+    const displayName = userDisplayName(userRecord)
+      || lead.commercialName
+      || (username === 'sin-asignar' ? 'Sin asignar' : username);
+    const technician = ensureTechnician(username, userRecord, displayName);
+    technician.totalSales += 1;
+    technician.packSales += metrics.isPack ? 1 : 0;
+    technician.fiberSales += metrics.fiberCount;
+    technician.mobileLines += metrics.mobileLines;
+    technician.commission += metrics.commission;
+
+    const clientUsername = (lead.clientUsername || (lead.origin === CLIENT_ROLE ? lead.commercial : '') || '')
+      .trim()
+      .toLowerCase();
+    if (clientUsername) {
+      const clientRecord = getUserByUsername(clientUsername);
+      const clientName = userDisplayName(clientRecord) || lead.clientName || clientUsername;
+      const clientStats = ensureClient(clientUsername, clientRecord, clientName);
+      if (clientStats) {
+        clientStats.totalSales += 1;
+        clientStats.fiberSales += metrics.fiberCount;
+        clientStats.mobileLines += metrics.mobileLines;
+        const basePoints = Number.isFinite(Number(lead.pointsLedger?.base)) ? Number(lead.pointsLedger.base) : 0;
+        if (basePoints > 0) {
+          clientStats.pointsEarnedFromLeads += basePoints;
+        }
+      }
+    }
+    if (lead.referredBy) {
+      const inviterUsername = lead.referredBy.trim().toLowerCase();
+      if (inviterUsername) {
+        const inviterRecord = getUserByUsername(inviterUsername);
+        const inviterName = userDisplayName(inviterRecord) || inviterUsername;
+        const inviterStats = ensureClient(inviterUsername, inviterRecord, inviterName);
+        if (inviterStats) {
+          const referralPoints = Number.isFinite(Number(lead.pointsLedger?.referral)) ? Number(lead.pointsLedger.referral) : 0;
+          if (referralPoints > 0) {
+            inviterStats.pointsEarnedFromReferrals += referralPoints;
+          }
+        }
+      }
+    }
+  });
+
+  users.forEach(user => {
+    if (user.role !== CLIENT_ROLE) return;
+    const stats = ensureClient(user.username, user, userDisplayName(user) || user.username);
+    if (!stats) return;
+    const history = Array.isArray(user.pointsHistory) ? user.pointsHistory : [];
+    history.forEach(movement => {
+      const movementDate = parseDate(movement.createdAt);
+      if (!movementDate) return;
+      if (movementDate < start || movementDate > end) return;
+      const amount = Math.round(Number(movement.amount) || 0);
+      if (!amount) return;
+      stats.pointsNet += amount;
+      if (amount > 0) {
+        stats.pointsEarned += amount;
+      } else if (amount < 0) {
+        stats.pointsSpent += Math.abs(amount);
+      }
+    });
+  });
+
+  const technicianList = Array.from(technicians.values()).map(entry => ({
+    ...entry,
+    kpi: getKpiStatus(entry.packSales)
+  }));
+
+  const clientList = Array.from(clients.values()).map(entry => ({
+    ...entry,
+    pointsNet: entry.pointsNet || 0,
+    pointsEarned: entry.pointsEarned || 0,
+    pointsSpent: entry.pointsSpent || 0,
+    pointsEarnedFromLeads: entry.pointsEarnedFromLeads || 0,
+    pointsEarnedFromReferrals: entry.pointsEarnedFromReferrals || 0,
+    totalSales: entry.totalSales || 0,
+    fiberSales: entry.fiberSales || 0,
+    mobileLines: entry.mobileLines || 0
+  }));
+
+  return { technicians: technicianList, clients: clientList };
+}
+
+function renderTechnicianStatCard(stats, index) {
+  const kpi = stats.kpi || getKpiStatus(stats.packSales || 0);
+  const kpiState = kpi.reached ? 'active' : 'pending';
+  const kpiText = kpi.reached ? `${kpi.label}` : 'KPI pendiente';
+  const firstThreshold = KPI_THRESHOLDS[0];
+  const detail = kpi.next
+    ? `Faltan ${kpi.missing} packs instalados para ${euro(kpi.next.bonus)}`
+    : kpi.reached
+      ? 'Objetivo de packs instalados completado.'
+      : firstThreshold
+        ? `Necesitas ${firstThreshold.sales} packs instalados para el primer bono.`
+        : 'Sin configuración de bonos.';
+  const avatar = renderStatAvatarMarkup(stats.name, stats.photo);
+  return `
+    <div class="stat-card" data-rank="${index + 1}">
+      <div class="stat-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          ${avatar}
+          <div>
+            <span class="stat-rank">#${index + 1}</span>
+            <div class="stat-name">${escapeHtml(stats.name)}</div>
+          </div>
+        </div>
+        <span class="kpi-badge" data-state="${kpiState}">${kpiText}</span>
+      </div>
+      <div class="stat-figure">${euro(stats.commission)}<span>Comisión generada</span></div>
+      <div class="stat-metrics">
+        <div class="stat-metric"><span>Ventas instaladas</span><strong>${stats.totalSales}</strong></div>
+        <div class="stat-metric"><span>Packs instalados</span><strong>${stats.packSales}</strong></div>
+        <div class="stat-metric"><span>Fibra contratada</span><strong>${stats.fiberSales}</strong></div>
+        <div class="stat-metric"><span>Líneas móviles</span><strong>${stats.mobileLines}</strong></div>
+      </div>
+      <div class="stat-footnote">${detail}</div>
+    </div>
+  `;
+}
+
+function renderClientStatCard(stats, index) {
+  const avatar = renderStatAvatarMarkup(stats.name, stats.photo);
+  const net = stats.pointsNet || 0;
+  const netLabel = formatPointsDelta(net);
+  const earnedLabel = stats.pointsEarned > 0 ? `+${formatPoints(stats.pointsEarned)}` : formatPoints(0);
+  const spentLabel = stats.pointsSpent > 0 ? `-${formatPoints(stats.pointsSpent)}` : formatPoints(0);
+  const badgeState = net >= 0 ? 'active' : 'pending';
+  const badgeText = net >= 0 ? 'Saldo positivo' : 'Saldo en descenso';
+  const installPoints = stats.pointsEarnedFromLeads || 0;
+  const referralPoints = stats.pointsEarnedFromReferrals || 0;
+  const footnoteParts = [];
+  if (installPoints > 0) footnoteParts.push(`${formatPoints(installPoints)} por instalaciones`);
+  if (referralPoints > 0) footnoteParts.push(`${formatPoints(referralPoints)} por invitaciones`);
+  const footnote = footnoteParts.length
+    ? `Incluye ${footnoteParts.join(' y ')}.`
+    : 'Actividad generada en el periodo seleccionado.';
+  return `
+    <div class="stat-card" data-rank="${index + 1}">
+      <div class="stat-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          ${avatar}
+          <div>
+            <span class="stat-rank">#${index + 1}</span>
+            <div class="stat-name">${escapeHtml(stats.name)}</div>
+          </div>
+        </div>
+        <span class="kpi-badge" data-state="${badgeState}">${badgeText}</span>
+      </div>
+      <div class="stat-figure">${netLabel}<span>Puntos netos</span></div>
+      <div class="stat-metrics">
+        <div class="stat-metric"><span>Puntos ganados</span><strong>${earnedLabel}</strong></div>
+        <div class="stat-metric"><span>Puntos canjeados</span><strong>${spentLabel}</strong></div>
+        <div class="stat-metric"><span>Instalaciones</span><strong>${stats.totalSales}</strong></div>
+        <div class="stat-metric"><span>Fibra contratada</span><strong>${stats.fiberSales}</strong></div>
+        <div class="stat-metric"><span>Líneas móviles</span><strong>${stats.mobileLines}</strong></div>
+      </div>
+      <div class="stat-footnote">${footnote}</div>
+    </div>
+  `;
+}
+
+function renderAdminSalesStats() {
+  if (!adminSalesStats || !adminClientStats) return;
+  const rangeKey = adminSalesRange || 'month';
+  const range = getTimeframeRange(rangeKey);
+  if (adminSalesRangeLabel) {
+    adminSalesRangeLabel.textContent = range.label;
+  }
+  if (adminSalesRangeControls) {
+    const buttons = adminSalesRangeControls.querySelectorAll('button[data-range]');
+    buttons.forEach(button => {
+      button.classList.toggle('active', button.dataset.range === rangeKey);
+    });
+  }
+  const { technicians, clients } = collectAdminSalesMetrics(rangeKey);
+  const sortedTechnicians = technicians
+    .filter(entry => entry.totalSales > 0 || entry.commission > 0)
     .sort((a, b) => {
       if (b.commission !== a.commission) return b.commission - a.commission;
       if (b.packSales !== a.packSales) return b.packSales - a.packSales;
+      if (b.fiberSales !== a.fiberSales) return b.fiberSales - a.fiberSales;
       return a.name.localeCompare(b.name, 'es');
     });
-  const firstThreshold = KPI_THRESHOLDS[0];
-  adminSalesStats.innerHTML = items
-    .map((stats, index) => {
-      const kpiState = stats.kpi.reached ? 'active' : 'pending';
-      const kpiText = stats.kpi.reached ? `${stats.kpi.label}` : 'KPI pendiente';
-      const detail = stats.kpi.next
-        ? `Faltan ${stats.kpi.missing} packs instalados para ${euro(stats.kpi.next.bonus)}`
-        : stats.kpi.reached
-          ? 'Objetivo de packs instalados completado.'
-          : firstThreshold
-            ? `Necesitas ${firstThreshold.sales} packs instalados para el primer bono.`
-            : 'Sin configuración de bonos.';
-      return `
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-rank">#${index + 1}</span>
-            <span class="stat-name">${stats.name}</span>
-            <span class="kpi-badge" data-state="${kpiState}">${kpiText}</span>
-          </div>
-          <div class="stat-body">
-            <div>Ventas instaladas: <strong>${stats.totalSales}</strong></div>
-            <div>Packs instalados: <strong>${stats.packSales}</strong></div>
-            <div>Ventas con fibra: <strong>${stats.fiberSales}</strong></div>
-            <div>Líneas móviles: <strong>${stats.mobileLines}</strong></div>
-            <div>Comisión: <strong>${euro(stats.commission)}</strong></div>
-            <div>${detail}</div>
-          </div>
-        </div>
-      `;
-    })
-    .join('');
+  adminSalesStats.innerHTML = sortedTechnicians.length
+    ? sortedTechnicians.map((stats, index) => renderTechnicianStatCard(stats, index)).join('')
+    : '<p class="dim">No hay comisiones registradas en este periodo.</p>';
+
+  const sortedClients = clients
+    .filter(entry => (
+      (entry.pointsNet || 0) !== 0
+      || entry.pointsEarned > 0
+      || entry.pointsSpent > 0
+      || entry.totalSales > 0
+      || entry.fiberSales > 0
+      || entry.mobileLines > 0
+      || entry.pointsEarnedFromLeads > 0
+      || entry.pointsEarnedFromReferrals > 0
+    ))
+    .sort((a, b) => {
+      const scoreA = a.pointsNet !== 0
+        ? a.pointsNet
+        : (a.pointsEarned > 0 ? a.pointsEarned : (a.pointsEarnedFromLeads > 0 ? a.pointsEarnedFromLeads : a.pointsEarnedFromReferrals));
+      const scoreB = b.pointsNet !== 0
+        ? b.pointsNet
+        : (b.pointsEarned > 0 ? b.pointsEarned : (b.pointsEarnedFromLeads > 0 ? b.pointsEarnedFromLeads : b.pointsEarnedFromReferrals));
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      if (b.pointsEarned !== a.pointsEarned) return b.pointsEarned - a.pointsEarned;
+      if (b.totalSales !== a.totalSales) return b.totalSales - a.totalSales;
+      if (b.fiberSales !== a.fiberSales) return b.fiberSales - a.fiberSales;
+      if (b.mobileLines !== a.mobileLines) return b.mobileLines - a.mobileLines;
+      return a.name.localeCompare(b.name, 'es');
+    });
+
+  adminClientStats.innerHTML = sortedClients.length
+    ? sortedClients.map((stats, index) => renderClientStatCard(stats, index)).join('')
+    : '<p class="dim">No hay actividad de clientes en este periodo.</p>';
 }
 
 function activateAdminTab(tab) {
@@ -4937,6 +5302,9 @@ document.addEventListener('DOMContentLoaded', () => {
   directClientList = $('#directClientList');
   directClientEmpty = $('#directClientEmpty');
   adminSalesStats = $('#adminSalesStats');
+  adminClientStats = $('#adminClientStats');
+  adminSalesRangeControls = $('#adminSalesRangeControls');
+  adminSalesRangeLabel = $('#adminSalesRangeLabel');
   adminTabs = $('#adminTabs');
   adminSalesTab = $('#adminSalesTab');
   adminTariffsTab = $('#adminTariffsTab');
@@ -5100,6 +5468,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!button) return;
     event.preventDefault();
     activateAdminTab(button.dataset.tab);
+  });
+
+  adminSalesRangeControls?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-range]');
+    if (!button) return;
+    event.preventDefault();
+    const targetRange = button.dataset.range || 'month';
+    if (targetRange === adminSalesRange) return;
+    adminSalesRange = targetRange;
+    renderAdminSalesStats();
   });
 
   aiForm?.addEventListener('submit', handleAiSearchSubmit);
