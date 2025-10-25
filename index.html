@@ -109,6 +109,56 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .status-pill[data-status="cancelado"] { background: rgba(239,68,68,0.18); color:#fca5a5; border:1px solid rgba(239,68,68,0.45); }
 .lead-list { margin-top:12px; display:flex; flex-direction:column; gap:12px; }
 .lead-card { border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:12px 14px; background:#0b1120; }
+.lead-card--commercial {
+  background: rgba(30,64,175,0.2);
+  border-color: rgba(59,130,246,0.35);
+  box-shadow: 0 10px 28px rgba(30,64,175,0.25);
+}
+.lead-card--direct {
+  background: rgba(249,115,22,0.16);
+  border-color: rgba(249,115,22,0.45);
+  box-shadow: 0 10px 28px rgba(249,115,22,0.25);
+}
+.tag.tag-origin-commercial {
+  background: rgba(59,130,246,0.18);
+  border-color: rgba(59,130,246,0.5);
+  color: #bfdbfe;
+}
+.tag.tag-origin-direct {
+  background: rgba(249,115,22,0.2);
+  border-color: rgba(249,115,22,0.55);
+  color: #fed7aa;
+}
+.lead-comments {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.lead-comments-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #94a3b8;
+}
+.lead-comments-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lead-comment-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+.lead-comment-body {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e2e8f0;
+}
 .lead-card header { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
 .lead-card .meta { font-size:12px; color:#93a0b5; }
 .lead-card .body { margin-top:8px; font-size:13px; line-height:1.45; }
@@ -2882,6 +2932,23 @@ function normaliseLead(raw) {
   lead.cancelledByName = lead.cancelledByName || lead.cancelled_by_name || '';
   lead.clientUsername = (lead.clientUsername || lead.client_username || '').toLowerCase();
   lead.referredBy = (lead.referredBy || lead.referred_by || '').toLowerCase();
+  const comments = Array.isArray(raw.comments) ? raw.comments : [];
+  lead.comments = comments
+    .map(entry => {
+      const text = (entry?.text || entry?.comment || '').toString().trim();
+      if (!text) return null;
+      const createdAt = entry.createdAt || entry.created_at || entry.timestamp || entry.date || new Date().toISOString();
+      const author = (entry.author || entry.user || '').toString().trim().toLowerCase();
+      const authorName = (entry.authorName || entry.author_name || entry.name || '').toString().trim();
+      return {
+        id: entry.id || createId('comment'),
+        text,
+        author,
+        authorName,
+        createdAt
+      };
+    })
+    .filter(Boolean);
   const ledger = lead.pointsLedger || lead.points_ledger || {};
   lead.pointsLedger = {
     base: Number.isFinite(Number(ledger.base)) ? Number(ledger.base) : 0,
@@ -3913,7 +3980,8 @@ function handleReferralSubmit(event) {
     installed: false,
     clientUsername: newUser.username,
     referredBy: currentUser.username,
-    pointsLedger: { base: 0, referral: 0, awardedAt: null }
+    pointsLedger: { base: 0, referral: 0, awardedAt: null },
+    comments: []
   };
   leads.push(lead);
   saveLeads();
@@ -5080,6 +5148,37 @@ function leadCancellationDetails(lead) {
   return `<p><strong>Motivo de cancelación:</strong> ${reason}${meta}</p>`;
 }
 
+function canCurrentUserCommentOnLeads() {
+  if (!currentUser) return false;
+  return ['admin', 'lider', 'comercial'].includes(currentUser.role);
+}
+
+function renderLeadComments(lead) {
+  if (!lead || !Array.isArray(lead.comments) || !lead.comments.length) return '';
+  const sorted = lead.comments
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const items = sorted
+    .map(comment => {
+      const authorLabel = escapeHtml(comment.authorName || comment.author || '');
+      const timestamp = formatDateTime(comment.createdAt);
+      const message = escapeHtml(comment.text || '').replace(/\n/g, '<br>');
+      return `
+        <li>
+          <div class="lead-comment-meta">${authorLabel ? `${authorLabel} · ` : ''}${timestamp}</div>
+          <div class="lead-comment-body">${message}</div>
+        </li>
+      `;
+    })
+    .join('');
+  return `
+    <div class="lead-comments">
+      <p class="lead-comments-title">Comentarios</p>
+      <ul class="lead-comments-list">${items}</ul>
+    </div>
+  `;
+}
+
 function renderAdminLeadList() {
   if (!leadList) return;
   const teamLeads = leads.filter(lead => lead.origin !== CLIENT_ROLE);
@@ -5113,10 +5212,13 @@ function renderAdminLeadList() {
           const deleteButton = currentUser?.role === 'admin'
             ? `<button class="smallbtn danger" data-action="delete-lead" data-id="${lead.id}">Eliminar</button>`
             : '';
-          const controls = [toggleButton, installButton, cancelButton, deleteButton].filter(Boolean).join('');
+          const commentButton = canCurrentUserCommentOnLeads()
+            ? `<button class="smallbtn" data-action="add-comment" data-id="${lead.id}">Añadir comentario</button>`
+            : '';
+          const controls = [commentButton, toggleButton, installButton, cancelButton, deleteButton].filter(Boolean).join('');
           const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
           return `
-            <div class="lead-card" data-id="${lead.id}">
+            <div class="lead-card lead-card--commercial" data-id="${lead.id}">
               <header>
                 <div>
                   <strong>${lead.clientName}</strong>
@@ -5139,6 +5241,7 @@ function renderAdminLeadList() {
                 <span>Creada: ${formatDateTime(lead.createdAt)} · Última actualización: ${formatDateTime(lead.updatedAt)}</span>
                 ${controlsMarkup}
               </footer>
+              ${renderLeadComments(lead)}
             </div>
           `;
         })
@@ -5182,14 +5285,17 @@ function renderDirectClientInbox() {
       const deleteButton = currentUser?.role === 'admin'
         ? `<button class="smallbtn danger" data-action="delete-lead" data-id="${lead.id}">Eliminar</button>`
         : '';
-      const controls = [toggleButton, installButton, cancelButton, deleteButton].filter(Boolean).join('');
+      const commentButton = canCurrentUserCommentOnLeads()
+        ? `<button class="smallbtn" data-action="add-comment" data-id="${lead.id}">Añadir comentario</button>`
+        : '';
+      const controls = [commentButton, toggleButton, installButton, cancelButton, deleteButton].filter(Boolean).join('');
       const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
       return `
-        <div class="lead-card" data-id="${lead.id}">
+        <div class="lead-card lead-card--direct" data-id="${lead.id}">
           <header>
             <div>
               <strong>${lead.clientName}</strong>
-              <span class="tag tag-warning">Cliente directo</span>
+              <span class="tag tag-origin-direct">Cliente directo</span>
               <span class="tag">${lead.tariffCodigo}</span>
             </div>
           <div class="inline-actions">
@@ -5210,6 +5316,7 @@ function renderDirectClientInbox() {
             <span>Actualizada: ${formatDateTime(lead.updatedAt)}</span>
             ${controlsMarkup}
           </footer>
+          ${renderLeadComments(lead)}
         </div>
       `;
     })
@@ -5846,6 +5953,34 @@ function handleLeadListAction(event) {
   if (!action || !id) return;
   const lead = leads.find(l => l.id === id);
   if (!lead) return;
+  if (action === 'add-comment') {
+    if (!canCurrentUserCommentOnLeads()) return;
+    const response = prompt('Escribe tu comentario sobre la venta:');
+    if (response === null) return;
+    const trimmed = response.trim();
+    if (!trimmed) {
+      alert('El comentario no puede estar vacío.');
+      return;
+    }
+    if (!Array.isArray(lead.comments)) {
+      lead.comments = [];
+    }
+    const createdAt = new Date().toISOString();
+    lead.comments.push({
+      id: createId('comment'),
+      text: trimmed,
+      author: currentUser.username,
+      authorName: userDisplayName(currentUser) || currentUser.username,
+      createdAt
+    });
+    lead.updatedAt = createdAt;
+    saveLeads();
+    renderLeadSummary();
+    renderAdminLeadList();
+    renderTeamPanel();
+    renderCommercialPanel();
+    return;
+  }
   if (action === 'toggle-status') {
     if (lead.status === 'cancelado') return;
     lead.status = lead.status === 'vendido' ? 'pendiente' : 'vendido';
@@ -6000,6 +6135,10 @@ function renderCommercialPanel() {
       const statusLabel = leadStatusLabel(lead.status);
       const installedTag = lead.installed ? '<span class="tag tag-success">Instalada</span>' : '';
       const referralTag = lead.referredBy ? '<span class="tag">Plan amigo</span>' : '';
+      const commentButton = canCurrentUserCommentOnLeads()
+        ? `<button class="smallbtn" data-action="add-comment" data-id="${lead.id}">Añadir comentario</button>`
+        : '';
+      const controlsMarkup = commentButton ? `<div class="controls" style="margin-left:auto;">${commentButton}</div>` : '';
       return `
         <div class="lead-card">
           <header>
@@ -6022,7 +6161,9 @@ function renderCommercialPanel() {
           <footer>
             <span>Enviada: ${formatDateTime(lead.createdAt)}</span>
             <span>Última actualización: ${formatDateTime(lead.updatedAt)}</span>
+            ${controlsMarkup}
           </footer>
+          ${renderLeadComments(lead)}
         </div>
       `;
     })
@@ -6042,14 +6183,21 @@ function renderTeamPanel() {
     : Array.isArray(currentUser.managedUsers)
       ? currentUser.managedUsers
       : [];
-  const uniqueMembers = Array.from(new Set(members.filter(Boolean)));
+  const uniqueMembers = Array.from(new Set(members.filter(Boolean).map(value => value.toLowerCase())));
   if (!uniqueMembers.length) {
     teamSummary.innerHTML = '<div class="dim">Aún no tienes usuarios asignados a tu equipo.</div>';
     teamLeadList.innerHTML = '';
     return;
   }
+  const memberSet = new Set(uniqueMembers);
   const teamLeads = leads
-    .filter(lead => uniqueMembers.includes(lead.commercial))
+    .filter(lead => {
+      const commercialUser = (lead.commercial || '').toLowerCase();
+      const referralUser = (lead.referredBy || '').toLowerCase();
+      const isMemberSale = memberSet.has(commercialUser);
+      const isReferralSale = lead.origin === CLIENT_ROLE && referralUser && memberSet.has(referralUser);
+      return isMemberSale || isReferralSale;
+    })
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   if (!teamLeads.length) {
     teamSummary.innerHTML = '<div class="dim">Sin oportunidades registradas para tu equipo.</div>';
@@ -6057,16 +6205,29 @@ function renderTeamPanel() {
     return;
   }
   const aggregate = teamLeads.reduce((acc, lead) => {
-    if (!acc[lead.commercial]) {
-      acc[lead.commercial] = {
-        username: lead.commercial,
-        name: lead.commercialName || lead.commercial,
+    let key = (lead.commercial || '').toLowerCase();
+    let name = lead.commercialName || lead.commercial || '';
+    if (!memberSet.has(key)) {
+      const referralKey = (lead.referredBy || '').toLowerCase();
+      if (referralKey && memberSet.has(referralKey)) {
+        key = referralKey;
+        const referralRecord = getUserByUsername(referralKey);
+        name = userDisplayName(referralRecord) || referralKey;
+      } else {
+        return acc;
+      }
+    }
+    if (!acc[key]) {
+      const record = getUserByUsername(key);
+      acc[key] = {
+        username: key,
+        name: userDisplayName(record) || name || key,
         total: 0,
         sold: 0
       };
     }
-    acc[lead.commercial].total += 1;
-    if (lead.status === 'vendido') acc[lead.commercial].sold += 1;
+    acc[key].total += 1;
+    if (lead.status === 'vendido') acc[key].sold += 1;
     return acc;
   }, {});
   teamSummary.innerHTML = Object.values(aggregate)
@@ -6083,6 +6244,11 @@ function renderTeamPanel() {
       const statusLabel = leadStatusLabel(lead.status);
       const installedTag = lead.installed ? '<span class="tag tag-success">Instalada</span>' : '';
       const referralTag = lead.referredBy ? '<span class="tag">Plan amigo</span>' : '';
+      const isDirect = lead.origin === CLIENT_ROLE;
+      const cardClass = isDirect ? 'lead-card lead-card--direct' : 'lead-card lead-card--commercial';
+      const originTag = isDirect
+        ? '<span class="tag tag-origin-direct">Cliente directo</span>'
+        : '<span class="tag tag-origin-commercial">Comercial</span>';
       const installLabel = lead.installed ? 'Marcar como pendiente de instalación' : 'Marcar como instalada';
       const installButton = lead.status === 'vendido'
         ? `<button class="smallbtn" data-action="toggle-installed" data-id="${lead.id}">${installLabel}</button>`
@@ -6090,13 +6256,25 @@ function renderTeamPanel() {
       const cancelButton = lead.status === 'vendido'
         ? `<button class="smallbtn" data-action="cancel-lead" data-id="${lead.id}">Cancelar venta</button>`
         : '';
-      const controls = [installButton, cancelButton].filter(Boolean).join('');
+      const commentButton = canCurrentUserCommentOnLeads()
+        ? `<button class="smallbtn" data-action="add-comment" data-id="${lead.id}">Añadir comentario</button>`
+        : '';
+      const controls = [commentButton, installButton, cancelButton].filter(Boolean).join('');
       const controlsMarkup = controls ? `<div class="controls" style="margin-left:auto;">${controls}</div>` : '';
+      const referrerRecord = lead.referredBy ? getUserByUsername(lead.referredBy) : null;
+      const referrerName = referrerRecord ? userDisplayName(referrerRecord) : lead.referredBy || '';
+      const actorLine = isDirect
+        ? `<p><strong>Cliente directo:</strong> ${lead.commercialName}</p>`
+        : `<p><strong>Comercial:</strong> ${lead.commercialName}</p>`;
+      const referralInfo = isDirect && referrerName
+        ? `<p><strong>Invitado por:</strong> ${referrerName}</p>`
+        : '';
       return `
-        <div class="lead-card">
+        <div class="${cardClass}">
           <header>
             <div>
               <strong>${lead.clientName}</strong>
+              ${originTag}
               <span class="tag">${lead.tariffCodigo}</span>
             </div>
           <div class="inline-actions">
@@ -6107,7 +6285,8 @@ function renderTeamPanel() {
           </header>
           <div class="body">
             <p><strong>Tarifa:</strong> ${lead.tariffNombre} · <strong>${lead.tariffCompania}</strong></p>
-            <p><strong>Comercial:</strong> ${lead.commercialName}</p>
+            ${actorLine}
+            ${referralInfo}
             <p><strong>Contacto:</strong> ${lead.contact}</p>
             ${lead.notes ? `<p><strong>Notas:</strong> ${lead.notes}</p>` : ''}
             ${leadCancellationDetails(lead)}
@@ -6117,6 +6296,7 @@ function renderTeamPanel() {
             <span>Actualizada: ${formatDateTime(lead.updatedAt)}</span>
             ${controlsMarkup}
           </footer>
+          ${renderLeadComments(lead)}
         </div>
       `;
     })
@@ -6255,7 +6435,8 @@ function handleLeadFormSubmit(event) {
     updatedAt: new Date().toISOString(),
     notified: true,
     origin: currentUser.role === CLIENT_ROLE ? CLIENT_ROLE : currentUser.role,
-    installed: false
+    installed: false,
+    comments: []
   };
   leads.push(lead);
   saveLeads();
@@ -6352,7 +6533,8 @@ function handleRequestFormSubmit(event) {
     installed: false,
     clientUsername: userRecord.username,
     referredBy: userRecord.referredBy || '',
-    pointsLedger: { base: 0, referral: 0, awardedAt: null }
+    pointsLedger: { base: 0, referral: 0, awardedAt: null },
+    comments: []
   };
   leads.push(lead);
   saveLeads();
@@ -7218,6 +7400,7 @@ document.addEventListener('DOMContentLoaded', () => {
   clientRewardsContainer?.addEventListener('click', handleClientRewardAction);
 
   leadList?.addEventListener('click', handleLeadListAction);
+  commercialLeads?.addEventListener('click', handleLeadListAction);
   directClientList?.addEventListener('click', handleLeadListAction);
   teamLeadList?.addEventListener('click', handleLeadListAction);
   leadFilter?.addEventListener('change', renderAdminLeadList);
