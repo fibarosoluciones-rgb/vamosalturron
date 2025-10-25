@@ -297,6 +297,63 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .request-item .info { display:flex; flex-direction:column; gap:4px; font-size:13px; }
 .request-item .actions { display:flex; gap:8px; align-items:center; }
 .empty-state { border:1px dashed rgba(148,163,184,0.35); border-radius:16px; padding:24px; text-align:center; color:#a8b3c7; margin-top:12px; }
+.call-request-headline { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.call-request-headline p { margin:0; font-size:13px; color:#cbd5f5; max-width:360px; }
+.call-request-overview { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin:12px 0 18px; }
+.call-request-overview__item { position:relative; padding:16px; border-radius:16px; border:1px solid rgba(148,163,184,0.25); box-shadow:0 16px 32px rgba(15,23,42,0.35); overflow:hidden; display:flex; flex-direction:column; gap:6px; isolation:isolate; }
+.call-request-overview__item::after { content:''; position:absolute; inset:-40% -40% auto auto; width:160px; height:160px; background:radial-gradient(circle at center, rgba(255,255,255,0.28), transparent 72%); opacity:0.45; pointer-events:none; }
+.call-request-overview__item[data-status="pendiente"] { background:linear-gradient(160deg, rgba(251,191,36,0.2) 0%, rgba(30,41,59,0.8) 100%); border-color:rgba(251,191,36,0.45); }
+.call-request-overview__item[data-status="seguimiento"] { background:linear-gradient(160deg, rgba(59,130,246,0.18) 0%, rgba(30,41,59,0.85) 100%); border-color:rgba(96,165,250,0.45); }
+.call-request-overview__item[data-status="informacion"] { background:linear-gradient(160deg, rgba(14,165,233,0.18) 0%, rgba(30,41,59,0.85) 100%); border-color:rgba(125,211,252,0.45); }
+.call-request-overview__item[data-status="venta"] { background:linear-gradient(160deg, rgba(34,197,94,0.18) 0%, rgba(15,118,110,0.8) 100%); border-color:rgba(34,197,94,0.45); }
+.call-request-overview__icon { font-size:20px; }
+.call-request-overview__count { font-size:32px; font-weight:800; line-height:1; }
+.call-request-overview__label { font-size:14px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; color:#e2e8f0; }
+.call-request-overview__hint { font-size:12px; color:rgba(226,232,240,0.85); margin:0; }
+.call-request-board { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); }
+.call-request-column { background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.2); border-radius:18px; display:flex; flex-direction:column; min-height:0; box-shadow:0 18px 42px rgba(8,15,30,0.45); position:relative; overflow:hidden; }
+.call-request-column__header { padding:18px 18px 0; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.call-request-column__title { margin:0; font-size:15px; font-weight:700; color:#e2e8f0; }
+.call-request-column__hint { margin:6px 0 0; font-size:12px; color:#94a3b8; max-width:180px; }
+.call-request-column__count { font-size:26px; font-weight:800; color:#fbbf24; }
+.call-request-column[data-status="seguimiento"] .call-request-column__count { color:#60a5fa; }
+.call-request-column[data-status="informacion"] .call-request-column__count { color:#38bdf8; }
+.call-request-column[data-status="venta"] .call-request-column__count { color:#34d399; }
+.call-request-column__list { padding:18px; display:flex; flex-direction:column; gap:12px; min-height:140px; }
+.call-request-column__list::after { content:''; flex:1 1 auto; }
+.call-request-empty { padding:18px; border-radius:14px; border:1px dashed rgba(148,163,184,0.35); text-align:center; font-size:12px; color:#94a3b8; background:rgba(15,23,42,0.65); }
+.call-request-card { position:relative; padding:16px; border-radius:16px; background:rgba(11,17,32,0.95); border:1px solid rgba(148,163,184,0.2); box-shadow:0 14px 32px rgba(8,15,30,0.4); display:flex; flex-direction:column; gap:10px; transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease; overflow:hidden; }
+.call-request-card:hover { transform:translateY(-2px); box-shadow:0 20px 40px rgba(15,23,42,0.55); }
+.call-request-card[data-status="pendiente"] { border-color:rgba(251,191,36,0.6); box-shadow:0 18px 40px rgba(251,191,36,0.22); }
+.call-request-card[data-status="seguimiento"] { border-color:rgba(96,165,250,0.45); }
+.call-request-card[data-status="informacion"] { border-color:rgba(56,189,248,0.45); }
+.call-request-card[data-status="venta"] { border-color:rgba(34,197,94,0.5); box-shadow:0 18px 40px rgba(34,197,94,0.25); }
+.call-request-card[data-urgency="due"] { box-shadow:0 22px 44px rgba(251,191,36,0.28); }
+.call-request-card[data-urgency="late"] { border-color:rgba(248,113,113,0.6); box-shadow:0 22px 44px rgba(248,113,113,0.32); }
+.call-request-card[data-urgency="scheduled"] { border-color:rgba(125,211,252,0.45); }
+.call-request-card header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.call-request-card header strong { font-size:15px; font-weight:700; color:#e2e8f0; }
+.call-request-card__meta { display:flex; flex-wrap:wrap; gap:8px; font-size:12px; color:#94a3b8; margin-top:6px; }
+.call-request-card__meta span { display:inline-flex; align-items:center; gap:4px; }
+.call-request-card__note { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#cbd5f5; background:rgba(30,41,59,0.65); border:1px solid rgba(148,163,184,0.18); border-radius:12px; padding:10px 12px; }
+.call-request-card__note span { font-size:16px; }
+.call-request-card__note strong { color:#f1f5f9; font-weight:600; }
+.call-request-card__note--highlight { background:rgba(59,130,246,0.22); border-color:rgba(96,165,250,0.45); color:#dbeafe; }
+.call-request-card__owner { font-size:12px; color:#cbd5f5; display:flex; align-items:center; gap:6px; }
+.call-request-card__timeline { font-size:12px; color:#94a3b8; }
+.call-request-card__actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+.call-request-action { border:none; border-radius:999px; padding:7px 14px; font-size:12px; font-weight:600; background:rgba(59,130,246,0.18); color:#cbd5f5; display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease, background .2s ease; }
+.call-request-action span { font-size:14px; }
+.call-request-action:hover { transform:translateY(-1px); box-shadow:0 10px 24px rgba(59,130,246,0.35); }
+.call-request-action[data-status="venta"] { background:rgba(34,197,94,0.2); color:#bbf7d0; }
+.call-request-action[data-status="informacion"] { background:rgba(56,189,248,0.2); color:#bae6fd; }
+.call-request-action[data-status="seguimiento"] { background:rgba(251,191,36,0.24); color:#fef3c7; }
+.call-request-action[data-status="pendiente"] { background:rgba(248,113,113,0.22); color:#fecaca; }
+.call-request-action.danger { background:rgba(239,68,68,0.22); color:#fecaca; }
+.call-request-action.danger:hover { box-shadow:0 12px 26px rgba(239,68,68,0.32); }
+.status-pill[data-status="venta"] { background:rgba(34,197,94,0.18); color:#bbf7d0; border-color:rgba(34,197,94,0.45); }
+.status-pill[data-status="informacion"] { background:rgba(56,189,248,0.18); color:#bae6fd; border-color:rgba(56,189,248,0.45); }
+.status-pill[data-status="seguimiento"] { background:rgba(59,130,246,0.18); color:#bfdbfe; border-color:rgba(59,130,246,0.45); }
 .modal { position:fixed; inset:0; background:rgba(11,15,23,0.85); display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); z-index:99; }
 .modal.hidden { display:none !important; }
 .modal .modal-content { background:#0f1522; border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px; max-width:420px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.45); }
@@ -1190,8 +1247,12 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
         <div id="customBudgetList" class="lead-list" style="margin-top:12px;"></div>
       </div>
       <div id="callRequestSection" class="notice admin-subsection hidden">
-        <h3 class="section-subtitle" style="margin:0;">Solicitudes de llamada</h3>
-        <div id="callRequestList" class="lead-list" style="margin-top:12px;"></div>
+        <div class="call-request-headline">
+          <h3 class="section-subtitle" style="margin:0;">Solicitudes de llamada</h3>
+          <p class="dim">Organiza, clasifica y resuelve cada petición para que ninguna llamada quede sin respuesta.</p>
+        </div>
+        <div id="callRequestOverview" class="call-request-overview hidden" aria-live="polite"></div>
+        <div id="callRequestList" class="call-request-board"></div>
       </div>
       <div class="admin-stats-toolbar">
         <div>
@@ -1482,6 +1543,35 @@ const STORAGE_KEYS = {
   session: 'panel.session.v2',
   users: 'panel.usuarios.v1'
 };
+
+const CALL_REQUEST_STATUS_INFO = {
+  pendiente: {
+    label: 'Pendiente',
+    columnTitle: 'Pendientes',
+    description: 'Llamadas nuevas por gestionar',
+    icon: '⏰'
+  },
+  seguimiento: {
+    label: 'Llamar más tarde',
+    columnTitle: 'Seguimiento',
+    description: 'Recordatorios programados',
+    icon: '📅'
+  },
+  informacion: {
+    label: 'Solo información',
+    columnTitle: 'Informativas',
+    description: 'Contactos resueltos sin venta',
+    icon: '💡'
+  },
+  venta: {
+    label: 'Venta conseguida',
+    columnTitle: 'Ventas logradas',
+    description: 'Cierres confirmados',
+    icon: '🏆'
+  }
+};
+
+const CALL_REQUEST_STATUS_ORDER = ['pendiente', 'seguimiento', 'informacion', 'venta'];
 
 const REWARD_LOW_STOCK_THRESHOLD = 15;
 
@@ -1815,6 +1905,7 @@ let grid,
   customBudgetSection,
   customBudgetList,
   callRequestSection,
+  callRequestOverview,
   callRequestList,
   adminSalesTotals,
   adminSalesStats,
@@ -3358,15 +3449,49 @@ function saveNotifications() {
   }
 }
 
+function resolveCallRequestStatus(value) {
+  const raw = (value ?? '').toString().toLowerCase().trim();
+  if (CALL_REQUEST_STATUS_INFO[raw]) return raw;
+  switch (raw) {
+    case 'atendida':
+    case 'resuelta':
+    case 'solo informacion':
+    case 'solo información':
+    case 'información':
+    case 'info':
+      return 'informacion';
+    case 'venta_conseguida':
+    case 'venta conseguida':
+    case 'vendida':
+    case 'vendido':
+    case 'cerrada':
+    case 'ganada':
+      return 'venta';
+    case 'seguimiento':
+    case 'follow-up':
+    case 'followup':
+    case 'follow_up':
+    case 'llamar mas tarde':
+    case 'llamar más tarde':
+    case 'llamar-mas-tarde':
+    case 'llamar_mas_tarde':
+    case 'recordatorio':
+      return 'seguimiento';
+    default:
+      return 'pendiente';
+  }
+}
+
 function normaliseCallRequest(raw) {
   if (!raw) return null;
+  const status = resolveCallRequestStatus(raw.status);
   const entry = {
     id: raw.id || createId('call'),
     name: (raw.name || raw.clientName || '').trim() || 'Contacto pendiente',
     phone: (raw.phone || raw.telefono || raw.contact || '').trim(),
     time: (raw.time || raw.timePreference || '').trim(),
     notes: (raw.notes || raw.observaciones || '').trim(),
-    status: raw.status === 'atendida' || raw.status === 'resuelta' ? 'atendida' : 'pendiente',
+    status,
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.updated_at || new Date().toISOString(),
     handledBy: raw.handledBy || '',
@@ -3374,8 +3499,12 @@ function normaliseCallRequest(raw) {
     resolvedAt: raw.resolvedAt || raw.resolved_at || null,
     originUser: raw.originUser || '',
     originName: raw.originName || (raw.name || '').trim(),
-    contactChannel: (raw.contactChannel || raw.contact || '').trim()
+    contactChannel: (raw.contactChannel || raw.contact || '').trim(),
+    followUpAt: (raw.followUpAt || raw.followUp || raw.follow_up || raw.followUpDate || '').toString().trim()
   };
+  if (entry.status !== 'seguimiento') {
+    entry.followUpAt = entry.status === 'pendiente' ? '' : entry.followUpAt && entry.followUpAt.length < 80 ? entry.followUpAt : '';
+  }
   return entry;
 }
 
@@ -4938,62 +5067,208 @@ function handleCallRequestSubmit(event) {
   closeCallRequestModal();
 }
 
+function formatCallRequestChannel(channel) {
+  if (!channel) return '';
+  const normalized = channel.toString().toLowerCase().trim();
+  if (!normalized) return '';
+  if (ROLE_LABELS[normalized]) return ROLE_LABELS[normalized];
+  if (normalized === 'externo') return 'Contacto externo';
+  if (normalized === 'web') return 'Formulario web';
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function getCallRequestUrgency(entry) {
+  if (!entry) return 'fresh';
+  const now = Date.now();
+  if (entry.status === 'pendiente') {
+    const created = entry.createdAt ? Date.parse(entry.createdAt) : NaN;
+    if (!Number.isNaN(created) && created) {
+      const diffHours = (now - created) / 36e5;
+      if (diffHours >= 24) return 'late';
+      if (diffHours >= 8) return 'due';
+    }
+    return 'fresh';
+  }
+  if (entry.status === 'seguimiento') {
+    const followUp = entry.followUpAt ? Date.parse(entry.followUpAt) : NaN;
+    if (!Number.isNaN(followUp) && followUp) {
+      const diffHours = (followUp - now) / 36e5;
+      if (diffHours <= 0) return 'late';
+      if (diffHours <= 6) return 'due';
+      return 'scheduled';
+    }
+    return 'scheduled';
+  }
+  return 'done';
+}
+
+function renderCallRequestCard(entry) {
+  if (!entry) return '';
+  const status = CALL_REQUEST_STATUS_INFO[entry.status] ? entry.status : resolveCallRequestStatus(entry.status);
+  if (status !== entry.status) {
+    entry.status = status;
+  }
+  const statusInfo = CALL_REQUEST_STATUS_INFO[entry.status] || CALL_REQUEST_STATUS_INFO.pendiente;
+  const metaParts = [];
+  if (entry.originName) metaParts.push(entry.originName);
+  const channelLabel = formatCallRequestChannel(entry.contactChannel);
+  if (channelLabel) metaParts.push(channelLabel);
+  if (entry.phone) metaParts.push(`Tel: ${entry.phone}`);
+  const metaHtml = metaParts.length
+    ? `<div class="call-request-card__meta">${metaParts.map(part => `<span>${escapeHtml(part)}</span>`).join('')}</div>`
+    : '';
+  const preferredTime = entry.time
+    ? `<div class="call-request-card__note"><span>🕓</span><strong>Horario preferido:</strong> ${escapeHtml(entry.time)}</div>`
+    : '';
+  const followUp = entry.status === 'seguimiento' && entry.followUpAt
+    ? `<div class="call-request-card__note call-request-card__note--highlight"><span>📅</span><strong>Seguimiento:</strong> ${escapeHtml(entry.followUpAt)}</div>`
+    : '';
+  const notes = entry.notes
+    ? `<div class="call-request-card__note"><span>📝</span><strong>Notas:</strong> ${escapeHtml(entry.notes)}</div>`
+    : '';
+  const owner = entry.handledByName && entry.status !== 'pendiente'
+    ? `<div class="call-request-card__owner">👤 ${escapeHtml(entry.handledByName)}</div>`
+    : '';
+  let timelineLabel;
+  if (entry.status === 'venta') {
+    timelineLabel = `Venta cerrada ${formatDateTime(entry.resolvedAt || entry.updatedAt || entry.createdAt)}`;
+  } else if (entry.status === 'informacion') {
+    timelineLabel = `Información enviada ${formatDateTime(entry.resolvedAt || entry.updatedAt || entry.createdAt)}`;
+  } else if (entry.status === 'seguimiento') {
+    timelineLabel = `Seguimiento programado ${formatDateTime(entry.updatedAt || entry.createdAt)}`;
+  } else {
+    timelineLabel = `Recibida ${formatDateTime(entry.createdAt)}`;
+  }
+  const actions = [];
+  if (entry.status !== 'venta') {
+    actions.push(`<button class="call-request-action" data-action="call-status" data-status="venta" data-id="${escapeHtml(entry.id)}"><span>🏆</span>Venta conseguida</button>`);
+  }
+  if (entry.status !== 'informacion') {
+    actions.push(`<button class="call-request-action" data-action="call-status" data-status="informacion" data-id="${escapeHtml(entry.id)}"><span>💡</span>Solo información</button>`);
+  }
+  if (entry.status !== 'seguimiento') {
+    actions.push(`<button class="call-request-action" data-action="call-status" data-status="seguimiento" data-id="${escapeHtml(entry.id)}"><span>📅</span>Llamar más tarde</button>`);
+  }
+  if (entry.status !== 'pendiente') {
+    actions.push(`<button class="call-request-action" data-action="call-status" data-status="pendiente" data-id="${escapeHtml(entry.id)}"><span>🔄</span>Volver a pendiente</button>`);
+  }
+  actions.push(`<button class="call-request-action danger" data-action="call-delete" data-id="${escapeHtml(entry.id)}"><span>🗑️</span>Eliminar</button>`);
+  return `
+        <article class="call-request-card" data-status="${entry.status}" data-urgency="${getCallRequestUrgency(entry)}">
+          <header>
+            <div>
+              <strong>${escapeHtml(entry.name)}</strong>
+              ${metaHtml}
+            </div>
+            <span class="status-pill" data-status="${entry.status}">${statusInfo.label}</span>
+          </header>
+          ${preferredTime}
+          ${followUp}
+          ${notes}
+          ${owner}
+          <div class="call-request-card__timeline">${escapeHtml(timelineLabel)}</div>
+          <div class="call-request-card__actions">${actions.join('')}</div>
+        </article>
+      `;
+}
+
 function renderCallRequestInbox() {
   if (!callRequestSection || !callRequestList) return;
   if (!currentUser || currentUser.role !== 'admin') {
     callRequestSection.classList.add('hidden');
+    callRequestOverview?.classList.add('hidden');
     callRequestList.innerHTML = '';
     return;
   }
-  if (!callRequests.length) {
-    callRequestSection.classList.add('hidden');
+  const groups = CALL_REQUEST_STATUS_ORDER.reduce((acc, key) => {
+    acc[key] = [];
+    return acc;
+  }, {});
+  callRequests.forEach(entry => {
+    if (!entry) return;
+    const status = CALL_REQUEST_STATUS_INFO[entry.status] ? entry.status : resolveCallRequestStatus(entry.status);
+    if (status !== entry.status) {
+      entry.status = status;
+    }
+    groups[status] = groups[status] || [];
+    groups[status].push(entry);
+  });
+  const total = callRequests.length;
+  callRequestSection.classList.toggle('hidden', total === 0);
+  if (!total) {
+    callRequestOverview?.classList.add('hidden');
     callRequestList.innerHTML = '';
     return;
   }
   callRequestSection.classList.remove('hidden');
-  const items = callRequests
-    .slice()
-    .sort((a, b) => {
-      if (a.status !== b.status) return a.status === 'pendiente' ? -1 : 1;
-      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-    });
-  callRequestList.innerHTML = items
-    .map(entry => {
-      const status = entry.status === 'atendida' ? 'vendido' : 'pendiente';
-      const statusText = entry.status === 'atendida' ? 'Atendida' : 'Pendiente';
-      const notes = entry.notes ? `<div class="dim">Notas: ${escapeHtml(entry.notes)}</div>` : '';
-      const preferredTime = entry.time ? `<div class="dim">Horario preferido: ${escapeHtml(entry.time)}</div>` : '';
-      const origin = entry.originName ? escapeHtml(entry.originName) : 'Contacto externo';
-      const footerInfo = entry.status === 'atendida'
-        ? `<span>Gestionada por ${escapeHtml(entry.handledByName || entry.handledBy || 'administración')} · ${escapeHtml(formatDateTime(entry.resolvedAt || entry.updatedAt))}</span>`
-        : `<span>Recibida: ${escapeHtml(formatDateTime(entry.createdAt))}</span>`;
-      const actions = entry.status === 'pendiente'
-        ? `<button class="smallbtn" data-action="call-complete" data-id="${escapeHtml(entry.id)}">Marcar atendida</button>
-            <button class="smallbtn danger" data-action="call-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`
-        : `<button class="smallbtn danger" data-action="call-delete" data-id="${escapeHtml(entry.id)}">Eliminar</button>`;
+  CALL_REQUEST_STATUS_ORDER.forEach(status => {
+    groups[status]?.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  });
+  if (callRequestOverview) {
+    callRequestOverview.classList.remove('hidden');
+    callRequestOverview.innerHTML = CALL_REQUEST_STATUS_ORDER
+      .map(status => {
+        const info = CALL_REQUEST_STATUS_INFO[status];
+        const count = groups[status]?.length || 0;
+        return `
+          <div class="call-request-overview__item" data-status="${status}">
+            <span class="call-request-overview__icon">${info.icon}</span>
+            <span class="call-request-overview__count">${count}</span>
+            <span class="call-request-overview__label">${info.columnTitle}</span>
+            <p class="call-request-overview__hint">${info.description}</p>
+          </div>
+        `;
+      })
+      .join('');
+  }
+  callRequestList.innerHTML = CALL_REQUEST_STATUS_ORDER
+    .map(status => {
+      const info = CALL_REQUEST_STATUS_INFO[status];
+      const items = groups[status] || [];
+      const cards = items.length
+        ? items.map(renderCallRequestCard).join('')
+        : '<div class="call-request-empty">Sin solicitudes en esta categoría.</div>';
       return `
-        <article class="lead-card" data-id="${escapeHtml(entry.id)}">
-          <header>
+        <section class="call-request-column" data-status="${status}">
+          <div class="call-request-column__header">
             <div>
-              <strong>${escapeHtml(entry.name)}</strong>
-              <div class="meta">${origin} · Tel: ${escapeHtml(entry.phone)}</div>
+              <h4 class="call-request-column__title">${info.columnTitle}</h4>
+              <p class="call-request-column__hint">${info.description}</p>
             </div>
-            <span class="status-pill" data-status="${status}">${statusText}</span>
-          </header>
-          <div class="body">
-            ${preferredTime}
-            ${notes}
+            <span class="call-request-column__count">${items.length}</span>
           </div>
-          <footer>
-            ${footerInfo}
-          </footer>
-          <div class="actions">
-            ${actions}
-          </div>
-        </article>
+          <div class="call-request-column__list">${cards}</div>
+        </section>
       `;
     })
     .join('');
+}
+
+function setCallRequestStatus(entry, status, { followUpAt = '' } = {}) {
+  if (!entry) return;
+  const target = CALL_REQUEST_STATUS_INFO[status] ? status : resolveCallRequestStatus(status);
+  const now = new Date().toISOString();
+  entry.status = target;
+  entry.updatedAt = now;
+  if (target === 'pendiente') {
+    entry.handledBy = '';
+    entry.handledByName = '';
+    entry.resolvedAt = null;
+    entry.followUpAt = '';
+    return;
+  }
+  if (target === 'seguimiento') {
+    const value = typeof followUpAt === 'string' ? followUpAt.trim() : '';
+    entry.followUpAt = value;
+    entry.resolvedAt = null;
+  } else {
+    entry.resolvedAt = now;
+    entry.followUpAt = '';
+  }
+  if (currentUser) {
+    entry.handledBy = currentUser.username;
+    entry.handledByName = userDisplayName(currentUser);
+  }
 }
 
 function handleCallRequestAction(event) {
@@ -5004,18 +5279,48 @@ function handleCallRequestAction(event) {
   if (!id) return;
   const entry = callRequests.find(item => item.id === id);
   if (!entry) return;
-  if (action === 'call-complete') {
-    if (entry.status === 'atendida') return;
-    const now = new Date().toISOString();
-    entry.status = 'atendida';
-    entry.handledBy = currentUser.username;
-    entry.handledByName = userDisplayName(currentUser);
-    entry.resolvedAt = now;
-    entry.updatedAt = now;
+  if (action === 'call-status') {
+    const nextStatus = button.dataset.status;
+    if (!nextStatus) return;
+    let followUpAt = entry.followUpAt || '';
+    if (resolveCallRequestStatus(nextStatus) === 'seguimiento') {
+      const promptValue = prompt('¿Cuándo deberías volver a llamar?', followUpAt);
+      if (promptValue === null) return;
+      followUpAt = promptValue.trim();
+    }
+    setCallRequestStatus(entry, nextStatus, { followUpAt });
     saveCallRequests();
     renderCallRequestInbox();
     if (entry.originUser) {
-      pushNotification({ user: entry.originUser, message: 'Tu solicitud de llamada ha sido atendida. El administrador se pondrá en contacto contigo.', type: 'info', meta: { id: entry.id } });
+      const status = resolveCallRequestStatus(nextStatus);
+      let message = '';
+      let type = 'info';
+      if (status === 'venta') {
+        message = '¡Tu solicitud de llamada se cerró con una venta! Gracias por confiar en nosotros.';
+        type = 'success';
+      } else if (status === 'informacion') {
+        message = 'El administrador ha respondido a tu solicitud de llamada con la información que necesitabas.';
+      } else if (status === 'seguimiento') {
+        message = followUpAt
+          ? `El administrador ha programado un seguimiento para tu solicitud de llamada (${followUpAt}).`
+          : 'El administrador ha programado un seguimiento para tu solicitud de llamada.';
+        type = 'warning';
+      } else if (status === 'pendiente') {
+        message = 'Tu solicitud de llamada vuelve a estar pendiente. Te contactaremos en breve.';
+      }
+      if (message) {
+        pushNotification({ user: entry.originUser, message, type, meta: { id: entry.id } });
+      }
+    }
+    return;
+  }
+  if (action === 'call-complete') {
+    if (resolveCallRequestStatus(entry.status) === 'venta') return;
+    setCallRequestStatus(entry, 'venta');
+    saveCallRequests();
+    renderCallRequestInbox();
+    if (entry.originUser) {
+      pushNotification({ user: entry.originUser, message: '¡Tu solicitud de llamada se cerró con una venta!', type: 'success', meta: { id: entry.id } });
     }
     return;
   }
@@ -8703,6 +9008,7 @@ document.addEventListener('DOMContentLoaded', () => {
   customBudgetSection = $('#customBudgetSection');
   customBudgetList = $('#customBudgetList');
   callRequestSection = $('#callRequestSection');
+  callRequestOverview = $('#callRequestOverview');
   callRequestList = $('#callRequestList');
   rewardForm = $('#rewardForm');
   rewardFormInfo = $('#rewardFormInfo');
