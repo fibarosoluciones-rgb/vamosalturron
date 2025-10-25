@@ -233,11 +233,63 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .stacked.gap-sm { gap:8px; }
 .multi-select { min-height:110px; }
 .inline-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-.ai-results { margin-top:16px; display:grid; gap:14px; }
-@media (min-width: 768px) {
-  .ai-results { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bot-panel { display:flex; flex-direction:column; gap:16px; position:relative; }
+.bot-panel-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.bot-focus-badge { background:rgba(78,143,202,0.18); border:1px solid rgba(78,143,202,0.45); color:#bfdbfe; padding:6px 12px; border-radius:999px; font-size:12px; letter-spacing:.4px; font-weight:600; display:inline-flex; align-items:center; gap:6px; }
+.bot-focus-badge.hidden { display:none !important; }
+.bot-banner { display:flex; align-items:flex-start; gap:12px; background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.2); border-radius:14px; padding:12px 14px; position:relative; }
+.bot-banner.hidden { display:none !important; }
+.bot-banner-message { flex:1; font-size:14px; line-height:1.5; color:#e2e8f0; }
+.bot-banner-close { background:none; border:none; color:#94a3b8; cursor:pointer; font-size:18px; line-height:1; padding:0 4px; }
+.bot-banner-close:hover { color:#fff; }
+.bot-tasks { background:rgba(15,23,42,0.6); border:1px solid rgba(148,163,184,0.18); border-radius:14px; padding:12px 16px; }
+.bot-tasks.hidden { display:none !important; }
+.bot-tasks-title { font-size:13px; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; font-weight:600; display:block; margin-bottom:6px; }
+.bot-tasks ul { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px; color:#e2e8f0; font-size:13px; }
+.bot-conversation { background:rgba(11,17,32,0.8); border:1px solid rgba(148,163,184,0.18); border-radius:16px; padding:16px; min-height:200px; max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth; }
+.bot-message { padding:12px 14px; border-radius:14px; max-width:100%; font-size:14px; line-height:1.5; }
+.bot-message strong { color:#fff; }
+.bot-message.bot { align-self:flex-start; background:rgba(78,143,202,0.16); border:1px solid rgba(78,143,202,0.35); color:#e2e8f0; }
+.bot-message.user { align-self:flex-end; background:rgba(34,197,94,0.18); border:1px solid rgba(34,197,94,0.45); color:#d1fae5; }
+.bot-message ul { margin:8px 0 0; padding-left:18px; }
+.bot-quick-replies { display:flex; flex-wrap:wrap; gap:8px; }
+.bot-quick-replies.hidden { display:none !important; }
+.bot-quick-replies button { border:1px solid rgba(148,163,184,0.35); background:rgba(148,163,184,0.12); color:#e2e8f0; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; transition:background .2s ease, border-color .2s ease, transform .15s ease; }
+.bot-quick-replies button:hover { background:rgba(78,143,202,0.18); border-color:rgba(78,143,202,0.45); transform:translateY(-1px); }
+.bot-quick-replies button:focus-visible { outline:2px solid rgba(148,163,184,0.6); outline-offset:2px; }
+.bot-input-bar { display:flex; flex-direction:column; gap:10px; background:rgba(11,17,32,0.8); border:1px solid rgba(148,163,184,0.18); border-radius:16px; padding:14px; }
+.bot-input-bar input { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(148,163,184,0.28); background:#0b1120; color:#e2e8f0; }
+.bot-input-bar input:focus-visible { outline:2px solid rgba(78,143,202,0.6); }
+.bot-input-actions { display:flex; justify-content:flex-end; gap:10px; }
+.bot-message-results { display:flex; flex-direction:column; gap:12px; }
+.bot-result-card { background:#0b1120; border:1px solid rgba(78,143,202,0.28); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px; }
+.bot-result-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+.bot-result-name { font-size:16px; font-weight:700; color:#fff; margin:0; }
+.bot-result-price { font-size:20px; font-weight:700; color:#bfdbfe; }
+.bot-result-meta { font-size:12px; color:#94a3b8; }
+.bot-result-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+.bot-panel-placeholder { height:0; transition:height .2s ease; pointer-events:none; }
+.bot-panel-placeholder.active { height:var(--bot-panel-placeholder-height, 0px); }
+.bot-panel-floating { position:fixed; right:28px; bottom:118px; width:min(360px, calc(100% - 32px)); max-height:calc(100vh - 140px); z-index:140; box-shadow:0 18px 48px rgba(0,0,0,0.45); animation:bot-pop-in .2s ease; }
+.bot-panel-floating .bot-conversation { max-height:60vh; }
+.bot-panel-collapsed { display:none !important; }
+.bot-floating-toggle { width:58px; height:58px; border-radius:50%; border:none; background:linear-gradient(135deg, #4e8fca, #1d4ed8); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 28px rgba(0,0,0,0.4); cursor:pointer; transition:transform .2s ease, box-shadow .2s ease; }
+.bot-floating-toggle svg { width:26px; height:26px; }
+.bot-floating-toggle:hover { transform:translateY(-3px) scale(1.02); box-shadow:0 16px 32px rgba(0,0,0,0.45); }
+.bot-floating-toggle.hidden { display:none !important; }
+.bot-floating-toggle.is-open { background:linear-gradient(135deg, #1e293b, #0f172a); }
+.bot-minimize { background:rgba(148,163,184,0.16); border:1px solid rgba(148,163,184,0.35); color:#e2e8f0; padding:6px 12px; border-radius:999px; font-size:12px; cursor:pointer; }
+.bot-minimize:hover { background:rgba(78,143,202,0.18); border-color:rgba(78,143,202,0.45); }
+.bot-panel-floating .bot-minimize { display:inline-flex; }
+.bot-minimize.hidden { display:none !important; }
+@keyframes bot-pop-in {
+  from { transform:translateY(12px); opacity:0; }
+  to { transform:translateY(0); opacity:1; }
 }
-.ai-card { background:#0b1120; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+@media (max-width: 640px) {
+  .bot-panel-floating { right:12px; bottom:100px; width:calc(100% - 24px); }
+  .bot-input-actions { flex-direction:column; align-items:stretch; }
+}
 .tariff-layout { display:flex; flex-direction:column; gap:24px; }
 .tariff-panels { display:flex; flex-direction:column; gap:24px; }
 .tariff-jumps { display:flex; flex-wrap:wrap; gap:10px; padding:12px; margin:0; background:rgba(15,23,42,0.7); border:1px solid rgba(148,163,184,0.2); border-radius:18px; box-shadow:0 12px 30px rgba(8,11,19,0.45); overflow-x:auto; scrollbar-width:none; }
@@ -295,9 +347,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .admin-tariff-table tr.featured-row:hover { background:rgba(78,143,202,0.2); }
 @media (max-width: 1100px) { .tariff-company-panel.grid-layout .tile{grid-column: span 6 / span 6;} .tariff-type-section .tile{grid-column: span 6 / span 6;} .tariff-highlight-grid .tile{grid-column: span 6 / span 6;} }
 @media (max-width: 640px) { .tariff-company-panel.grid-layout .tile{grid-column: span 12 / span 12;} .tariff-type-section .tile{grid-column: span 12 / span 12;} .tariff-highlight-grid .tile{grid-column: span 12 / span 12;} }
-.ai-card h4 { margin:0; font-size:16px; }
-.ai-card p { margin:0; }
-.ai-card .badge { margin-right:auto; }
 .profile-modal { max-width: 720px; width: 100%; }
 .profile-modal h3 { margin-top: 0; }
 .profile-modal .modal-actions { gap: 12px; flex-wrap: wrap; }
@@ -699,17 +748,34 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 </div>
 
 <main class="wrap">
-  <section id="aiPanel" class="card">
-    <h2 class="section-title">Buscador inteligente de tarifas</h2>
-    <p class="dim">Describe lo que necesitas y te mostraremos tres propuestas ajustadas al momento.</p>
-    <form id="aiSearchForm" class="stacked">
-      <textarea id="aiSearchInput" placeholder="Necesito tres líneas móviles con al menos 40GB y fibra rápida por menos de 70€"></textarea>
-      <div class="inline-actions" style="justify-content:flex-end;">
-        <button type="button" class="smallbtn" id="aiSearchClear">Limpiar</button>
-        <button type="submit" class="primary">Buscar tarifas</button>
+  <section id="botPanel" class="card bot-panel" aria-label="Asistente inteligente de tarifas">
+    <div class="bot-panel-header">
+      <div>
+        <h2 class="section-title">Asistente inteligente de tarifas</h2>
+        <p class="dim">Conversemos para entender lo que necesitas y mostrarte las mejores opciones.</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <span id="botFocusBadge" class="bot-focus-badge hidden"></span>
+        <button type="button" class="bot-minimize hidden" id="botMinimizeBtn">Minimizar</button>
+      </div>
+    </div>
+    <div id="botBanner" class="bot-banner hidden" role="status">
+      <div id="botBannerMessage" class="bot-banner-message"></div>
+      <button type="button" class="bot-banner-close" id="botBannerClose" aria-label="Ocultar mensaje del asistente">&times;</button>
+    </div>
+    <div id="botTaskHint" class="bot-tasks hidden">
+      <span class="bot-tasks-title">Prioridades del día</span>
+      <ul id="botTaskList"></ul>
+    </div>
+    <div id="botConversation" class="bot-conversation" role="log" aria-live="polite"></div>
+    <div id="botQuickReplies" class="bot-quick-replies" role="group" aria-label="Respuestas sugeridas"></div>
+    <form id="botInputForm" class="bot-input-bar">
+      <input id="botInputField" type="text" placeholder="Escribe tu respuesta aquí…" autocomplete="off" aria-label="Respuesta para el asistente" />
+      <div class="bot-input-actions">
+        <button type="button" class="smallbtn" id="botRestart">Reiniciar</button>
+        <button type="submit" class="primary">Enviar</button>
       </div>
     </form>
-    <div id="aiResults" class="ai-results"></div>
   </section>
 
   <section id="authReminder" class="notice hidden">
@@ -767,6 +833,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <button type="button" class="tab" data-tab="clients">Clientes directos</button>
       <button type="button" class="tab" data-tab="rewards">Recompensas</button>
       <button type="button" class="tab" data-tab="users">Usuarios</button>
+      <button type="button" class="tab" data-tab="bot">Bot inteligente</button>
     </div>
 
     <div id="adminSalesTab" class="admin-tab">
@@ -1029,13 +1096,67 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       </div>
       <div id="userList"></div>
     </div>
+
+    <div id="adminBotTab" class="admin-tab hidden">
+      <div class="section-subtitle">Configuración del asistente</div>
+      <p class="dim" style="margin-top:0;">Define el enfoque comercial, los mensajes destacados y las prioridades que seguirá el bot inteligente.</p>
+      <form id="botSettingsForm" class="stacked">
+        <div class="form-grid">
+          <div class="full">
+            <label class="label" for="botFocusInput">Enfoque comercial prioritario</label>
+            <input id="botFocusInput" type="text" placeholder="Ej. Impulsar paquetes fibra + móvil familiares" />
+            <p class="dim" style="margin-top:6px;">El asistente recordará esta prioridad al presentar las recomendaciones.</p>
+          </div>
+        </div>
+        <div class="toggle-field">
+          <input id="botBannerEnabled" type="checkbox" />
+          <label for="botBannerEnabled">Mostrar banner de bienvenida con mensaje destacado</label>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="label" for="botMessageCliente">Mensaje de bienvenida para clientes</label>
+            <textarea id="botMessageCliente" placeholder="Mensaje que verán los clientes al iniciar la conversación."></textarea>
+          </div>
+          <div>
+            <label class="label" for="botMessageComercial">Mensaje de bienvenida para comerciales</label>
+            <textarea id="botMessageComercial" placeholder="Mensaje específico para el equipo comercial."></textarea>
+          </div>
+          <div>
+            <label class="label" for="botMessageLider">Mensaje de bienvenida para responsables de equipo</label>
+            <textarea id="botMessageLider" placeholder="Mensaje orientado a líderes de equipo."></textarea>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="label" for="botTasksCliente">Prioridades para clientes</label>
+            <textarea id="botTasksCliente" placeholder="Introduce una prioridad por línea."></textarea>
+          </div>
+          <div>
+            <label class="label" for="botTasksComercial">Prioridades para comerciales</label>
+            <textarea id="botTasksComercial" placeholder="Define objetivos diarios para los comerciales."></textarea>
+          </div>
+          <div>
+            <label class="label" for="botTasksLider">Prioridades para responsables de equipo</label>
+            <textarea id="botTasksLider" placeholder="Instrucciones clave para los líderes."></textarea>
+          </div>
+        </div>
+        <div class="inline-actions" style="justify-content:flex-start; padding-top:4px;">
+          <button type="submit" class="primary">Guardar ajustes</button>
+          <span class="dim" id="botSettingsInfo"></span>
+        </div>
+      </form>
+    </div>
   </section>
+  <div id="botPanelPlaceholder" class="bot-panel-placeholder" aria-hidden="true"></div>
 
   <div class="grid" id="grid"></div>
   <p class="footer">Hecho con cariño en tonos <strong>azul</strong>, <strong>negro</strong> y <strong>blanco</strong>. Datos de tarifas embebidos – no requiere conexión.</p>
 </main>
 
 <div class="floating-actions">
+  <button type="button" class="bot-floating-toggle hidden" id="botFloatingToggle" aria-label="Abrir asistente de tarifas">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2h9A3.5 3.5 0 0 1 20 5.5v5a3.5 3.5 0 0 1-3.5 3.5H13l-4.5 4v-4H7.5A3.5 3.5 0 0 1 4 10.5v-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+  </button>
   <a class="whatsapp" href="https://wa.me/34633671657" target="_blank" rel="noreferrer noopener" aria-label="Abrir conversación de WhatsApp">
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 20.5 5.5 16A7.5 7.5 0 1 1 12 19.5a7.4 7.4 0 0 1-3.5-.9L4 20.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9.5 9.75c0 1.95 1.8 3.75 3.75 3.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </a>
@@ -1056,7 +1177,8 @@ const STORAGE_KEYS = {
   leads: 'panel.leads.v1',
   rewards: 'panel.recompensas.v1',
   session: 'panel.session.v2',
-  users: 'panel.usuarios.v1'
+  users: 'panel.usuarios.v1',
+  botSettings: 'panel.bot-settings.v1'
 };
 
 const REWARD_LOW_STOCK_THRESHOLD = 15;
@@ -1087,6 +1209,24 @@ const DEFAULT_USERS = [
     email: 'ana@fibaro.es'
   }
 ];
+
+const DEFAULT_BOT_SETTINGS = {
+  focus: 'Impulsar combos de fibra y móvil con ahorro mensual.',
+  bannerEnabled: true,
+  bannerMessages: {
+    cliente: 'Hola, te ayudamos a elegir la tarifa que mejor se ajusta a tu presupuesto.',
+    comercial: 'Refuerza las ofertas convergentes en promoción y detecta clientes interesados en packs completos.',
+    lider: 'Coordina a tu equipo priorizando las tarifas con mayor margen y seguimiento activo.'
+  },
+  tasks: {
+    cliente: ['Comparar al menos dos opciones antes de decidir.'],
+    comercial: ['Promociona paquetes familiares con más de 600Mb de fibra.', 'Recoge datos completos para agilizar la instalación.'],
+    lider: ['Revisa las oportunidades abiertas sin seguimiento.', 'Recuerda asignar leads pendientes a comerciales disponibles.']
+  }
+};
+
+const BOT_AUDIENCES = ['cliente', 'comercial', 'lider'];
+const BOT_MAX_RESULTS = 4;
 
 const ROLE_LABELS = { admin: 'Administrador', comercial: 'Comercial', basico: 'Básico', lider: 'Responsable de equipo', cliente: 'Cliente' };
 const CLIENT_ROLE = 'cliente';
@@ -1185,6 +1325,7 @@ async function commitRemoteSync() {
       tariffs,
       leads,
       rewards,
+      botSettings,
       updatedAt: serverTimestamp()
     }, { merge: true });
     remoteState.lastError = null;
@@ -1252,8 +1393,18 @@ function applyRemoteData(data) {
       console.warn('No se pudieron sincronizar recompensas en localStorage', error);
     }
   }
+  if (remoteState.data.botSettings) {
+    botSettings = normaliseBotSettings(remoteState.data.botSettings);
+    try {
+      localStorage.setItem(STORAGE_KEYS.botSettings, JSON.stringify(botSettings));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar los ajustes del bot en localStorage', error);
+    }
+    fillBotSettingsForm();
+    applyBotSettingsToConversation({ restartConversation: false });
+  }
   if (domReady) {
-    renderEverythingAfterDataChange({ refreshFilters: true, refreshAi: Boolean(aiLastQuery) });
+    renderEverythingAfterDataChange({ refreshFilters: true, refreshBot: true });
   }
 }
 
@@ -1404,11 +1555,21 @@ let grid,
   clientNameInput,
   clientContactInput,
   clientNotesInput,
-  aiPanel,
-  aiForm,
-  aiInput,
-  aiResults,
-  aiClearBtn,
+  botPanel,
+  botConversation,
+  botQuickReplies,
+  botInputForm,
+  botInputField,
+  botRestartBtn,
+  botFocusBadge,
+  botBanner,
+  botBannerMessage,
+  botBannerClose,
+  botTaskHint,
+  botTaskList,
+  botFloatingToggle,
+  botPanelPlaceholder,
+  botMinimizeBtn,
   profilePanel,
   profileForm,
   profileFormInfo,
@@ -1442,7 +1603,17 @@ let grid,
   userRoleFilter,
   userListContainer,
   saveUserBtn,
-  cancelUserEdit;
+  cancelUserEdit,
+  botSettingsForm,
+  botFocusInput,
+  botBannerEnabledInput,
+  botMessageClienteInput,
+  botMessageComercialInput,
+  botMessageLiderInput,
+  botTasksClienteInput,
+  botTasksComercialInput,
+  botTasksLiderInput,
+  botSettingsInfo;
 
 let currentUser = null;
 let tariffs = [];
@@ -1451,7 +1622,14 @@ let rewards = [];
 let editingTariffId = null;
 let editingUser = null;
 let commercialNoticeTimeout = null;
-let aiLastQuery = '';
+let botSettings = normaliseBotSettings(DEFAULT_BOT_SETTINGS);
+let botKnowledge = computeBotKnowledge([]);
+let botState = null;
+let botBannerDismissed = false;
+let botPanelFloating = false;
+let botPanelCollapsed = false;
+let botPanelAutoFloating = false;
+let botPanelPlaceholderHeight = 0;
 let adminActiveTab = 'sales';
 let adminSalesRange = 'month';
 let adminTabButtons = [];
@@ -1462,7 +1640,7 @@ let clientTariffTab = 'destacadas';
 let pendingTariffScrollTarget = '';
 let lastRenderedTariffs = [];
 
-function renderEverythingAfterDataChange({ refreshFilters = false, refreshAi = false } = {}) {
+function renderEverythingAfterDataChange({ refreshFilters = false, refreshBot = false } = {}) {
   if (!domReady) return;
   updateAvailableUsersHint();
   renderUserList();
@@ -1477,8 +1655,8 @@ function renderEverythingAfterDataChange({ refreshFilters = false, refreshAi = f
   renderAdminRewards();
   renderCommercialPanel();
   renderTeamPanel();
-  if (refreshAi && aiLastQuery) {
-    runAiSearch(aiLastQuery, { keepInput: true });
+  if (refreshBot) {
+    refreshBotKnowledge({ preserveAnswers: true });
   }
 }
 
@@ -1819,41 +1997,6 @@ function extractTariffFeatures(tariff) {
   return { dataGB, fiberMbps, unlimitedMinutes };
 }
 
-function parseAiQuery(raw) {
-  const text = String(raw || '').toLowerCase();
-  const lineMatch = text.match(/(\d+)\s*(?:l[ií]neas|lineas|l[ií]nea|linea)/);
-  const lines = lineMatch ? parseInt(lineMatch[1], 10) : null;
-  const budgetValues = [];
-  for (const match of text.matchAll(/(\d+(?:[.,]\d+)?)\s*(?:€|eur|euros)/g)) {
-    const value = parseLocaleNumber(match[1]);
-    if (!Number.isNaN(value)) budgetValues.push(value);
-  }
-  for (const match of text.matchAll(/(?:menos\s+de|inferior\s+a|hasta)\s+(\d+(?:[.,]\d+)?)/g)) {
-    const value = parseLocaleNumber(match[1]);
-    if (!Number.isNaN(value)) budgetValues.push(value);
-  }
-  const budget = budgetValues.length ? Math.min(...budgetValues) : null;
-  const dataMatches = Array.from(text.matchAll(/(\d+(?:[.,]\d+)?)\s*(?:gb|gigas)/g));
-  const dataValues = dataMatches
-    .map(match => parseLocaleNumber(match[1]))
-    .filter(value => !Number.isNaN(value));
-  const minData = dataValues.length ? Math.max(...dataValues) : null;
-  const fiberMatches = Array.from(text.matchAll(/(\d+(?:[.,]\d+)?)\s*(?:gbps|gb|mbps|mb)\s*(?:de\s*)?fibra/g));
-  let fiberMbps = null;
-  fiberMatches.forEach(match => {
-    const value = parseLocaleNumber(match[1]);
-    if (Number.isNaN(value)) return;
-    const unit = /gbp?s?/i.test(match[0]) ? 1000 : /gb/i.test(match[0]) ? 1000 : 1;
-    const mbps = value * unit;
-    fiberMbps = fiberMbps === null ? mbps : Math.max(fiberMbps, mbps);
-  });
-  if (fiberMbps === null && /(fibra\s+r[áa]pida|fibra\s+alta\s+velocidad)/.test(text)) {
-    fiberMbps = 600;
-  }
-  const unlimitedMinutes = /(ilimitad|minutos\s+ilimitados|sin\s+l[ií]mite\s+de\s+minutos|llamadas\s+ilimitadas)/.test(text);
-  return { lines, budget, minData, fiberMbps, unlimitedMinutes };
-}
-
 function scoreTariff(tariff, requirements) {
   if (requirements.lines && tariffLines(tariff) < requirements.lines) return -Infinity;
   const price = tariff.precio != null ? Number(tariff.precio) : Infinity;
@@ -1890,120 +2033,719 @@ function scoreTariff(tariff, requirements) {
   return score;
 }
 
-function premiumScore(tariff, requirements) {
-  if (requirements.lines && tariffLines(tariff) < requirements.lines) return -Infinity;
-  const price = tariff.precio != null ? Number(tariff.precio) : Infinity;
-  const features = extractTariffFeatures(tariff);
-  let score = 0;
-  if (features.dataGB != null) score += features.dataGB * 0.6;
-  if (features.fiberMbps != null) score += features.fiberMbps / 80;
-  if (features.unlimitedMinutes) score += 4;
-  if (requirements.minData && features.dataGB != null) {
-    score += Math.max(0, features.dataGB - requirements.minData) * 0.8;
+function computeBotKnowledge(list) {
+  const knowledge = {
+    count: Array.isArray(list) ? list.length : 0,
+    productTypes: [],
+    lineOptions: [],
+    dataOptions: [],
+    fiberOptions: [],
+    budgetOptions: [],
+    priceRange: { min: null, max: null },
+    hasUnlimitedMinutes: false
+  };
+  if (!Array.isArray(list) || !list.length) {
+    return knowledge;
   }
-  if (requirements.fiberMbps && features.fiberMbps != null) {
-    score += Math.max(0, features.fiberMbps - requirements.fiberMbps) / 60;
+  const typeSet = new Set();
+  const lineSet = new Set();
+  const dataSet = new Set();
+  const fiberSet = new Set();
+  const priceValues = [];
+  let unlimitedCount = 0;
+  list.forEach(tariff => {
+    if (!tariff) return;
+    if (tariff.tipo) typeSet.add(tariff.tipo);
+    if (tariff.lineas !== null && tariff.lineas !== undefined) {
+      const lines = Number(tariff.lineas);
+      if (Number.isFinite(lines) && lines > 0) lineSet.add(lines);
+    }
+    if (tariff.precio !== null && tariff.precio !== undefined) {
+      const price = Number(tariff.precio);
+      if (Number.isFinite(price)) priceValues.push(price);
+    }
+    const features = extractTariffFeatures(tariff);
+    if (features.dataGB != null && Number.isFinite(features.dataGB)) {
+      dataSet.add(Math.round(features.dataGB));
+    }
+    if (features.fiberMbps != null && Number.isFinite(features.fiberMbps)) {
+      fiberSet.add(Math.round(features.fiberMbps));
+    }
+    if (features.unlimitedMinutes) {
+      unlimitedCount += 1;
+    }
+  });
+  knowledge.productTypes = Array.from(typeSet);
+  knowledge.lineOptions = Array.from(lineSet).sort((a, b) => a - b);
+  knowledge.dataOptions = Array.from(dataSet).sort((a, b) => a - b).slice(0, 6);
+  knowledge.fiberOptions = Array.from(fiberSet).sort((a, b) => a - b).slice(0, 6);
+  knowledge.hasUnlimitedMinutes = unlimitedCount > 0;
+  if (priceValues.length) {
+    priceValues.sort((a, b) => a - b);
+    knowledge.priceRange.min = priceValues[0];
+    knowledge.priceRange.max = priceValues[priceValues.length - 1];
+    const quantiles = [0.25, 0.5, 0.75]
+      .map(q => priceValues[Math.min(priceValues.length - 1, Math.floor(priceValues.length * q))])
+      .filter(value => Number.isFinite(value));
+    const budgets = [...new Set(quantiles)];
+    knowledge.budgetOptions = budgets.map(value => Math.ceil(value / 5) * 5);
   }
-  if (requirements.budget && Number.isFinite(price) && price > requirements.budget * 2) {
-    score -= (price - requirements.budget * 2) / 50;
-  }
-  if (Number.isFinite(price)) {
-    score -= price / 160;
-  }
-  return score;
+  return knowledge;
 }
 
-function formatAiReason(type, tariff, requirements, features) {
-  const priceText = tariff.precio != null ? euro(tariff.precio, tariff.moneda) : 'precio no disponible';
-  const parts = [];
-  if (features.dataGB != null) {
-    parts.push(`${Math.round(features.dataGB)}GB de datos`);
+const BOT_QUESTION_FLOW = [
+  {
+    field: 'productType',
+    shouldAsk: (knowledge) => knowledge.productTypes.length > 1,
+    question: () => '¿Qué tipo de servicio necesitas hoy?',
+    options: (knowledge) => knowledge.productTypes.slice(0, 4).map(type => ({
+      value: type,
+      label: TARIFF_TYPE_LABELS[type] || type
+    })),
+    parse: (raw, knowledge) => {
+      const direct = String(raw || '').trim().toUpperCase();
+      if (knowledge.productTypes.includes(direct)) return direct;
+      const normalised = direct.toLowerCase();
+      if (normalised.includes('fibra') && normalised.includes('móvil')) {
+        return knowledge.productTypes.includes('C') ? 'C' : (knowledge.productTypes[0] || null);
+      }
+      if (normalised.includes('fibra')) {
+        if (knowledge.productTypes.includes('F')) return 'F';
+      }
+      if (normalised.includes('prepago')) {
+        if (knowledge.productTypes.includes('P')) return 'P';
+      }
+      if (normalised.includes('nuevo')) {
+        if (knowledge.productTypes.includes('N')) return 'N';
+      }
+      if (normalised.includes('móvil') || normalised.includes('movil')) {
+        if (knowledge.productTypes.includes('M')) return 'M';
+      }
+      return knowledge.productTypes[0] || null;
+    },
+    format: (value) => TARIFF_TYPE_LABELS[value] || value
+  },
+  {
+    field: 'lines',
+    shouldAsk: () => true,
+    question: () => '¿Cuántas líneas móviles necesitas?',
+    options: (knowledge) => knowledge.lineOptions.slice(0, 4).map(lines => ({
+      value: String(lines),
+      label: `${lines} ${lines === 1 ? 'línea' : 'líneas'}`
+    })),
+    parse: (raw) => {
+      const value = parseInt(String(raw || '').replace(/[^0-9]/g, ''), 10);
+      return Number.isFinite(value) && value > 0 ? value : null;
+    },
+    format: (value) => `${value} ${value === 1 ? 'línea' : 'líneas'}`
+  },
+  {
+    field: 'minData',
+    shouldAsk: (knowledge) => knowledge.dataOptions.length > 0,
+    question: () => '¿Cuántos datos móviles quieres tener por línea?',
+    options: (knowledge) => knowledge.dataOptions.slice(-4).map(amount => ({
+      value: String(amount),
+      label: `${amount}GB o más`
+    })),
+    parse: (raw) => {
+      const value = parseLocaleNumber(raw);
+      return Number.isFinite(value) && value > 0 ? Math.round(value) : null;
+    },
+    format: (value) => `${value}GB`
+  },
+  {
+    field: 'fiberMbps',
+    shouldAsk: (knowledge) => knowledge.fiberOptions.length > 0 || knowledge.productTypes.some(type => type === 'C' || type === 'F'),
+    question: () => '¿Qué velocidad de fibra consideras imprescindible?',
+    options: (knowledge) => knowledge.fiberOptions.slice(-4).map(speed => ({
+      value: String(speed),
+      label: speed >= 1000 ? `${(speed / 1000).toFixed(speed % 1000 === 0 ? 0 : 1)} Gbps` : `${speed} Mbps`
+    })),
+    parse: (raw) => {
+      const value = parseLocaleNumber(raw);
+      return Number.isFinite(value) && value > 0 ? Math.round(value) : null;
+    },
+    format: (value) => value >= 1000 ? `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)} Gbps` : `${value} Mbps`
+  },
+  {
+    field: 'budget',
+    shouldAsk: (knowledge) => knowledge.priceRange.max != null,
+    question: () => '¿Cuál es tu presupuesto mensual máximo?',
+    options: (knowledge) => {
+      const budgets = knowledge.budgetOptions.length ? knowledge.budgetOptions : (knowledge.priceRange.max ? [knowledge.priceRange.max] : []);
+      return budgets.slice(0, 4).map(amount => ({
+        value: String(Math.round(amount)),
+        label: `Hasta ${formatBotBudget(Math.round(amount))}`
+      }));
+    },
+    parse: (raw) => {
+      const value = parseLocaleNumber(raw);
+      return Number.isFinite(value) && value > 0 ? Math.round(value) : null;
+    },
+    format: (value) => `Hasta ${formatBotBudget(value)}`
+  },
+  {
+    field: 'unlimitedMinutes',
+    shouldAsk: (knowledge) => knowledge.hasUnlimitedMinutes,
+    question: () => '¿Necesitas llamadas ilimitadas?',
+    options: () => [
+      { value: 'yes', label: 'Sí, llamadas ilimitadas' },
+      { value: 'no', label: 'No es imprescindible' }
+    ],
+    parse: (raw) => {
+      const value = String(raw || '').trim().toLowerCase();
+      if (!value) return null;
+      if (['yes', 'sí', 'si', 'true', '1'].some(token => value === token || value.includes(token))) return true;
+      if (['no', 'false', '0'].some(token => value === token || value.includes(token))) return false;
+      if (value.includes('ilimitad')) return true;
+      return null;
+    },
+    format: (value) => value ? 'Con llamadas ilimitadas' : 'Sin llamadas ilimitadas'
   }
-  if (features.fiberMbps != null) {
-    if (features.fiberMbps >= 1000) {
-      const gbps = features.fiberMbps / 1000;
-      parts.push(`${gbps % 1 === 0 ? gbps : gbps.toFixed(1)} Gbps de fibra`);
-    } else {
-      parts.push(`${Math.round(features.fiberMbps)} Mbps de fibra`);
-    }
-  }
-  if (features.unlimitedMinutes) {
-    parts.push('llamadas ilimitadas');
-  }
-  const featureText = parts.length ? ` Incluye ${parts.join(' · ')}.` : '';
-  const requestedLines = requirements.lines;
-  const lineText = tariff.lineas != null ? `${tariff.lineas} líneas` : 'líneas flexibles';
-  if (type === 'economy') {
-    const coverage = requestedLines ? `${requestedLines} líneas solicitadas` : lineText;
-    return `Es la opción más económica que cubre ${coverage} por ${priceText}.${featureText}`;
-  }
-  if (type === 'premium') {
-    return `Mejora las prestaciones con ${lineText} y extras avanzados por ${priceText}.${featureText}`;
-  }
-  let message = `Equilibrio entre prestaciones y precio por ${priceText}.`;
-  if (requestedLines && tariffLines(tariff) >= requestedLines) {
-    message += ` Mantiene las ${requestedLines} líneas solicitadas.`;
-  }
-  if (requirements.budget && tariff.precio != null && tariff.precio <= requirements.budget) {
-    message += ' Respeta el presupuesto indicado.';
-  }
-  if (requirements.minData && features.dataGB != null && features.dataGB >= requirements.minData) {
-    message += ' Cumple el mínimo de datos móviles.';
-  }
-  if (requirements.fiberMbps && features.fiberMbps != null && features.fiberMbps >= requirements.fiberMbps) {
-    message += ' Ofrece la velocidad de fibra solicitada o superior.';
-  }
-  return `${message}${featureText}`.trim();
+];
+
+function getBotAudience() {
+  if (!currentUser) return 'cliente';
+  if (currentUser.role === 'comercial') return 'comercial';
+  if (currentUser.role === 'lider') return 'lider';
+  if (currentUser.role === 'admin') return 'lider';
+  return 'cliente';
 }
 
-function buildAiRecommendations(query) {
-  const requirements = parseAiQuery(query);
-  const dataset = tariffs.slice();
-  if (!dataset.length) {
-    return { requirements, items: [] };
-  }
-  const economyCandidates = (requirements.lines
-    ? dataset.filter(tariff => tariffLines(tariff) >= requirements.lines)
-    : dataset.slice())
-      .sort((a, b) => (a.precio ?? Infinity) - (b.precio ?? Infinity));
-  const economy = economyCandidates.find(item => item && item.precio != null) || economyCandidates[0] || null;
-
-  const balanced = dataset
-    .map(tariff => ({ tariff, score: scoreTariff(tariff, requirements) }))
-    .filter(item => item.score > -Infinity)
-    .sort((a, b) => b.score - a.score);
-  const best = balanced.length ? balanced[0].tariff : economy;
-
-  const premiumCandidates = dataset
-    .map(tariff => ({ tariff, score: premiumScore(tariff, requirements) }))
-    .filter(item => item.score > -Infinity)
-    .sort((a, b) => b.score - a.score);
-  let premium = premiumCandidates.length ? premiumCandidates[0].tariff : null;
-
-  const results = [];
-  const seen = new Set();
-  if (economy) {
-    seen.add(economy.id);
-    results.push({ type: 'economy', label: 'Opción más económica', tariff: economy, reason: formatAiReason('economy', economy, requirements, extractTariffFeatures(economy)) });
-  }
-  if (best && !seen.has(best.id)) {
-    seen.add(best.id);
-    results.push({ type: 'balanced', label: 'Mejor equilibrio', tariff: best, reason: formatAiReason('balanced', best, requirements, extractTariffFeatures(best)) });
-  }
-  if (premium) {
-    if (seen.has(premium.id)) {
-      premium = premiumCandidates.find(item => !seen.has(item.tariff.id))?.tariff || null;
-    }
-    if (premium) {
-      seen.add(premium.id);
-      results.push({ type: 'premium', label: 'Potencia superior', tariff: premium, reason: formatAiReason('premium', premium, requirements, extractTariffFeatures(premium)) });
-    }
-  }
-  return { requirements, items: results };
+function getBotBannerText() {
+  const audience = getBotAudience();
+  const text = botSettings.bannerMessages?.[audience];
+  return (text || '').trim();
 }
 
-function canCurrentUserRequestTariffs() {
-  return Boolean(currentUser && (currentUser.role === 'comercial' || currentUser.role === 'lider' || currentUser.role === CLIENT_ROLE));
+function getBotTasksForAudience() {
+  const audience = getBotAudience();
+  const tasks = botSettings.tasks?.[audience];
+  if (!Array.isArray(tasks)) return [];
+  return tasks.map(item => String(item).trim()).filter(Boolean);
+}
+
+function updateBotFocusBadge() {
+  if (!botFocusBadge) return;
+  const focus = (botSettings.focus || '').trim();
+  if (!focus) {
+    botFocusBadge.textContent = '';
+    botFocusBadge.classList.add('hidden');
+    requestAnimationFrame(updateBotPanelPlaceholderHeight);
+    return;
+  }
+  botFocusBadge.textContent = `Foco: ${focus}`;
+  botFocusBadge.classList.remove('hidden');
+  requestAnimationFrame(updateBotPanelPlaceholderHeight);
+}
+
+function renderBotBanner(force = false) {
+  if (!botBanner || !botBannerMessage) return;
+  const text = getBotBannerText();
+  if (!botSettings.bannerEnabled || !text) {
+    botBanner.classList.add('hidden');
+    requestAnimationFrame(updateBotPanelPlaceholderHeight);
+    return;
+  }
+  if (botBannerDismissed && !force) return;
+  if (force) botBannerDismissed = false;
+  botBannerMessage.textContent = text;
+  botBanner.classList.remove('hidden');
+  requestAnimationFrame(updateBotPanelPlaceholderHeight);
+}
+
+function updateBotTaskHint() {
+  if (!botTaskHint || !botTaskList) return;
+  const tasks = getBotTasksForAudience();
+  if (!tasks.length) {
+    botTaskHint.classList.add('hidden');
+    botTaskList.innerHTML = '';
+    requestAnimationFrame(updateBotPanelPlaceholderHeight);
+    return;
+  }
+  botTaskHint.classList.remove('hidden');
+  botTaskList.innerHTML = tasks.map(task => `<li>${escapeHtml(task)}</li>`).join('');
+  requestAnimationFrame(updateBotPanelPlaceholderHeight);
+}
+
+function pushBotMessage(text, { type = 'bot', html = '', className = '' } = {}) {
+  if (!botConversation) return;
+  const message = document.createElement('div');
+  message.className = `bot-message ${type === 'user' ? 'user' : 'bot'}`;
+  if (className) message.classList.add(className);
+  if (html) {
+    message.innerHTML = html;
+  } else {
+    message.textContent = text;
+  }
+  botConversation.appendChild(message);
+  botConversation.scrollTop = botConversation.scrollHeight;
+  requestAnimationFrame(updateBotPanelPlaceholderHeight);
+}
+
+function formatBotBudget(value) {
+  if (!Number.isFinite(value)) return '';
+  return euro(value, 'EUR');
+}
+
+function prepareBotDefaults(knowledge) {
+  const defaults = {};
+  if (knowledge.productTypes.length === 1) {
+    defaults.productType = knowledge.productTypes[0];
+  }
+  return defaults;
+}
+
+function nextBotQuestion() {
+  if (!botState) return null;
+  return BOT_QUESTION_FLOW.find(question => question.shouldAsk(botKnowledge, botState.answers) && botState.answers[question.field] === undefined);
+}
+
+function startBotConversation({ restart = false } = {}) {
+  if (!botConversation) return;
+  botState = {
+    answers: prepareBotDefaults(botKnowledge),
+    completed: false
+  };
+  if (!restart) {
+    botConversation.innerHTML = '';
+  } else {
+    botConversation.innerHTML = '';
+  }
+  const audience = getBotAudience();
+  const greetingMap = {
+    comercial: 'Hola, repasemos lo que busca tu cliente para recomendarle la mejor tarifa.',
+    lider: 'Hola, te ayudo a orientar las propuestas del equipo según las prioridades marcadas.',
+    cliente: 'Hola, soy tu asistente inteligente. Vamos a encontrar la tarifa ideal para ti.'
+  };
+  pushBotMessage(greetingMap[audience] || greetingMap.cliente);
+  if (botKnowledge.count) {
+    pushBotMessage(`Tengo ${botKnowledge.count} tarifas actualizadas para analizar.`);
+  }
+  if ((botSettings.focus || '').trim()) {
+    pushBotMessage(`Tendré muy presente el objetivo: ${botSettings.focus.trim()}.`);
+  }
+  updateBotFocusBadge();
+  updateBotTaskHint();
+  renderBotBanner(restart);
+  askNextBotQuestion();
+}
+
+function renderBotQuickReplies(question) {
+  if (!botQuickReplies) return;
+  const options = typeof question.options === 'function' ? question.options(botKnowledge, botSettings) : [];
+  if (!options || !options.length) {
+    botQuickReplies.classList.add('hidden');
+    botQuickReplies.innerHTML = '';
+    return;
+  }
+  botQuickReplies.innerHTML = options.map(option => {
+    const value = option.value != null ? String(option.value) : option.label;
+    return `<button type="button" data-value="${escapeHtml(value)}">${escapeHtml(option.label)}</button>`;
+  }).join('');
+  botQuickReplies.classList.remove('hidden');
+}
+
+function askNextBotQuestion({ repeat = false } = {}) {
+  const question = nextBotQuestion();
+  if (!question) {
+    renderBotRecommendations();
+    return;
+  }
+  if (!repeat) {
+    pushBotMessage(question.question(botKnowledge, botSettings));
+  }
+  renderBotQuickReplies(question);
+}
+
+function handleBotAnswer(raw, { displayText = null } = {}) {
+  const question = nextBotQuestion();
+  if (!question) {
+    if (!botState?.completed) {
+      renderBotRecommendations();
+    }
+    return;
+  }
+  const parsed = question.parse ? question.parse(raw, botKnowledge, botSettings) : raw;
+  if (parsed === null || parsed === undefined || Number.isNaN(parsed)) {
+    pushBotMessage('No he terminado de entenderlo, ¿puedes indicarlo de otra forma?', { type: 'bot' });
+    renderBotQuickReplies(question);
+    return;
+  }
+  const display = displayText || (question.format ? question.format(parsed) : String(parsed));
+  pushBotMessage(display, { type: 'user' });
+  botState.answers[question.field] = parsed;
+  askNextBotQuestion();
+}
+
+function summariseBotAnswers(answers) {
+  const summary = [];
+  if (answers.lines) summary.push(`${answers.lines} ${answers.lines === 1 ? 'línea' : 'líneas'}`);
+  if (answers.minData) summary.push(`${answers.minData}GB`);
+  if (answers.fiberMbps) summary.push(answers.fiberMbps >= 1000 ? `${(answers.fiberMbps / 1000).toFixed(answers.fiberMbps % 1000 === 0 ? 0 : 1)} Gbps` : `${answers.fiberMbps} Mbps`);
+  if (answers.budget) summary.push(`hasta ${formatBotBudget(answers.budget)}`);
+  if (answers.unlimitedMinutes === true) summary.push('con llamadas ilimitadas');
+  if (answers.unlimitedMinutes === false) summary.push('sin llamadas ilimitadas');
+  return summary;
+}
+
+function buildBotRecommendations(answers) {
+  const requirements = {
+    productType: answers.productType || null,
+    lines: answers.lines ? Number(answers.lines) : null,
+    minData: answers.minData ? Number(answers.minData) : null,
+    fiberMbps: answers.fiberMbps ? Number(answers.fiberMbps) : null,
+    budget: answers.budget ? Number(answers.budget) : null,
+    unlimitedMinutes: answers.unlimitedMinutes === true
+  };
+  let dataset = tariffs.slice();
+  if (requirements.productType) {
+    dataset = dataset.filter(tariff => tariff.tipo === requirements.productType);
+  }
+  const focusText = (botSettings.focus || '').toLowerCase();
+  const scored = dataset.map(tariff => {
+    const price = tariff.precio != null ? Number(tariff.precio) : Infinity;
+    let score = scoreTariff(tariff, requirements);
+    const features = extractTariffFeatures(tariff);
+    if (focusText.includes('ahorro') || focusText.includes('precio')) {
+      if (Number.isFinite(price) && botKnowledge.priceRange.max != null) {
+        const range = Math.max((botKnowledge.priceRange.max || 0) - (botKnowledge.priceRange.min || 0), 1);
+        score += Math.max(0, (botKnowledge.priceRange.max - price) / range) * 2;
+      }
+    }
+    if (focusText.includes('fibra')) {
+      if (features.fiberMbps) score += 2;
+    }
+    if (focusText.includes('móvil') || focusText.includes('movil')) {
+      if (features.dataGB) score += Math.min(features.dataGB, 200) / 60;
+    }
+    if (focusText.includes('equipo') || focusText.includes('empresa') || focusText.includes('negocio')) {
+      if (tariff.lineas != null && Number(tariff.lineas) >= 3) score += 1.5;
+    }
+    return { tariff, price, score };
+  }).filter(entry => entry.score > -Infinity);
+  const items = scored.sort((a, b) => {
+    if (a.price === b.price) return b.score - a.score;
+    if (!Number.isFinite(a.price)) return 1;
+    if (!Number.isFinite(b.price)) return -1;
+    return a.price - b.price;
+  }).slice(0, BOT_MAX_RESULTS);
+  return { requirements, items };
+}
+
+function renderBotRecommendations() {
+  if (!botState) return;
+  botState.completed = true;
+  const { items } = buildBotRecommendations(botState.answers);
+  if (!items.length) {
+    pushBotMessage('No he encontrado tarifas que cumplan todos los requisitos. Podemos ajustar algún criterio para buscar otras alternativas.');
+    if (botQuickReplies) {
+      botQuickReplies.innerHTML = '<button type="button" data-value="__restart">Nueva búsqueda</button>';
+      botQuickReplies.classList.remove('hidden');
+    }
+    return;
+  }
+  const summary = summariseBotAnswers(botState.answers);
+  let intro = `Estas son las ${items.length} tarifas más ajustadas ordenadas de menor a mayor precio.`;
+  if (summary.length) {
+    intro += ` He tenido en cuenta ${summary.join(', ')}.`;
+  }
+  if ((botSettings.focus || '').trim()) {
+    intro += ` Prioridad actual: ${botSettings.focus.trim()}.`;
+  }
+  pushBotMessage(intro);
+  const cardsHtml = items.map((entry, index) => {
+    const tariff = entry.tariff;
+    const priceText = tariff.precio != null ? euro(tariff.precio, tariff.moneda) : 'Precio no disponible';
+    const features = extractTariffFeatures(tariff);
+    const details = [];
+    if (tariff.lineas != null) {
+      const lines = Number(tariff.lineas);
+      if (Number.isFinite(lines)) details.push(`${lines} ${lines === 1 ? 'línea' : 'líneas'}`);
+    }
+    if (features.dataGB != null) {
+      details.push(`${Math.round(features.dataGB)}GB`);
+    }
+    if (features.fiberMbps != null) {
+      details.push(features.fiberMbps >= 1000 ? `${(features.fiberMbps / 1000).toFixed(features.fiberMbps % 1000 === 0 ? 0 : 1)} Gbps de fibra` : `${features.fiberMbps} Mbps de fibra`);
+    }
+    if (features.unlimitedMinutes) {
+      details.push('Llamadas ilimitadas');
+    }
+    const permanencia = tariff.permanencia ? `Permanencia: ${tariff.permanencia}` : 'Sin permanencia confirmada';
+    const canRequest = canCurrentUserRequestTariffs();
+    const requestButton = canRequest
+      ? `<button class="primary" data-action="bot-lead" data-id="${tariff.id}">Solicitar tarifa</button>`
+      : '<span class="dim">Inicia sesión para solicitarla</span>';
+    const focusButton = `<button class="smallbtn" data-action="bot-focus" data-id="${tariff.id}">Ver en catálogo</button>`;
+    const priceDisplay = escapeHtml(priceText);
+    return `
+      <div class="bot-result-card" data-id="${tariff.id}">
+        <div class="bot-result-header">
+          <div>
+            <p class="bot-result-name">${escapeHtml(tariff.nombre || 'Tarifa sin nombre')}</p>
+            <div class="bot-result-meta">${escapeHtml(tariff['compañia'] || tariff.compania || 'Sin compañía')}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            <span class="badge">#${index + 1}</span>
+            <div class="bot-result-price">${priceDisplay}</div>
+          </div>
+        </div>
+        <div class="bot-result-meta">${details.length ? escapeHtml(details.join(' · ')) : 'Sin detalles destacados'}</div>
+        <div class="bot-result-meta">${escapeHtml(permanencia)}</div>
+        <div class="bot-result-actions">
+          ${focusButton}
+          ${requestButton}
+        </div>
+      </div>
+    `;
+  }).join('');
+  pushBotMessage(cardsHtml, { type: 'bot', html: cardsHtml, className: 'bot-message-results' });
+  if (botQuickReplies) {
+    botQuickReplies.innerHTML = '<button type="button" data-value="__restart">Nueva búsqueda</button>';
+    botQuickReplies.classList.remove('hidden');
+  }
+}
+
+function refreshBotKnowledge({ preserveAnswers = false } = {}) {
+  botKnowledge = computeBotKnowledge(tariffs);
+  updateBotFocusBadge();
+  updateBotTaskHint();
+  if (!botState || !preserveAnswers) {
+    startBotConversation();
+    return;
+  }
+  const defaults = prepareBotDefaults(botKnowledge);
+  botState.answers = { ...defaults, ...botState.answers };
+  if (botState.completed) {
+    renderBotRecommendations();
+  } else {
+    askNextBotQuestion({ repeat: true });
+  }
+}
+
+function handleBotInputSubmit(event) {
+  event.preventDefault();
+  const value = botInputField?.value.trim() || '';
+  if (!value) return;
+  handleBotAnswer(value, { displayText: value });
+  if (botInputField) botInputField.value = '';
+}
+
+function handleBotQuickReply(event) {
+  const button = event.target.closest('button[data-value]');
+  if (!button) return;
+  const value = button.dataset.value;
+  if (value === '__restart') {
+    startBotConversation({ restart: true });
+    return;
+  }
+  handleBotAnswer(value, { displayText: button.textContent.trim() });
+}
+
+function handleBotConversationClick(event) {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+  const id = button.dataset.id;
+  if (!id) return;
+  if (button.dataset.action === 'bot-focus') {
+    focusTariffCard(id);
+  }
+  if (button.dataset.action === 'bot-lead') {
+    const tariff = tariffs.find(item => item.id === id);
+    if (tariff) {
+      openLeadModal(tariff);
+    }
+  }
+}
+
+function activateBotPanelPlaceholder() {
+  if (!botPanel || !botPanelPlaceholder) return;
+  const rect = botPanel.getBoundingClientRect();
+  const height = Math.max(rect.height, botPanel.offsetHeight || 0);
+  if (height > 0) {
+    botPanelPlaceholderHeight = height;
+    botPanelPlaceholder.style.setProperty('--bot-panel-placeholder-height', `${Math.ceil(height)}px`);
+    botPanelPlaceholder.classList.add('active');
+  }
+}
+
+function deactivateBotPanelPlaceholder() {
+  if (!botPanelPlaceholder) return;
+  botPanelPlaceholderHeight = 0;
+  botPanelPlaceholder.classList.remove('active');
+  botPanelPlaceholder.style.setProperty('--bot-panel-placeholder-height', '0px');
+}
+
+function updateBotPanelPlaceholderHeight() {
+  if (!botPanelFloating || !botPanel || !botPanelPlaceholder) {
+    if (!botPanelFloating) {
+      deactivateBotPanelPlaceholder();
+    }
+    return;
+  }
+  const rect = botPanel.getBoundingClientRect();
+  const height = Math.max(rect.height, botPanel.offsetHeight || 0);
+  if (height > 0 && Math.abs(height - botPanelPlaceholderHeight) > 2) {
+    botPanelPlaceholderHeight = height;
+    botPanelPlaceholder.style.setProperty('--bot-panel-placeholder-height', `${Math.ceil(height)}px`);
+    botPanelPlaceholder.classList.add('active');
+  }
+}
+
+function openBotPanelFloating() {
+  if (!botPanel) return;
+  activateBotPanelPlaceholder();
+  botPanelFloating = true;
+  botPanelCollapsed = false;
+  botPanel.classList.add('bot-panel-floating');
+  botPanel.classList.remove('bot-panel-collapsed');
+  if (botFloatingToggle) {
+    botFloatingToggle.classList.remove('hidden');
+    botFloatingToggle.classList.add('is-open');
+  }
+  if (botMinimizeBtn) botMinimizeBtn.classList.remove('hidden');
+  updateBotPanelPlaceholderHeight();
+  botConversation?.scrollTo(0, botConversation.scrollHeight);
+}
+
+function closeBotPanelFloating() {
+  if (!botPanelFloating) return;
+  botPanelFloating = false;
+  botPanelAutoFloating = false;
+  botPanelCollapsed = false;
+  if (botPanel) {
+    botPanel.classList.remove('bot-panel-floating');
+    botPanel.classList.remove('bot-panel-collapsed');
+  }
+  if (botFloatingToggle) {
+    botFloatingToggle.classList.remove('is-open');
+    botFloatingToggle.classList.add('hidden');
+  }
+  if (botMinimizeBtn) botMinimizeBtn.classList.add('hidden');
+  deactivateBotPanelPlaceholder();
+}
+
+function minimizeBotPanel() {
+  if (!botPanel) return;
+  botPanelCollapsed = true;
+  botPanel.classList.add('bot-panel-collapsed');
+  if (botFloatingToggle) {
+    botFloatingToggle.classList.remove('is-open');
+    botFloatingToggle.classList.remove('hidden');
+  }
+  requestAnimationFrame(updateBotPanelPlaceholderHeight);
+}
+
+function toggleBotFloatingPanel() {
+  if (!botPanel) return;
+  if (!botPanelFloating) {
+    botPanelAutoFloating = false;
+    openBotPanelFloating();
+    return;
+  }
+  if (botPanelCollapsed) {
+    botPanelCollapsed = false;
+    botPanel.classList.remove('bot-panel-collapsed');
+    if (botFloatingToggle) botFloatingToggle.classList.add('is-open');
+    if (botMinimizeBtn) botMinimizeBtn.classList.remove('hidden');
+    botConversation?.scrollTo(0, botConversation.scrollHeight);
+  } else {
+    minimizeBotPanel();
+  }
+  requestAnimationFrame(updateBotPanelPlaceholderHeight);
+}
+
+function updateBotFloatingToggleVisibility() {
+  if (!botPanel || !botFloatingToggle) return;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  const viewportTop = window.scrollY || document.documentElement.scrollTop || 0;
+  if (botPanelFloating) {
+    botFloatingToggle.classList.remove('hidden');
+    requestAnimationFrame(updateBotPanelPlaceholderHeight);
+    if (botPanelAutoFloating && botPanelPlaceholder) {
+      const placeholderRect = botPanelPlaceholder.getBoundingClientRect();
+      const placeholderTop = placeholderRect.top;
+      const placeholderBottom = placeholderRect.bottom;
+      const placeholderFullyVisible = placeholderTop >= 0 && placeholderBottom <= viewportHeight;
+      if (placeholderFullyVisible || viewportTop <= (botPanelPlaceholder.offsetTop || 0)) {
+        closeBotPanelFloating();
+      }
+    }
+    return;
+  }
+  const rect = botPanel.getBoundingClientRect();
+  const panelTop = botPanel.offsetTop || 0;
+  const panelHeight = rect.height || botPanel.offsetHeight || 0;
+  const panelBottom = panelTop + panelHeight;
+  const shouldFloat = viewportTop + 80 > panelBottom;
+  if (shouldFloat) {
+    botPanelAutoFloating = true;
+    openBotPanelFloating();
+    minimizeBotPanel();
+    return;
+  }
+  const fullyVisible = rect.top >= 0 && rect.bottom <= viewportHeight;
+  if (fullyVisible) {
+    botFloatingToggle.classList.add('hidden');
+  } else {
+    botFloatingToggle.classList.remove('hidden');
+  }
+}
+
+function handleBotSettingsSubmit(event) {
+  event.preventDefault();
+  const focus = botFocusInput?.value.trim() || '';
+  const bannerEnabled = botBannerEnabledInput ? Boolean(botBannerEnabledInput.checked) : true;
+  const messageCliente = botMessageClienteInput?.value.trim() || '';
+  const messageComercial = botMessageComercialInput?.value.trim() || '';
+  const messageLider = botMessageLiderInput?.value.trim() || '';
+  const tasksCliente = botTasksClienteInput?.value.split(/\r?\n/) || [];
+  const tasksComercial = botTasksComercialInput?.value.split(/\r?\n/) || [];
+  const tasksLider = botTasksLiderInput?.value.split(/\r?\n/) || [];
+  botSettings = normaliseBotSettings({
+    focus,
+    bannerEnabled,
+    bannerMessages: {
+      cliente: messageCliente,
+      comercial: messageComercial,
+      lider: messageLider
+    },
+    tasks: {
+      cliente: tasksCliente,
+      comercial: tasksComercial,
+      lider: tasksLider
+    }
+  });
+  saveBotSettings();
+  applyBotSettingsToConversation({ restartConversation: true });
+  if (botSettingsInfo) {
+    botSettingsInfo.textContent = 'Ajustes guardados correctamente.';
+    setTimeout(() => { if (botSettingsInfo) botSettingsInfo.textContent = ''; }, 4000);
+  }
+}
+
+function fillBotSettingsForm() {
+  if (!botSettingsForm) return;
+  if (botFocusInput) botFocusInput.value = botSettings.focus || '';
+  if (botBannerEnabledInput) botBannerEnabledInput.checked = Boolean(botSettings.bannerEnabled);
+  if (botMessageClienteInput) botMessageClienteInput.value = botSettings.bannerMessages?.cliente || '';
+  if (botMessageComercialInput) botMessageComercialInput.value = botSettings.bannerMessages?.comercial || '';
+  if (botMessageLiderInput) botMessageLiderInput.value = botSettings.bannerMessages?.lider || '';
+  if (botTasksClienteInput) botTasksClienteInput.value = (botSettings.tasks?.cliente || []).join('\n');
+  if (botTasksComercialInput) botTasksComercialInput.value = (botSettings.tasks?.comercial || []).join('\n');
+  if (botTasksLiderInput) botTasksLiderInput.value = (botSettings.tasks?.lider || []).join('\n');
+}
+
+function applyBotSettingsToConversation({ restartConversation = false } = {}) {
+  updateBotFocusBadge();
+  renderBotBanner(true);
+  updateBotTaskHint();
+  if (restartConversation) {
+    startBotConversation({ restart: true });
+  } else {
+    refreshBotKnowledge({ preserveAnswers: true });
+  }
 }
 
 function clearAiHighlights() {
@@ -2021,86 +2763,8 @@ function focusTariffCard(tariffId) {
     setTimeout(() => tile.classList.remove('highlighted'), 4000);
   }
 }
-
-function renderAiResults(result) {
-  if (!aiResults) return;
-  if (!result || !Array.isArray(result.items) || !result.items.length) {
-    aiResults.innerHTML = '<p class="dim">Describe lo que necesitas para obtener recomendaciones personalizadas.</p>';
-    clearAiHighlights();
-    return;
-  }
-  const canRequest = canCurrentUserRequestTariffs();
-  aiResults.innerHTML = result.items
-    .map(option => {
-      const tariff = option.tariff;
-      const price = tariff.precio != null ? euro(tariff.precio, tariff.moneda) : 'Precio no disponible';
-      const lines = tariff.lineas != null ? `${tariff.lineas} líneas móviles` : 'Líneas flexibles';
-      const permanencia = tariff.permanencia ? `Permanencia: ${tariff.permanencia}` : 'Sin datos de permanencia';
-      const requestControl = canRequest
-        ? `<button class="primary" data-action="ai-lead" data-id="${tariff.id}">Solicitar tarifa</button>`
-        : '<span class="dim">Inicia sesión para solicitarla</span>';
-      const focusButton = `<button class="smallbtn" data-action="ai-focus" data-id="${tariff.id}">Ver en catálogo</button>`;
-      return `
-        <div class="ai-card" data-id="${tariff.id}">
-          <span class="badge">${option.label}</span>
-          <h4>${tariff.nombre}</h4>
-          <div class="dim">${tariff['compañia']} · ${lines}</div>
-          <div class="price">${price}</div>
-          <p class="dim">${option.reason}</p>
-          <p class="dim">${permanencia}</p>
-          <div class="inline-actions" style="justify-content:flex-end; gap:8px;">
-            ${focusButton}
-            ${requestControl}
-          </div>
-        </div>
-      `;
-    })
-    .join('');
-}
-
-function runAiSearch(query, { keepInput = false } = {}) {
-  const text = String(query || '').trim();
-  if (!keepInput && aiInput) {
-    aiInput.value = text;
-  }
-  aiLastQuery = text;
-  clearAiHighlights();
-  if (!text) {
-    renderAiResults(null);
-    return;
-  }
-  const recommendation = buildAiRecommendations(text);
-  renderAiResults(recommendation);
-}
-
-function handleAiSearchSubmit(event) {
-  event.preventDefault();
-  runAiSearch(aiInput?.value || '');
-}
-
-function resetAiSearch() {
-  aiLastQuery = '';
-  if (aiInput) aiInput.value = '';
-  clearAiHighlights();
-  if (aiResults) {
-    aiResults.innerHTML = '<p class="dim">Describe lo que necesitas para obtener recomendaciones personalizadas.</p>';
-  }
-}
-
-function handleAiResultsClick(event) {
-  const button = event.target.closest('button[data-action]');
-  if (!button) return;
-  const id = button.dataset.id;
-  if (!id) return;
-  if (button.dataset.action === 'ai-focus') {
-    focusTariffCard(id);
-  }
-  if (button.dataset.action === 'ai-lead') {
-    const tariff = tariffs.find(item => item.id === id);
-    if (tariff) {
-      openLeadModal(tariff);
-    }
-  }
+function canCurrentUserRequestTariffs() {
+  return Boolean(currentUser && (currentUser.role === 'comercial' || currentUser.role === 'lider' || currentUser.role === CLIENT_ROLE));
 }
 
 function normaliseLead(raw) {
@@ -2235,6 +2899,73 @@ function saveRewards() {
     localStorage.setItem(STORAGE_KEYS.rewards, JSON.stringify(rewards));
   } catch (error) {
     console.warn('No se pudieron guardar las recompensas', error);
+  }
+}
+
+function normaliseBotSettings(raw = {}) {
+  const fallback = { ...DEFAULT_BOT_SETTINGS };
+  const defaultMessages = { ...DEFAULT_BOT_SETTINGS.bannerMessages };
+  const defaultTasks = BOT_AUDIENCES.reduce((acc, audience) => {
+    acc[audience] = Array.isArray(DEFAULT_BOT_SETTINGS.tasks?.[audience])
+      ? DEFAULT_BOT_SETTINGS.tasks[audience].map(item => String(item).trim()).filter(Boolean)
+      : [];
+    return acc;
+  }, {});
+  const result = {
+    focus: typeof fallback.focus === 'string' ? fallback.focus : '',
+    bannerEnabled: Boolean(fallback.bannerEnabled),
+    bannerMessages: defaultMessages,
+    tasks: defaultTasks
+  };
+  if (raw && typeof raw === 'object') {
+    if (typeof raw.focus === 'string') {
+      result.focus = raw.focus.trim();
+    }
+    if (raw.bannerEnabled !== undefined) {
+      result.bannerEnabled = Boolean(raw.bannerEnabled);
+    }
+    const messages = raw.bannerMessages || {};
+    BOT_AUDIENCES.forEach(audience => {
+      const value = messages[audience];
+      if (typeof value === 'string') {
+        result.bannerMessages[audience] = value.trim();
+      }
+    });
+    const tasks = raw.tasks || {};
+    BOT_AUDIENCES.forEach(audience => {
+      const entry = tasks[audience];
+      if (Array.isArray(entry)) {
+        result.tasks[audience] = entry.map(item => String(item).trim()).filter(Boolean);
+      } else if (typeof entry === 'string') {
+        result.tasks[audience] = entry.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+      }
+    });
+  }
+  result.focus = result.focus.trim();
+  return result;
+}
+
+function loadBotSettingsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.botSettings);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return normaliseBotSettings(parsed);
+    }
+  } catch (error) {
+    console.warn('No se pudieron cargar los ajustes del bot', error);
+  }
+  return normaliseBotSettings(DEFAULT_BOT_SETTINGS);
+}
+
+function saveBotSettings() {
+  if (remoteState.enabled) {
+    scheduleRemoteSync();
+  }
+  try {
+    localStorage.setItem(STORAGE_KEYS.botSettings, JSON.stringify(botSettings));
+  } catch (error) {
+    console.warn('No se pudieron guardar los ajustes del bot', error);
   }
 }
 
@@ -3157,14 +3888,13 @@ function handleStorageEvent(event) {
   if (event.storageArea && event.storageArea !== localStorage) return;
   if (event.key === STORAGE_KEYS.tariffs) {
     tariffs = loadTariffsFromStorage();
+    botKnowledge = computeBotKnowledge(tariffs);
     populateFilterOptions(true);
     aplicarFiltros();
     if (currentUser?.role === 'admin') {
       renderTariffTable();
     }
-    if (aiLastQuery) {
-      runAiSearch(aiLastQuery, { keepInput: true });
-    }
+    refreshBotKnowledge({ preserveAnswers: true });
   }
   if (event.key === STORAGE_KEYS.leads) {
     leads = loadLeadsFromStorage();
@@ -3177,6 +3907,11 @@ function handleStorageEvent(event) {
     rewards = loadRewardsFromStorage();
     renderAdminRewards();
     renderCommercialPanel();
+  }
+  if (event.key === STORAGE_KEYS.botSettings) {
+    botSettings = loadBotSettingsFromStorage();
+    fillBotSettingsForm();
+    applyBotSettingsToConversation({ restartConversation: false });
   }
   if (event.key === STORAGE_KEYS.users) {
     users = loadUsersFromStorage();
@@ -3553,7 +4288,7 @@ function handleTarifaFormSubmit(event) {
   populateFilterOptions(true);
   aplicarFiltros();
   renderTariffTable();
-  if (aiLastQuery) runAiSearch(aiLastQuery, { keepInput: true });
+  refreshBotKnowledge({ preserveAnswers: true });
   if (tarifaFormInfo) tarifaFormInfo.textContent = message;
   resetTariffForm({ keepMessage: true });
 }
@@ -3578,7 +4313,7 @@ function handleTarifaListAction(event) {
       populateFilterOptions(true);
       aplicarFiltros();
       renderTariffTable();
-      if (aiLastQuery) runAiSearch(aiLastQuery, { keepInput: true });
+      refreshBotKnowledge({ preserveAnswers: true });
       if (tarifaFormInfo) tarifaFormInfo.textContent = 'Tarifa eliminada.';
       resetTariffForm();
     }
@@ -5117,6 +5852,9 @@ function setCurrentUser(user, { persist = true } = {}) {
   }
   updateUIForRole();
   prefillProfileForm();
+  if (domReady) {
+    startBotConversation({ restart: true });
+  }
 }
 
 function logout() {
@@ -5809,11 +6547,21 @@ document.addEventListener('DOMContentLoaded', () => {
   clientNameInput = $('#clientName');
   clientContactInput = $('#clientContact');
   clientNotesInput = $('#clientNotes');
-  aiPanel = $('#aiPanel');
-  aiForm = $('#aiSearchForm');
-  aiInput = $('#aiSearchInput');
-  aiResults = $('#aiResults');
-  aiClearBtn = $('#aiSearchClear');
+  botPanel = $('#botPanel');
+  botConversation = $('#botConversation');
+  botQuickReplies = $('#botQuickReplies');
+  botInputForm = $('#botInputForm');
+  botInputField = $('#botInputField');
+  botRestartBtn = $('#botRestart');
+  botFocusBadge = $('#botFocusBadge');
+  botBanner = $('#botBanner');
+  botBannerMessage = $('#botBannerMessage');
+  botBannerClose = $('#botBannerClose');
+  botTaskHint = $('#botTaskHint');
+  botTaskList = $('#botTaskList');
+  botFloatingToggle = $('#botFloatingToggle');
+  botPanelPlaceholder = $('#botPanelPlaceholder');
+  botMinimizeBtn = $('#botMinimizeBtn');
 
   profilePanel = $('#profilePanel');
   profileForm = $('#profileForm');
@@ -5851,19 +6599,35 @@ document.addEventListener('DOMContentLoaded', () => {
   userListContainer = $('#userList');
   saveUserBtn = $('#saveUserBtn');
   cancelUserEdit = $('#cancelUserEdit');
+  botSettingsForm = $('#botSettingsForm');
+  botFocusInput = $('#botFocusInput');
+  botBannerEnabledInput = $('#botBannerEnabled');
+  botMessageClienteInput = $('#botMessageCliente');
+  botMessageComercialInput = $('#botMessageComercial');
+  botMessageLiderInput = $('#botMessageLider');
+  botTasksClienteInput = $('#botTasksCliente');
+  botTasksComercialInput = $('#botTasksComercial');
+  botTasksLiderInput = $('#botTasksLider');
+  botSettingsInfo = $('#botSettingsInfo');
 
   setupRewardImageUploader();
 
+  botSettings = loadBotSettingsFromStorage();
   users = loadUsersFromStorage();
   tariffs = loadTariffsFromStorage();
   leads = loadLeadsFromStorage();
   rewards = loadRewardsFromStorage();
+
+  botKnowledge = computeBotKnowledge(tariffs);
 
   resetUserForm();
 
   initFilters();
   populateReferralTariffs();
   renderEverythingAfterDataChange({ refreshFilters: true });
+  fillBotSettingsForm();
+  startBotConversation();
+  updateBotFloatingToggleVisibility();
 
   $('#filtrar')?.addEventListener('click', aplicarFiltros);
   $('#limpiar')?.addEventListener('click', () => { resetFilters(); aplicarFiltros(); });
@@ -5938,9 +6702,21 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAdminSalesStats();
   });
 
-  aiForm?.addEventListener('submit', handleAiSearchSubmit);
-  aiClearBtn?.addEventListener('click', resetAiSearch);
-  aiResults?.addEventListener('click', handleAiResultsClick);
+  botInputForm?.addEventListener('submit', handleBotInputSubmit);
+  botQuickReplies?.addEventListener('click', handleBotQuickReply);
+  botConversation?.addEventListener('click', handleBotConversationClick);
+  botRestartBtn?.addEventListener('click', () => startBotConversation({ restart: true }));
+  botBannerClose?.addEventListener('click', () => {
+    botBannerDismissed = true;
+    botBanner?.classList.add('hidden');
+    requestAnimationFrame(updateBotPanelPlaceholderHeight);
+  });
+  botFloatingToggle?.addEventListener('click', toggleBotFloatingPanel);
+  botMinimizeBtn?.addEventListener('click', minimizeBotPanel);
+  botSettingsForm?.addEventListener('submit', handleBotSettingsSubmit);
+  window.addEventListener('scroll', updateBotFloatingToggleVisibility);
+  window.addEventListener('resize', updateBotFloatingToggleVisibility);
+  window.addEventListener('resize', () => requestAnimationFrame(updateBotPanelPlaceholderHeight));
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
@@ -5967,7 +6743,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUIForRole();
   }
 
-  resetAiSearch();
 });
 </script>
 </body>
