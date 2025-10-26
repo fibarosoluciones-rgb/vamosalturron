@@ -336,6 +336,11 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .call-request-card { position:relative; padding:16px; border-radius:16px; background:rgba(11,17,32,0.95); border:1px solid rgba(148,163,184,0.2); box-shadow:0 14px 32px rgba(8,15,30,0.4); display:flex; flex-direction:column; gap:10px; transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease; overflow:hidden; }
 .call-request-card:hover { transform:translateY(-2px); box-shadow:0 20px 40px rgba(15,23,42,0.55); }
 .call-request-card[data-status="pendiente"] { border-color:rgba(251,191,36,0.6); box-shadow:0 18px 40px rgba(251,191,36,0.22); }
+.call-request-card[data-second-call="true"][data-status="pendiente"] {
+  background:linear-gradient(160deg, rgba(251,191,36,0.18) 0%, rgba(30,41,59,0.9) 100%);
+  border-color:rgba(250,204,21,0.65);
+  box-shadow:0 24px 50px rgba(250,204,21,0.26);
+}
 .call-request-card[data-status="seguimiento"] { border-color:rgba(96,165,250,0.45); }
 .call-request-card[data-status="informacion"] { border-color:rgba(56,189,248,0.45); }
 .call-request-card[data-status="venta"] { border-color:rgba(34,197,94,0.5); box-shadow:0 18px 40px rgba(34,197,94,0.25); }
@@ -344,12 +349,26 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .call-request-card[data-urgency="scheduled"] { border-color:rgba(125,211,252,0.45); }
 .call-request-card header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
 .call-request-card header strong { font-size:15px; font-weight:700; color:#e2e8f0; }
+.call-request-card__status { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 .call-request-card__meta { display:flex; flex-wrap:wrap; gap:8px; font-size:12px; color:#94a3b8; margin-top:6px; }
 .call-request-card__meta span { display:inline-flex; align-items:center; gap:4px; }
 .call-request-card__note { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#cbd5f5; background:rgba(30,41,59,0.65); border:1px solid rgba(148,163,184,0.18); border-radius:12px; padding:10px 12px; }
 .call-request-card__note span { font-size:16px; }
 .call-request-card__note strong { color:#f1f5f9; font-weight:600; }
 .call-request-card__note--highlight { background:rgba(59,130,246,0.22); border-color:rgba(96,165,250,0.45); color:#dbeafe; }
+.call-request-card__badge {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:rgba(250,204,21,0.16);
+  color:#facc15;
+  border:1px solid rgba(250,204,21,0.45);
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
 .call-request-card__owner { font-size:12px; color:#cbd5f5; display:flex; align-items:center; gap:6px; }
 .call-request-card__timeline { font-size:12px; color:#94a3b8; }
 .call-request-card__actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
@@ -1033,6 +1052,56 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <div class="modal-actions">
         <button type="button" class="smallbtn" id="cancelCallRequest">Cancelar</button>
         <button type="submit" class="primary">Solicitar llamada</button>
+      </div>
+    </form>
+</div>
+</div>
+
+<div id="followUpModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3>Programar seguimiento</h3>
+    <p class="dim" id="followUpSummary"></p>
+    <form id="followUpForm" class="stacked">
+      <div class="form-grid">
+        <div>
+          <label class="label" for="followUpDate">Día de la llamada</label>
+          <input id="followUpDate" type="date" required />
+        </div>
+        <div>
+          <label class="label" for="followUpTime">Hora prevista</label>
+          <input id="followUpTime" type="time" required />
+        </div>
+      </div>
+      <div>
+        <label class="label" for="followUpNote">Comentario</label>
+        <textarea id="followUpNote" placeholder="Añade un recordatorio o contexto para la segunda llamada"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="smallbtn" id="cancelFollowUp">Cancelar</button>
+        <button type="submit" class="primary">Guardar recordatorio</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="callSaleModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3>Confirmar venta</h3>
+    <p class="dim" id="callSaleSummary"></p>
+    <form id="callSaleForm" class="stacked">
+      <div>
+        <label class="label" for="callSaleTariff">Tarifa contratada</label>
+        <select id="callSaleTariff" required></select>
+      </div>
+      <div>
+        <label class="label" for="callSaleCommercial">Asignar a comercial</label>
+        <select id="callSaleCommercial">
+          <option value="">Ningún comercial</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="smallbtn" id="cancelCallSale">Cancelar</button>
+        <button type="submit" class="primary">Registrar venta</button>
       </div>
     </form>
   </div>
@@ -1895,6 +1964,17 @@ let grid,
   callRequestSection,
   callRequestOverview,
   callRequestList,
+  followUpModal,
+  followUpForm,
+  followUpSummary,
+  followUpDateInput,
+  followUpTimeInput,
+  followUpNoteInput,
+  callSaleModal,
+  callSaleForm,
+  callSaleSummary,
+  callSaleTariffSelect,
+  callSaleCommercialSelect,
   adminSalesTotals,
   adminSalesStats,
   adminClientStats,
@@ -2078,6 +2158,8 @@ let pendingTariffScrollTarget = '';
 let lastRenderedTariffs = [];
 let notificationsOpen = false;
 let activeBudgetResponseId = '';
+let pendingFollowUpRequestId = '';
+let pendingSaleRequestId = '';
 
 function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   if (!domReady) return;
@@ -2338,6 +2420,12 @@ function userDisplayName(user) {
   if (combined) return combined;
   if (user.name) return user.name;
   return user.username || '';
+}
+
+function getCommercialUsers() {
+  return users
+    .filter(user => user && user.role === 'comercial')
+    .sort((a, b) => userDisplayName(a).localeCompare(userDisplayName(b), 'es'));
 }
 
 function updateAvailableUsersHint() {
@@ -3488,10 +3576,29 @@ function normaliseCallRequest(raw) {
     originUser: raw.originUser || '',
     originName: raw.originName || (raw.name || '').trim(),
     contactChannel: (raw.contactChannel || raw.contact || '').trim(),
-    followUpAt: (raw.followUpAt || raw.followUp || raw.follow_up || raw.followUpDate || '').toString().trim()
+    followUpAt: (raw.followUpAt || raw.followUp || raw.follow_up || raw.followUpDate || '').toString().trim(),
+    followUpNote: (raw.followUpNote || raw.follow_up_note || '').toString().trim(),
+    secondCall: Boolean(raw.secondCall),
+    saleTariffId: raw.saleTariffId || '',
+    saleTariffCodigo: raw.saleTariffCodigo || '',
+    saleTariffName: raw.saleTariffName || '',
+    saleAssignedTo: raw.saleAssignedTo || '',
+    saleAssignedName: raw.saleAssignedName || '',
+    saleLeadId: raw.saleLeadId || ''
   };
   if (entry.status !== 'seguimiento') {
     entry.followUpAt = entry.status === 'pendiente' ? '' : entry.followUpAt && entry.followUpAt.length < 80 ? entry.followUpAt : '';
+    if (entry.status !== 'pendiente') {
+      entry.followUpNote = '';
+    }
+  }
+  if (entry.status !== 'venta') {
+    entry.saleTariffId = '';
+    entry.saleTariffCodigo = '';
+    entry.saleTariffName = '';
+    entry.saleAssignedTo = '';
+    entry.saleAssignedName = '';
+    entry.saleLeadId = '';
   }
   return entry;
 }
@@ -5090,6 +5197,19 @@ function getCallRequestUrgency(entry) {
   return 'done';
 }
 
+function describeFollowUpAt(value) {
+  if (!value) return '';
+  const parsed = Date.parse(value);
+  if (!Number.isNaN(parsed)) {
+    try {
+      return new Date(parsed).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+    } catch (error) {
+      return value;
+    }
+  }
+  return value;
+}
+
 function renderCallRequestCard(entry) {
   if (!entry) return '';
   const status = CALL_REQUEST_STATUS_INFO[entry.status] ? entry.status : resolveCallRequestStatus(entry.status);
@@ -5097,6 +5217,7 @@ function renderCallRequestCard(entry) {
     entry.status = status;
   }
   const statusInfo = CALL_REQUEST_STATUS_INFO[entry.status] || CALL_REQUEST_STATUS_INFO.pendiente;
+  const isSecondCall = Boolean(entry.secondCall && entry.status === 'pendiente');
   const metaParts = [];
   if (entry.originName) metaParts.push(entry.originName);
   const channelLabel = formatCallRequestChannel(entry.contactChannel);
@@ -5108,14 +5229,30 @@ function renderCallRequestCard(entry) {
   const preferredTime = entry.time
     ? `<div class="call-request-card__note"><span>🕓</span><strong>Horario preferido:</strong> ${escapeHtml(entry.time)}</div>`
     : '';
-  const followUp = entry.status === 'seguimiento' && entry.followUpAt
-    ? `<div class="call-request-card__note call-request-card__note--highlight"><span>📅</span><strong>Seguimiento:</strong> ${escapeHtml(entry.followUpAt)}</div>`
+  const followUpLabel = entry.status === 'seguimiento' && entry.followUpAt
+    ? describeFollowUpAt(entry.followUpAt)
+    : '';
+  const followUp = followUpLabel
+    ? `<div class="call-request-card__note call-request-card__note--highlight"><span>📅</span><strong>Seguimiento:</strong> ${escapeHtml(followUpLabel)}</div>`
+    : '';
+  const followUpComment = entry.status === 'seguimiento' && entry.followUpNote
+    ? `<div class="call-request-card__note"><span>🗒️</span><strong>Comentario:</strong> ${escapeHtml(entry.followUpNote)}</div>`
+    : '';
+  const secondCallNote = isSecondCall && entry.followUpNote
+    ? `<div class="call-request-card__note"><span>🗒️</span><strong>Comentario seguimiento:</strong> ${escapeHtml(entry.followUpNote)}</div>`
     : '';
   const notes = entry.notes
     ? `<div class="call-request-card__note"><span>📝</span><strong>Notas:</strong> ${escapeHtml(entry.notes)}</div>`
     : '';
   const owner = entry.handledByName && entry.status !== 'pendiente'
     ? `<div class="call-request-card__owner">👤 ${escapeHtml(entry.handledByName)}</div>`
+    : '';
+  const saleTariffLabel = entry.saleTariffName || entry.saleTariffCodigo || '';
+  const saleTariffNote = entry.status === 'venta' && saleTariffLabel
+    ? `<div class="call-request-card__note"><span>📦</span><strong>Tarifa:</strong> ${escapeHtml(saleTariffLabel)}</div>`
+    : '';
+  const saleCommercialNote = entry.status === 'venta' && entry.saleAssignedName
+    ? `<div class="call-request-card__note"><span>🧑‍💼</span><strong>Comercial:</strong> ${escapeHtml(entry.saleAssignedName)}</div>`
     : '';
   let timelineLabel;
   if (entry.status === 'venta') {
@@ -5141,19 +5278,27 @@ function renderCallRequestCard(entry) {
     actions.push(`<button class="call-request-action" data-action="call-status" data-status="pendiente" data-id="${escapeHtml(entry.id)}"><span>🔄</span>Volver a pendiente</button>`);
   }
   actions.push(`<button class="call-request-action danger" data-action="call-delete" data-id="${escapeHtml(entry.id)}"><span>🗑️</span>Eliminar</button>`);
+  const statusBadges = [`<span class="status-pill" data-status="${entry.status}">${statusInfo.label}</span>`];
+  if (isSecondCall) {
+    statusBadges.push('<span class="call-request-card__badge">2ª llamada</span>');
+  }
   return `
-        <article class="call-request-card" data-status="${entry.status}" data-urgency="${getCallRequestUrgency(entry)}">
+        <article class="call-request-card" data-status="${entry.status}" data-urgency="${getCallRequestUrgency(entry)}" data-second-call="${isSecondCall ? 'true' : 'false'}">
           <header>
             <div>
               <strong>${escapeHtml(entry.name)}</strong>
               ${metaHtml}
             </div>
-            <span class="status-pill" data-status="${entry.status}">${statusInfo.label}</span>
+            <div class="call-request-card__status">${statusBadges.join('')}</div>
           </header>
           ${preferredTime}
           ${followUp}
+          ${followUpComment}
+          ${secondCallNote}
           ${notes}
           ${owner}
+          ${saleTariffNote}
+          ${saleCommercialNote}
           <div class="call-request-card__timeline">${escapeHtml(timelineLabel)}</div>
           <div class="call-request-card__actions">${actions.join('')}</div>
         </article>
@@ -5172,15 +5317,33 @@ function renderCallRequestInbox() {
     acc[key] = [];
     return acc;
   }, {});
+  let shouldPersist = false;
+  const nowTs = Date.now();
   callRequests.forEach(entry => {
     if (!entry) return;
-    const status = CALL_REQUEST_STATUS_INFO[entry.status] ? entry.status : resolveCallRequestStatus(entry.status);
+    let status = CALL_REQUEST_STATUS_INFO[entry.status] ? entry.status : resolveCallRequestStatus(entry.status);
     if (status !== entry.status) {
       entry.status = status;
+      shouldPersist = true;
     }
-    groups[status] = groups[status] || [];
-    groups[status].push(entry);
+    if (entry.status === 'seguimiento' && entry.followUpAt) {
+      const followUpTs = Date.parse(entry.followUpAt);
+      if (!Number.isNaN(followUpTs) && followUpTs <= nowTs) {
+        entry.status = 'pendiente';
+        entry.updatedAt = new Date().toISOString();
+        entry.resolvedAt = null;
+        entry.followUpAt = '';
+        entry.secondCall = true;
+        status = 'pendiente';
+        shouldPersist = true;
+      }
+    }
+    groups[entry.status] = groups[entry.status] || [];
+    groups[entry.status].push(entry);
   });
+  if (shouldPersist) {
+    saveCallRequests();
+  }
   const total = callRequests.length;
   callRequestSection.classList.toggle('hidden', total === 0);
   if (!total) {
@@ -5232,7 +5395,7 @@ function renderCallRequestInbox() {
     .join('');
 }
 
-function setCallRequestStatus(entry, status, { followUpAt = '' } = {}) {
+function setCallRequestStatus(entry, status, { followUpAt = '', followUpNote = '', saleInfo = null } = {}) {
   if (!entry) return;
   const target = CALL_REQUEST_STATUS_INFO[status] ? status : resolveCallRequestStatus(status);
   const now = new Date().toISOString();
@@ -5243,20 +5406,96 @@ function setCallRequestStatus(entry, status, { followUpAt = '' } = {}) {
     entry.handledByName = '';
     entry.resolvedAt = null;
     entry.followUpAt = '';
+    entry.followUpNote = typeof entry.followUpNote === 'string' ? entry.followUpNote : '';
+    entry.secondCall = entry.secondCall || false;
+    entry.saleTariffId = '';
+    entry.saleTariffCodigo = '';
+    entry.saleTariffName = '';
+    entry.saleAssignedTo = '';
+    entry.saleAssignedName = '';
+    entry.saleLeadId = '';
     return;
   }
   if (target === 'seguimiento') {
     const value = typeof followUpAt === 'string' ? followUpAt.trim() : '';
     entry.followUpAt = value;
+    entry.followUpNote = typeof followUpNote === 'string' ? followUpNote.trim() : '';
     entry.resolvedAt = null;
+    entry.secondCall = false;
   } else {
     entry.resolvedAt = now;
     entry.followUpAt = '';
+    entry.followUpNote = '';
+    if (target !== 'venta') {
+      entry.saleTariffId = '';
+      entry.saleTariffCodigo = '';
+      entry.saleTariffName = '';
+      entry.saleAssignedTo = '';
+      entry.saleAssignedName = '';
+      entry.saleLeadId = '';
+    }
   }
   if (currentUser) {
     entry.handledBy = currentUser.username;
     entry.handledByName = userDisplayName(currentUser);
   }
+  if (target === 'venta') {
+    entry.secondCall = false;
+    if (saleInfo) {
+      entry.saleTariffId = saleInfo.tariffId || '';
+      entry.saleTariffCodigo = saleInfo.tariffCodigo || '';
+      entry.saleTariffName = saleInfo.tariffName || '';
+      entry.saleAssignedTo = saleInfo.assignedTo || '';
+      entry.saleAssignedName = saleInfo.assignedName || '';
+      entry.saleLeadId = saleInfo.leadId || '';
+    }
+  }
+}
+
+function notifyCallRequestOrigin(entry, status, { followUpAt } = {}) {
+  if (!entry || !entry.originUser) return;
+  let message = '';
+  let type = 'info';
+  if (status === 'venta') {
+    message = '¡Tu solicitud de llamada se cerró con una venta! Gracias por confiar en nosotros.';
+    type = 'success';
+  } else if (status === 'informacion') {
+    message = 'El administrador ha respondido a tu solicitud de llamada con la información que necesitabas.';
+  } else if (status === 'seguimiento') {
+    const label = followUpAt ? describeFollowUpAt(followUpAt) : '';
+    message = label
+      ? `El administrador ha programado un seguimiento para tu solicitud de llamada (${label}).`
+      : 'El administrador ha programado un seguimiento para tu solicitud de llamada.';
+    type = 'warning';
+  } else if (status === 'pendiente') {
+    message = 'Tu solicitud de llamada vuelve a estar pendiente. Te contactaremos en breve.';
+  }
+  if (message) {
+    pushNotification({ user: entry.originUser, message, type, meta: { id: entry.id } });
+  }
+}
+
+function applyCallRequestStatus(entry, status, options = {}) {
+  if (!entry) return;
+  setCallRequestStatus(entry, status, options);
+  saveCallRequests();
+  renderCallRequestInbox();
+  const resolved = resolveCallRequestStatus(status);
+  if (entry.originUser) {
+    notifyCallRequestOrigin(entry, resolved, options);
+  }
+}
+
+function detachSaleLead(entry) {
+  if (!entry || !entry.saleLeadId) return false;
+  const index = leads.findIndex(lead => lead.id === entry.saleLeadId);
+  if (index === -1) {
+    entry.saleLeadId = '';
+    return false;
+  }
+  leads.splice(index, 1);
+  entry.saleLeadId = '';
+  return true;
 }
 
 function handleCallRequestAction(event) {
@@ -5270,46 +5509,40 @@ function handleCallRequestAction(event) {
   if (action === 'call-status') {
     const nextStatus = button.dataset.status;
     if (!nextStatus) return;
-    let followUpAt = entry.followUpAt || '';
-    if (resolveCallRequestStatus(nextStatus) === 'seguimiento') {
-      const promptValue = prompt('¿Cuándo deberías volver a llamar?', followUpAt);
-      if (promptValue === null) return;
-      followUpAt = promptValue.trim();
+    const resolved = resolveCallRequestStatus(nextStatus);
+    if (resolved === 'seguimiento') {
+      pendingFollowUpRequestId = entry.id;
+      openFollowUpModal(entry);
+      return;
     }
-    setCallRequestStatus(entry, nextStatus, { followUpAt });
-    saveCallRequests();
-    renderCallRequestInbox();
-    if (entry.originUser) {
-      const status = resolveCallRequestStatus(nextStatus);
-      let message = '';
-      let type = 'info';
-      if (status === 'venta') {
-        message = '¡Tu solicitud de llamada se cerró con una venta! Gracias por confiar en nosotros.';
-        type = 'success';
-      } else if (status === 'informacion') {
-        message = 'El administrador ha respondido a tu solicitud de llamada con la información que necesitabas.';
-      } else if (status === 'seguimiento') {
-        message = followUpAt
-          ? `El administrador ha programado un seguimiento para tu solicitud de llamada (${followUpAt}).`
-          : 'El administrador ha programado un seguimiento para tu solicitud de llamada.';
-        type = 'warning';
-      } else if (status === 'pendiente') {
-        message = 'Tu solicitud de llamada vuelve a estar pendiente. Te contactaremos en breve.';
-      }
-      if (message) {
-        pushNotification({ user: entry.originUser, message, type, meta: { id: entry.id } });
-      }
+    if (resolved === 'venta') {
+      pendingSaleRequestId = entry.id;
+      openCallSaleModal(entry);
+      return;
     }
+    let leadsUpdated = false;
+    if (entry.status === 'venta' && entry.saleLeadId) {
+      leadsUpdated = detachSaleLead(entry);
+      if (leadsUpdated) {
+        saveLeads();
+        renderLeadSummary();
+        renderAdminLeadList();
+        renderTeamPanel();
+        renderCommercialPanel();
+      }
+      entry.saleTariffId = '';
+      entry.saleTariffCodigo = '';
+      entry.saleTariffName = '';
+      entry.saleAssignedTo = '';
+      entry.saleAssignedName = '';
+    }
+    applyCallRequestStatus(entry, nextStatus);
     return;
   }
   if (action === 'call-complete') {
     if (resolveCallRequestStatus(entry.status) === 'venta') return;
-    setCallRequestStatus(entry, 'venta');
-    saveCallRequests();
-    renderCallRequestInbox();
-    if (entry.originUser) {
-      pushNotification({ user: entry.originUser, message: '¡Tu solicitud de llamada se cerró con una venta!', type: 'success', meta: { id: entry.id } });
-    }
+    pendingSaleRequestId = entry.id;
+    openCallSaleModal(entry);
     return;
   }
   if (action === 'call-delete') {
@@ -5317,12 +5550,280 @@ function handleCallRequestAction(event) {
     const index = callRequests.findIndex(item => item.id === id);
     if (index === -1) return;
     const [removed] = callRequests.splice(index, 1);
+    if (removed?.saleLeadId) {
+      const removedLead = detachSaleLead(removed);
+      if (removedLead) {
+        saveLeads();
+        renderLeadSummary();
+        renderAdminLeadList();
+        renderTeamPanel();
+        renderCommercialPanel();
+      }
+    }
     saveCallRequests();
     renderCallRequestInbox();
     if (removed?.originUser) {
       pushNotification({ user: removed.originUser, message: 'Tu solicitud de llamada se ha cerrado.', type: 'warning', meta: { id: removed.id } });
     }
   }
+}
+
+function formatInputDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatInputTime(date) {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+function splitDateTimeParts(value) {
+  if (!value) {
+    return { date: '', time: '' };
+  }
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) {
+    return { date: '', time: '' };
+  }
+  const date = new Date(parsed);
+  return {
+    date: formatInputDate(date),
+    time: formatInputTime(date)
+  };
+}
+
+function buildLocalIso(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return '';
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hour, minute] = timeStr.split(':').map(Number);
+  if ([year, month, day, hour, minute].some(value => !Number.isFinite(value))) return '';
+  const localDate = new Date(year, month - 1, day, hour, minute, 0, 0);
+  if (Number.isNaN(localDate.getTime())) return '';
+  return localDate.toISOString();
+}
+
+function openFollowUpModal(entry) {
+  if (!followUpModal || !followUpForm) return;
+  pendingFollowUpRequestId = entry?.id || '';
+  if (followUpSummary) {
+    followUpSummary.textContent = entry
+      ? `Programa la próxima llamada para ${entry.name}`
+      : 'Selecciona la fecha y hora para el seguimiento.';
+  }
+  const parts = splitDateTimeParts(entry?.followUpAt);
+  const now = new Date();
+  const future = new Date(now.getTime() + 60 * 60 * 1000);
+  const defaultDate = parts.date || formatInputDate(future);
+  const defaultTime = parts.time || formatInputTime(future);
+  if (followUpDateInput) {
+    followUpDateInput.min = formatInputDate(now);
+    followUpDateInput.value = defaultDate;
+  }
+  if (followUpTimeInput) {
+    followUpTimeInput.value = defaultTime;
+  }
+  if (followUpNoteInput) {
+    followUpNoteInput.value = entry?.followUpNote || '';
+  }
+  followUpModal.classList.remove('hidden');
+  followUpModal.setAttribute('aria-hidden', 'false');
+  setTimeout(() => followUpDateInput?.focus(), 0);
+}
+
+function closeFollowUpModal() {
+  pendingFollowUpRequestId = '';
+  if (!followUpModal) return;
+  followUpModal.classList.add('hidden');
+  followUpModal.setAttribute('aria-hidden', 'true');
+}
+
+function handleFollowUpSubmit(event) {
+  event.preventDefault();
+  if (!pendingFollowUpRequestId) {
+    closeFollowUpModal();
+    return;
+  }
+  const entry = callRequests.find(item => item.id === pendingFollowUpRequestId);
+  if (!entry) {
+    closeFollowUpModal();
+    return;
+  }
+  const dateValue = followUpDateInput?.value;
+  const timeValue = followUpTimeInput?.value;
+  if (!dateValue || !timeValue) {
+    alert('Selecciona la fecha y la hora para el seguimiento.');
+    return;
+  }
+  const followUpIso = buildLocalIso(dateValue, timeValue);
+  if (!followUpIso) {
+    alert('La fecha u hora seleccionadas no son válidas.');
+    return;
+  }
+  const note = followUpNoteInput?.value.trim() || '';
+  applyCallRequestStatus(entry, 'seguimiento', { followUpAt: followUpIso, followUpNote: note });
+  closeFollowUpModal();
+}
+
+function populateCallSaleOptions(entry) {
+  if (callSaleTariffSelect) {
+    const selectedTariff = entry?.saleTariffId || '';
+    const tariffOptions = tariffs
+      .slice()
+      .sort((a, b) => (a.nombre || a.codigo || '').localeCompare(b.nombre || b.codigo || '', 'es'))
+      .map(tariff => `<option value="${escapeHtml(tariff.id)}">${escapeHtml(tariff.nombre || tariff.codigo)} · ${escapeHtml(tariff.codigo)}</option>`)
+      .join('');
+    callSaleTariffSelect.innerHTML = '<option value="">Selecciona una tarifa</option>' + tariffOptions;
+    const hasSelectedTariff = selectedTariff && tariffs.some(t => t.id === selectedTariff);
+    if (selectedTariff && !hasSelectedTariff) {
+      const fallbackLabel = entry?.saleTariffName || entry?.saleTariffCodigo || selectedTariff;
+      callSaleTariffSelect.innerHTML += `<option value="${escapeHtml(selectedTariff)}">${escapeHtml(fallbackLabel)}</option>`;
+    }
+    if (selectedTariff) {
+      callSaleTariffSelect.value = selectedTariff;
+    } else {
+      callSaleTariffSelect.value = '';
+    }
+  }
+  if (callSaleCommercialSelect) {
+    const selectedCommercial = entry?.saleAssignedTo || '';
+    const commercialUsers = getCommercialUsers();
+    let options = commercialUsers
+      .map(user => `<option value="${escapeHtml(user.username)}">${escapeHtml(userDisplayName(user) || user.username)}</option>`)
+      .join('');
+    const hasSelectedCommercial = selectedCommercial
+      ? commercialUsers.some(user => user.username === selectedCommercial)
+      : false;
+    if (selectedCommercial && !hasSelectedCommercial) {
+      const fallbackLabel = entry?.saleAssignedName || selectedCommercial;
+      options += `<option value="${escapeHtml(selectedCommercial)}">${escapeHtml(fallbackLabel)}</option>`;
+    }
+    callSaleCommercialSelect.innerHTML = '<option value="">Ningún comercial</option>' + options;
+    if (selectedCommercial) {
+      callSaleCommercialSelect.value = selectedCommercial;
+    } else {
+      callSaleCommercialSelect.value = '';
+    }
+  }
+}
+
+function openCallSaleModal(entry) {
+  if (!callSaleModal || !callSaleForm) return;
+  pendingSaleRequestId = entry?.id || '';
+  if (callSaleSummary) {
+    callSaleSummary.textContent = entry
+      ? `Indica la tarifa contratada por ${entry.name} y asigna la venta.`
+      : 'Selecciona la tarifa y el comercial que gestionó la venta.';
+  }
+  populateCallSaleOptions(entry);
+  callSaleModal.classList.remove('hidden');
+  callSaleModal.setAttribute('aria-hidden', 'false');
+  setTimeout(() => callSaleTariffSelect?.focus(), 0);
+}
+
+function closeCallSaleModal() {
+  pendingSaleRequestId = '';
+  if (!callSaleModal) return;
+  callSaleModal.classList.add('hidden');
+  callSaleModal.setAttribute('aria-hidden', 'true');
+}
+
+function handleCallSaleSubmit(event) {
+  event.preventDefault();
+  if (!pendingSaleRequestId) {
+    closeCallSaleModal();
+    return;
+  }
+  const entry = callRequests.find(item => item.id === pendingSaleRequestId);
+  if (!entry) {
+    closeCallSaleModal();
+    return;
+  }
+  if (!callSaleTariffSelect) {
+    closeCallSaleModal();
+    return;
+  }
+  const tariffId = callSaleTariffSelect?.value;
+  const tariff = tariffs.find(t => t.id === tariffId);
+  if (!tariff) {
+    alert('Selecciona una tarifa válida para registrar la venta.');
+    return;
+  }
+  const commercialUsername = callSaleCommercialSelect?.value || '';
+  const commercialUser = commercialUsername ? getUserByUsername(commercialUsername) : null;
+  const assignedName = commercialUser ? userDisplayName(commercialUser) : (commercialUsername || '');
+  let leadId = entry.saleLeadId || '';
+  let leadsChanged = false;
+  if (commercialUsername) {
+    let lead = leadId ? leads.find(item => item.id === leadId) : null;
+    const now = new Date().toISOString();
+    const tariffCompany = tariff['compañia'] || tariff.compania || '';
+    if (lead) {
+      lead.tariffId = tariff.id;
+      lead.tariffCodigo = tariff.codigo;
+      lead.tariffNombre = tariff.nombre;
+      lead.tariffCompania = tariffCompany;
+      lead.commercial = commercialUsername;
+      lead.commercialName = assignedName;
+      lead.clientName = entry.name || '';
+      lead.contact = entry.phone || '';
+      lead.notes = entry.notes || '';
+      lead.status = 'vendido';
+      lead.updatedAt = now;
+      lead.soldAt = now;
+      lead.notified = false;
+      lead.origin = 'call-request';
+      lead.installed = false;
+      leadsChanged = true;
+    } else {
+      const newLead = {
+        id: createId('lead'),
+        tariffId: tariff.id,
+        tariffCodigo: tariff.codigo,
+        tariffNombre: tariff.nombre,
+        tariffCompania: tariffCompany,
+        commercial: commercialUsername,
+        commercialName: assignedName,
+        clientName: entry.name || '',
+        contact: entry.phone || '',
+        notes: entry.notes || '',
+        status: 'vendido',
+        createdAt: now,
+        updatedAt: now,
+        soldAt: now,
+        notified: false,
+        origin: 'call-request',
+        installed: false,
+        comments: []
+      };
+      leads.push(newLead);
+      leadId = newLead.id;
+      leadsChanged = true;
+    }
+  } else if (entry.saleLeadId) {
+    leadsChanged = detachSaleLead(entry);
+    leadId = '';
+  }
+  if (leadsChanged) {
+    saveLeads();
+    renderLeadSummary();
+    renderAdminLeadList();
+    renderTeamPanel();
+    renderCommercialPanel();
+  }
+  const saleInfo = {
+    tariffId: tariff.id,
+    tariffCodigo: tariff.codigo,
+    tariffName: tariff.nombre,
+    assignedTo: commercialUsername,
+    assignedName,
+    leadId
+  };
+  applyCallRequestStatus(entry, 'venta', { saleInfo });
+  closeCallSaleModal();
 }
 
 function ensureUserPointsStructure(user) {
@@ -8998,6 +9499,17 @@ document.addEventListener('DOMContentLoaded', () => {
   callRequestSection = $('#callRequestSection');
   callRequestOverview = $('#callRequestOverview');
   callRequestList = $('#callRequestList');
+  followUpModal = $('#followUpModal');
+  followUpForm = $('#followUpForm');
+  followUpSummary = $('#followUpSummary');
+  followUpDateInput = $('#followUpDate');
+  followUpTimeInput = $('#followUpTime');
+  followUpNoteInput = $('#followUpNote');
+  callSaleModal = $('#callSaleModal');
+  callSaleForm = $('#callSaleForm');
+  callSaleSummary = $('#callSaleSummary');
+  callSaleTariffSelect = $('#callSaleTariff');
+  callSaleCommercialSelect = $('#callSaleCommercial');
   rewardForm = $('#rewardForm');
   rewardFormInfo = $('#rewardFormInfo');
   rewardIdInput = $('#rewardId');
@@ -9262,6 +9774,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   callRequestList?.addEventListener('click', handleCallRequestAction);
+  followUpForm?.addEventListener('submit', handleFollowUpSubmit);
+  $('#cancelFollowUp')?.addEventListener('click', closeFollowUpModal);
+  followUpModal?.addEventListener('click', (event) => {
+    if (event.target === followUpModal) {
+      closeFollowUpModal();
+    }
+  });
+  callSaleForm?.addEventListener('submit', handleCallSaleSubmit);
+  $('#cancelCallSale')?.addEventListener('click', closeCallSaleModal);
+  callSaleModal?.addEventListener('click', (event) => {
+    if (event.target === callSaleModal) {
+      closeCallSaleModal();
+    }
+  });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
@@ -9273,6 +9799,8 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCustomBudgetModal();
       closeBudgetResponseModal();
       closeCallRequestModal();
+      closeFollowUpModal();
+      closeCallSaleModal();
       hideNotifications();
     }
   });
