@@ -5757,11 +5757,14 @@ function handleCallSaleSubmit(event) {
   const assignedName = commercialUser ? userDisplayName(commercialUser) : (commercialUsername || '');
   let leadId = entry.saleLeadId || '';
   let leadsChanged = false;
+  let updatedLead = null;
+  let wasInstalled = false;
   if (commercialUsername) {
     let lead = leadId ? leads.find(item => item.id === leadId) : null;
     const now = new Date().toISOString();
     const tariffCompany = tariff['compañia'] || tariff.compania || '';
     if (lead) {
+      wasInstalled = Boolean(lead.installed);
       lead.tariffId = tariff.id;
       lead.tariffCodigo = tariff.codigo;
       lead.tariffNombre = tariff.nombre;
@@ -5776,9 +5779,14 @@ function handleCallSaleSubmit(event) {
       lead.soldAt = now;
       lead.notified = false;
       lead.origin = 'call-request';
-      lead.installed = false;
+      if (!lead.pointsLedger || typeof lead.pointsLedger !== 'object') {
+        lead.pointsLedger = { base: 0, referral: 0, awardedAt: null };
+      }
+      lead.installed = true;
+      updatedLead = lead;
       leadsChanged = true;
     } else {
+      wasInstalled = false;
       const newLead = {
         id: createId('lead'),
         tariffId: tariff.id,
@@ -5796,16 +5804,26 @@ function handleCallSaleSubmit(event) {
         soldAt: now,
         notified: false,
         origin: 'call-request',
-        installed: false,
+        installed: true,
+        pointsLedger: { base: 0, referral: 0, awardedAt: null },
         comments: []
       };
       leads.push(newLead);
       leadId = newLead.id;
+      updatedLead = newLead;
       leadsChanged = true;
     }
   } else if (entry.saleLeadId) {
     leadsChanged = detachSaleLead(entry);
     leadId = '';
+  }
+  if (updatedLead) {
+    if (!updatedLead.pointsLedger || typeof updatedLead.pointsLedger !== 'object') {
+      updatedLead.pointsLedger = { base: 0, referral: 0, awardedAt: null };
+    }
+    if (!wasInstalled) {
+      grantInstallationPoints(updatedLead);
+    }
   }
   if (leadsChanged) {
     saveLeads();
