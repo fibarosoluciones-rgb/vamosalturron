@@ -324,7 +324,20 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .upload-dropzone.has-image img { display:block; width:100%; height:100%; object-fit:cover; border-radius:12px; }
 .upload-actions { margin-top:8px; display:flex; justify-content:flex-end; }
 .reward-card .title { font-size:17px; font-weight:700; }
-.reward-card .cost { font-size:14px; color:#fbbf24; font-weight:600; }
+.reward-card .cost { font-size:14px; color:#fbbf24; font-weight:600; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.reward-card .cost.discounted { flex-direction:row; flex-wrap:wrap; }
+.reward-card .original-cost { text-decoration:line-through; opacity:0.6; font-size:13px; }
+.reward-card .discounted-price { font-size:16px; font-weight:700; color:#facc15; }
+.reward-card .discount-pill { display:inline-flex; align-items:center; justify-content:center; padding:2px 10px; border-radius:999px; background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.45); color:#fde68a; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.reward-card.discounted { border-color:rgba(250,204,21,0.55); box-shadow:0 24px 60px rgba(250,204,21,0.25); animation:pulseGlow 2.8s ease-in-out infinite alternate; }
+.reward-card.discounted::before { content:""; position:absolute; inset:-30% -30% auto -30%; height:140px; background:radial-gradient(circle at center, rgba(250,204,21,0.35), transparent 70%); pointer-events:none; filter:blur(2px); }
+.discount-timer { font-size:12px; color:#fde68a; display:flex; align-items:center; gap:6px; font-weight:600; }
+.discount-info { display:flex; flex-direction:column; gap:4px; font-size:12px; color:#e2e8f0; }
+.discount-info.expired { color:#fca5a5; }
+@keyframes pulseGlow {
+  from { box-shadow:0 18px 48px rgba(250,204,21,0.15); }
+  to { box-shadow:0 24px 70px rgba(250,204,21,0.35); }
+}
 .reward-card .validity { font-size:12px; color:#a8b3c7; }
 .reward-card .requests { font-size:12px; color:#a8b3c7; }
 .reward-card .actions { margin-top:auto; display:flex; gap:10px; flex-wrap:wrap; }
@@ -1518,6 +1531,16 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
             <input id="rewardPoints" type="number" min="1" step="1" required />
           </div>
           <div>
+            <label class="label" for="rewardDiscountPercent">Descuento temporal (%)</label>
+            <input id="rewardDiscountPercent" type="number" min="0" max="99" step="0.5" placeholder="Ej. 15" />
+            <p class="dim" style="margin-top:6px;">Introduce 0 para desactivar el descuento.</p>
+          </div>
+          <div>
+            <label class="label" for="rewardDiscountUntil">Descuento activo hasta</label>
+            <input id="rewardDiscountUntil" type="datetime-local" />
+            <p class="dim" style="margin-top:6px;">Tras esta fecha y hora el precio volverá automáticamente al original.</p>
+          </div>
+          <div>
             <label class="label" for="rewardUnits">Unidades en stock</label>
             <input id="rewardUnits" type="number" min="0" step="1" placeholder="Ej. 100" />
             <p class="dim" style="margin-top:6px;">Deja vacío si no hay límite de unidades.</p>
@@ -2290,6 +2313,8 @@ let grid,
   rewardIdInput,
   rewardTitleInput,
   rewardPointsInput,
+  rewardDiscountPercentInput,
+  rewardDiscountUntilInput,
   rewardUnitsInput,
   rewardValidFromInput,
   rewardValidUntilInput,
@@ -2447,6 +2472,7 @@ let customBudgets = [];
 let messageThreads = [];
 let messageOffers = [];
 let analyticsEvents = [];
+let discountCountdownTimer = null;
 let messageTabButtons = [];
 let messageTabPanels = {};
 let messageCenterActiveTab = 'messages';
@@ -4732,6 +4758,21 @@ function normaliseReward(raw) {
       totalUnits = parsedUnits;
     }
   }
+  const rawDiscountPercent = Number.parseFloat(raw.discountPercent ?? raw.discount_percent ?? raw.discount ?? raw.descuento ?? 0);
+  const discountPercent = Number.isFinite(rawDiscountPercent) && rawDiscountPercent > 0
+    ? Math.min(99, Math.max(0, rawDiscountPercent))
+    : 0;
+  let discountUntil = '';
+  const rawDiscountUntil = raw.discountUntil || raw.discount_until || raw.discountExpiresAt || raw.descuentoHasta || '';
+  if (rawDiscountUntil) {
+    const parsedDiscountUntil = new Date(rawDiscountUntil);
+    if (!Number.isNaN(parsedDiscountUntil.getTime())) {
+      discountUntil = parsedDiscountUntil.toISOString();
+    }
+  }
+  if (discountPercent <= 0) {
+    discountUntil = '';
+  }
   const reward = {
     id: raw.id || createId('reward'),
     title,
@@ -4743,7 +4784,9 @@ function normaliseReward(raw) {
     validUntil: raw.validUntil || raw.valid_until || '',
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.updated_at || new Date().toISOString(),
-    archived: Boolean(raw.archived)
+    archived: Boolean(raw.archived),
+    discountPercent,
+    discountUntil
   };
   const requests = Array.isArray(raw.requests)
     ? raw.requests.map(normaliseRewardRequest).filter(Boolean)
@@ -7589,6 +7632,118 @@ function formatPointsDelta(value) {
   return formatPoints(0);
 }
 
+function toDateTimeLocalInputValue(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function fromDateTimeLocalInputValue(value) {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString();
+}
+
+function formatDiscountPercent(value) {
+  if (!Number.isFinite(value)) return '0%';
+  const display = Number(value);
+  const useDecimals = Math.abs(display % 1) > 0;
+  return `${display.toLocaleString('es-ES', {
+    minimumFractionDigits: useDecimals ? 1 : 0,
+    maximumFractionDigits: 2
+  })}%`;
+}
+
+function getRewardDiscountState(reward, referenceDate = new Date()) {
+  const baseCost = reward?.pointsCost ? Math.max(0, Math.round(Number(reward.pointsCost) || 0)) : 0;
+  const percentRaw = Number.parseFloat(reward?.discountPercent ?? 0);
+  const hasPercent = Number.isFinite(percentRaw) && percentRaw > 0;
+  const clampedPercent = hasPercent ? Math.min(99, Math.max(0, percentRaw)) : 0;
+  const expiresAtRaw = reward?.discountUntil || '';
+  const expiresDate = expiresAtRaw ? new Date(expiresAtRaw) : null;
+  const expiresValid = expiresDate && !Number.isNaN(expiresDate.getTime());
+  const scheduled = clampedPercent > 0 && expiresValid;
+  if (!scheduled) {
+    return {
+      active: false,
+      percent: clampedPercent,
+      finalCost: baseCost,
+      expiresAt: expiresValid ? expiresDate.toISOString() : '',
+      remainingMs: 0,
+      scheduled: Boolean(clampedPercent) && Boolean(reward?.discountUntil),
+      expired: false
+    };
+  }
+  const now = referenceDate instanceof Date ? referenceDate.getTime() : Date.now();
+  const remainingMs = expiresDate.getTime() - now;
+  if (remainingMs <= 0) {
+    return {
+      active: false,
+      percent: clampedPercent,
+      finalCost: baseCost,
+      expiresAt: expiresDate.toISOString(),
+      remainingMs: 0,
+      scheduled: true,
+      expired: true
+    };
+  }
+  const finalCost = Math.max(1, Math.round(baseCost * (1 - clampedPercent / 100)));
+  return {
+    active: true,
+    percent: clampedPercent,
+    finalCost,
+    expiresAt: expiresDate.toISOString(),
+    remainingMs,
+    scheduled: true,
+    expired: false
+  };
+}
+
+function formatDiscountCountdown(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `Termina en ${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+}
+
+function updateDiscountCountdowns() {
+  const elements = document.querySelectorAll('[data-discount-expiration]');
+  if (!elements.length) return;
+  const now = Date.now();
+  let requiresRefresh = false;
+  elements.forEach((element) => {
+    const iso = element.getAttribute('data-discount-expiration');
+    if (!iso) return;
+    const target = Date.parse(iso);
+    if (Number.isNaN(target)) return;
+    const remaining = target - now;
+    if (remaining <= 0) {
+      element.textContent = 'Descuento finalizado';
+      requiresRefresh = true;
+    } else {
+      element.textContent = formatDiscountCountdown(remaining);
+    }
+  });
+  if (requiresRefresh) {
+    renderAdminRewards();
+    renderClientPlan();
+  }
+}
+
+function ensureDiscountCountdownTicker() {
+  if (discountCountdownTimer) return;
+  discountCountdownTimer = setInterval(updateDiscountCountdowns, 1000);
+}
+
 function isRewardActive(reward, referenceDate = todayISO()) {
   if (!reward || reward.archived) return false;
   if (reward.validFrom && reward.validFrom > referenceDate) return false;
@@ -7811,14 +7966,26 @@ function renderClientRewards(record) {
     return;
   }
   const balance = record.pointsBalance || 0;
+  const now = new Date();
   clientRewardsContainer.innerHTML = active
-    .sort((a, b) => a.pointsCost - b.pointsCost)
+    .slice()
+    .sort((a, b) => {
+      const discountA = getRewardDiscountState(a, now);
+      const discountB = getRewardDiscountState(b, now);
+      if (discountA.active !== discountB.active) return discountA.active ? -1 : 1;
+      const costA = discountA.active ? discountA.finalCost : a.pointsCost;
+      const costB = discountB.active ? discountB.finalCost : b.pointsCost;
+      if (costA !== costB) return costA - costB;
+      return a.pointsCost - b.pointsCost;
+    })
     .map(reward => {
       const userRequests = reward.requests.filter(entry => entry.username === record.username);
       const pending = userRequests.filter(entry => entry.status !== 'entregado');
       const delivered = userRequests.filter(entry => entry.status === 'entregado');
       const hasPending = pending.length > 0;
-      const unlocked = balance >= reward.pointsCost;
+      const discount = getRewardDiscountState(reward, now);
+      const effectiveCost = discount.active ? discount.finalCost : reward.pointsCost;
+      const unlocked = balance >= effectiveCost;
       const imageMarkup = reward.imageUrl
         ? `<figure class="reward-thumb"><img src="${escapeHtml(reward.imageUrl)}" alt="Imagen de ${escapeHtml(reward.title)}" loading="lazy" /></figure>`
         : '<figure class="reward-thumb placeholder"><span>Sin imagen</span></figure>';
@@ -7829,6 +7996,9 @@ function renderClientRewards(record) {
       const stockBadge = formatRewardStockBadge(reward);
       const cardClasses = ['reward-card'];
       const outOfStock = stockBadge.outOfStock;
+      if (discount.active) {
+        cardClasses.push('discounted');
+      }
       if (unlocked && !outOfStock) {
         cardClasses.push('unlocked');
       } else {
@@ -7838,15 +8008,21 @@ function renderClientRewards(record) {
         cardClasses.push('out-of-stock');
       }
       const cardClass = cardClasses.join(' ');
-      let actionButton = `<button type="button" class="smallbtn" disabled>Necesitas ${reward.pointsCost} pts</button>`;
+      let actionButton = `<button type="button" class="smallbtn" disabled>Necesitas ${formatPoints(effectiveCost)}</button>`;
       if (outOfStock) {
         actionButton = '<button type="button" class="smallbtn" disabled>Sin stock</button>';
       } else if (unlocked && !hasPending) {
-        actionButton = `<button type="button" class="primary" data-action="redeem-reward" data-id="${reward.id}">Canjear por ${reward.pointsCost} pts</button>`;
+        actionButton = `<button type="button" class="primary" data-action="redeem-reward" data-id="${reward.id}">Canjear por ${formatPoints(effectiveCost)}</button>`;
       } else if (hasPending) {
         actionButton = '<button type="button" class="smallbtn" disabled>Solicitud en curso</button>';
       }
       const description = reward.description ? `<p class="dim">${reward.description}</p>` : '';
+      const costMarkup = discount.active
+        ? `<div class="cost discounted"><span class="original-cost">${formatPoints(reward.pointsCost)}</span><span class="discounted-price">${formatPoints(effectiveCost)}</span><span class="discount-pill">-${formatDiscountPercent(discount.percent)}</span></div>`
+        : `<div class="cost">${formatPoints(effectiveCost)}</div>`;
+      const countdownMarkup = discount.active
+        ? `<div class="discount-timer" data-discount-expiration="${discount.expiresAt}">${formatDiscountCountdown(discount.remainingMs)}</div>`
+        : '';
       const statusPieces = [];
       if (stockBadge.markup && (stockBadge.outOfStock || stockBadge.lowStock)) {
         statusPieces.push(stockBadge.markup);
@@ -7859,7 +8035,8 @@ function renderClientRewards(record) {
         <div class="${cardClass}" data-id="${reward.id}">
           ${imageMarkup}
           <div class="title">${reward.title}</div>
-          <div class="cost">${formatPoints(reward.pointsCost)}</div>
+          ${costMarkup}
+          ${countdownMarkup}
           <div class="validity">${formatRewardValidity(reward)}</div>
           ${description}
           ${statusMarkup}
@@ -7868,6 +8045,7 @@ function renderClientRewards(record) {
       `;
     })
     .join('');
+  updateDiscountCountdowns();
 }
 
 function renderClientPointsHistory(record) {
@@ -7906,12 +8084,14 @@ function handleRewardRedemption(rewardId) {
   const record = getUserByUsername(currentUser.username);
   if (!record) return;
   ensureUserPointsStructure(record);
+  const discount = getRewardDiscountState(reward, new Date());
+  const redemptionCost = discount.active ? discount.finalCost : reward.pointsCost;
   const stockState = getRewardStockState(reward);
   if (stockState?.outOfStock) {
     showCommercialFlash('Esta recompensa está sin stock por el momento.');
     return;
   }
-  if (record.pointsBalance < reward.pointsCost) {
+  if (record.pointsBalance < redemptionCost) {
     showCommercialFlash('Todavía no tienes puntos suficientes para esta recompensa.');
     return;
   }
@@ -7920,12 +8100,12 @@ function handleRewardRedemption(rewardId) {
     showCommercialFlash('Ya tienes una solicitud pendiente de esta recompensa.');
     return;
   }
-  recordPointsMovement(record, -reward.pointsCost, `Canje de recompensa: ${reward.title}`, { relatedId: reward.id, type: 'spent' });
+  recordPointsMovement(record, -redemptionCost, `Canje de recompensa: ${reward.title}`, { relatedId: reward.id, type: 'spent' });
   reward.requests.push({
     id: createId('rewardreq'),
     username: record.username,
     status: 'pendiente',
-    points: reward.pointsCost,
+    points: redemptionCost,
     requestedAt: new Date().toISOString(),
     deliveredAt: null
   });
@@ -7945,11 +8125,22 @@ function renderAdminRewards() {
     return;
   }
   const today = todayISO();
+  const now = new Date();
   rewardList.innerHTML = rewards
     .slice()
-    .sort((a, b) => a.pointsCost - b.pointsCost)
+    .sort((a, b) => {
+      const discountA = getRewardDiscountState(a, now);
+      const discountB = getRewardDiscountState(b, now);
+      if (discountA.active !== discountB.active) return discountA.active ? -1 : 1;
+      const costA = discountA.active ? discountA.finalCost : a.pointsCost;
+      const costB = discountB.active ? discountB.finalCost : b.pointsCost;
+      if (costA !== costB) return costA - costB;
+      return a.pointsCost - b.pointsCost;
+    })
     .map(reward => {
       const active = isRewardActive(reward, today);
+      const discount = getRewardDiscountState(reward, now);
+      const effectiveCost = discount.active ? discount.finalCost : reward.pointsCost;
       const total = reward.requests.length;
       const pending = reward.requests.filter(entry => entry.status !== 'entregado').length;
       const stockBadge = formatRewardStockBadge(reward);
@@ -8000,6 +8191,9 @@ function renderAdminRewards() {
       if (outOfStock) {
         cardClasses.push('out-of-stock');
       }
+      if (discount.active) {
+        cardClasses.push('discounted');
+      }
       const cardClass = cardClasses.join(' ');
       const statusPieces = [];
       if (stockBadge.markup) statusPieces.push(stockBadge.markup);
@@ -8007,11 +8201,20 @@ function renderAdminRewards() {
       const statusMarkup = statusPieces.length
         ? `<div class="reward-status">${statusPieces.join('')}</div>`
         : '';
+      const costMarkup = discount.active
+        ? `<div class="cost discounted"><span class="original-cost">${formatPoints(reward.pointsCost)}</span><span class="discounted-price">${formatPoints(effectiveCost)}</span><span class="discount-pill">-${formatDiscountPercent(discount.percent)}</span></div>`
+        : `<div class="cost">${formatPoints(reward.pointsCost)}</div>`;
+      const discountInfo = discount.active
+        ? `<div class="discount-info"><span>Precio temporal: ${formatPoints(effectiveCost)}</span><span class="discount-timer" data-discount-expiration="${discount.expiresAt}">${formatDiscountCountdown(discount.remainingMs)}</span></div>`
+        : discount.expired
+          ? `<div class="discount-info expired">Descuento caducado el ${formatDateTime(discount.expiresAt)}</div>`
+          : '';
       return `
         <div class="${cardClass}" data-id="${reward.id}">
           ${imageMarkup}
           <div class="title">${reward.title}</div>
-          <div class="cost">${formatPoints(reward.pointsCost)}</div>
+          ${costMarkup}
+          ${discountInfo}
           <div class="validity">${formatRewardValidity(reward)}</div>
           ${description}
           ${statusMarkup}
@@ -8024,6 +8227,7 @@ function renderAdminRewards() {
       `;
     })
     .join('');
+  updateDiscountCountdowns();
 }
 
 function rewardImageValueIsPreviewable(value) {
@@ -8150,6 +8354,8 @@ function setupRewardImageUploader() {
 function resetRewardForm() {
   rewardForm?.reset();
   if (rewardIdInput) rewardIdInput.value = '';
+  if (rewardDiscountPercentInput) rewardDiscountPercentInput.value = '';
+  if (rewardDiscountUntilInput) rewardDiscountUntilInput.value = '';
   if (rewardUnitsInput) rewardUnitsInput.value = '';
   if (rewardFormInfo) rewardFormInfo.textContent = '';
   resetRewardImageField();
@@ -8160,6 +8366,8 @@ function fillRewardForm(reward) {
   if (rewardIdInput) rewardIdInput.value = reward.id;
   if (rewardTitleInput) rewardTitleInput.value = reward.title;
   if (rewardPointsInput) rewardPointsInput.value = reward.pointsCost;
+  if (rewardDiscountPercentInput) rewardDiscountPercentInput.value = reward.discountPercent ? String(reward.discountPercent) : '0';
+  if (rewardDiscountUntilInput) rewardDiscountUntilInput.value = toDateTimeLocalInputValue(reward.discountUntil || '');
   if (rewardUnitsInput) rewardUnitsInput.value = reward.totalUnits ?? '';
   if (rewardValidFromInput) rewardValidFromInput.value = reward.validFrom || '';
   if (rewardValidUntilInput) rewardValidUntilInput.value = reward.validUntil || '';
@@ -8173,9 +8381,28 @@ function handleRewardFormSubmit(event) {
   if (!rewardForm) return;
   const title = rewardTitleInput?.value.trim();
   const pointsValue = Number(rewardPointsInput?.value || 0);
+  const discountPercentRaw = Number.parseFloat(rewardDiscountPercentInput?.value ?? '0');
+  const discountPercent = Number.isFinite(discountPercentRaw) ? Math.min(99, Math.max(0, discountPercentRaw)) : 0;
+  const discountUntilRaw = rewardDiscountUntilInput?.value || '';
+  let discountUntil = '';
   const unitsRaw = (rewardUnitsInput?.value ?? '').trim();
   let totalUnits = null;
   const imageUrl = rewardImageInput?.value.trim() || '';
+  if (discountPercent > 0) {
+    if (!discountUntilRaw) {
+      if (rewardFormInfo) rewardFormInfo.textContent = 'Indica cuándo termina el descuento temporal.';
+      return;
+    }
+    discountUntil = fromDateTimeLocalInputValue(discountUntilRaw);
+    if (!discountUntil) {
+      if (rewardFormInfo) rewardFormInfo.textContent = 'Introduce una fecha y hora de finalización válidas.';
+      return;
+    }
+    if (Date.parse(discountUntil) <= Date.now()) {
+      if (rewardFormInfo) rewardFormInfo.textContent = 'La fecha de fin del descuento debe ser futura.';
+      return;
+    }
+  }
   if (unitsRaw) {
     const parsedUnits = Number.parseInt(unitsRaw, 10);
     if (!Number.isFinite(parsedUnits) || parsedUnits < 0) {
@@ -8211,6 +8438,8 @@ function handleRewardFormSubmit(event) {
     existing.validUntil = rewardValidUntilInput?.value || '';
     existing.imageUrl = imageUrl;
     existing.totalUnits = totalUnits;
+    existing.discountPercent = discountPercent;
+    existing.discountUntil = discountPercent > 0 ? discountUntil : '';
     existing.updatedAt = now;
     if (rewardFormInfo) rewardFormInfo.textContent = 'Recompensa actualizada correctamente.';
   } else {
@@ -8226,6 +8455,8 @@ function handleRewardFormSubmit(event) {
       createdAt: now,
       updatedAt: now,
       archived: false,
+      discountPercent,
+      discountUntil: discountPercent > 0 ? discountUntil : '',
       requests: []
     };
     rewards.push(reward);
@@ -11464,6 +11695,8 @@ document.addEventListener('DOMContentLoaded', () => {
   rewardIdInput = $('#rewardId');
   rewardTitleInput = $('#rewardTitle');
   rewardPointsInput = $('#rewardPoints');
+  rewardDiscountPercentInput = $('#rewardDiscountPercent');
+  rewardDiscountUntilInput = $('#rewardDiscountUntil');
   rewardUnitsInput = $('#rewardUnits');
   rewardValidFromInput = $('#rewardValidFrom');
   rewardValidUntilInput = $('#rewardValidUntil');
@@ -11634,6 +11867,8 @@ document.addEventListener('DOMContentLoaded', () => {
   populateAiLinesOptions();
   renderEverythingAfterDataChange({ refreshAi: Boolean(aiLastQuery) });
   renderBannerForm();
+  ensureDiscountCountdownTicker();
+  updateDiscountCountdowns();
   $('#imprimir')?.addEventListener('click', () => window.print());
 
   loginForm?.addEventListener('submit', handleLoginSubmit);
