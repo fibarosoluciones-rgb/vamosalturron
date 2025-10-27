@@ -1903,10 +1903,13 @@ const CALL_REQUEST_STATUS_ORDER = ['pendiente', 'seguimiento', 'informacion', 'v
 
 const REWARD_LOW_STOCK_THRESHOLD = 15;
 
+const DEFAULT_ADMIN_USERNAME = 'admin';
+const DEFAULT_ADMIN_PASSWORD = 'admin123';
+
 const DEFAULT_USERS = [
   {
-    username: 'admin',
-    password: 'admin123',
+    username: DEFAULT_ADMIN_USERNAME,
+    password: DEFAULT_ADMIN_PASSWORD,
     role: 'admin',
     firstName: 'Alicia',
     lastName: 'Admin',
@@ -2105,10 +2108,14 @@ function applyRemoteData(data) {
     const list = remoteState.data.users.map(normaliseUser).filter(Boolean);
     cleanManagedUsers(list);
     users = list;
+    const adminEnsured = ensureDefaultAdminUser({ persist: false });
     try {
       localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
     } catch (error) {
       console.warn('No se pudieron sincronizar usuarios en localStorage', error);
+    }
+    if (adminEnsured) {
+      saveUsers();
     }
     if (currentUser) {
       const updated = getUserByUsername(currentUser.username);
@@ -3488,6 +3495,44 @@ function saveUsers() {
   } catch (error) {
     console.warn('No se pudieron guardar los usuarios', error);
   }
+}
+
+function ensureDefaultAdminUser({ persist = true } = {}) {
+  const template = DEFAULT_USERS.find(user => user.username === DEFAULT_ADMIN_USERNAME);
+  if (!template) return false;
+  const adminTemplate = normaliseUser({ ...template });
+  if (!adminTemplate) return false;
+  const existing = getUserByUsername(DEFAULT_ADMIN_USERNAME);
+  let changed = false;
+  if (!existing) {
+    users.push(adminTemplate);
+    changed = true;
+  } else {
+    if (existing.role !== 'admin') {
+      existing.role = 'admin';
+      changed = true;
+    }
+    if (existing.password !== DEFAULT_ADMIN_PASSWORD) {
+      existing.password = DEFAULT_ADMIN_PASSWORD;
+      changed = true;
+    }
+    if (!existing.firstName && adminTemplate.firstName) {
+      existing.firstName = adminTemplate.firstName;
+      changed = true;
+    }
+    if (!existing.lastName && adminTemplate.lastName) {
+      existing.lastName = adminTemplate.lastName;
+      changed = true;
+    }
+    if (!existing.email && adminTemplate.email) {
+      existing.email = adminTemplate.email;
+      changed = true;
+    }
+  }
+  if (changed && persist) {
+    saveUsers();
+  }
+  return changed;
 }
 
 function getUserByUsername(username) {
@@ -8610,6 +8655,7 @@ function handleStorageEvent(event) {
   }
   if (event.key === STORAGE_KEYS.users) {
     users = loadUsersFromStorage();
+    ensureDefaultAdminUser();
     updateAvailableUsersHint();
     renderUserList();
     if (currentUser) {
@@ -11851,6 +11897,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupRewardImageUploader();
 
   users = loadUsersFromStorage();
+  ensureDefaultAdminUser();
   tariffs = loadTariffsFromStorage();
   leads = loadLeadsFromStorage();
   rewards = loadRewardsFromStorage();
