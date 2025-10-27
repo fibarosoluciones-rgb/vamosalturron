@@ -1538,8 +1538,20 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
             <textarea id="bannerDescription" placeholder="Mensaje adicional para el banner"></textarea>
           </div>
           <div class="full">
-            <label class="label" for="bannerImage">Imagen (URL)</label>
-            <input id="bannerImage" type="url" placeholder="https://..." />
+            <label class="label" for="bannerImage">Imagen del banner</label>
+            <input id="bannerImage" type="hidden" />
+            <div id="bannerImageDropzone" class="upload-dropzone" tabindex="0">
+              <input id="bannerImageFile" type="file" accept="image/*" />
+              <div class="upload-placeholder">
+                <strong>Arrastra una imagen aquí</strong>
+                <span>Puedes soltarla directamente desde tu equipo o hacer clic para elegirla desde tu galería.</span>
+              </div>
+              <img id="bannerImagePreview" class="hidden" alt="Vista previa de la imagen del banner" />
+            </div>
+            <div class="upload-actions hidden" id="bannerImageActions">
+              <button type="button" class="smallbtn hidden" id="bannerImageClear">Quitar imagen</button>
+            </div>
+            <p class="dim" style="margin-top:6px;">Formatos JPG, PNG o GIF hasta 2&nbsp;MB. Puedes arrastrar la imagen o elegirla desde tu galería.</p>
             <p class="small-hint">La imagen se recorta automáticamente para ajustarse al espacio disponible.</p>
           </div>
           <div>
@@ -1692,6 +1704,8 @@ const DEFAULT_BANNER_CONFIG = Object.freeze({
   version: 0,
   updatedAt: ''
 });
+
+const BANNER_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
 
 const CALL_REQUEST_STATUS_INFO = {
   pendiente: {
@@ -2236,6 +2250,11 @@ let grid,
   bannerTitleInput,
   bannerDescriptionInput,
   bannerImageInput,
+  bannerImageDropzone,
+  bannerImagePreview,
+  bannerImageActions,
+  bannerImageClearButton,
+  bannerImageFileInput,
   bannerLinkInput,
   bannerWhatsappInput,
   bannerResetButton,
@@ -2315,6 +2334,7 @@ function renderBannerForm() {
   if (bannerImageInput) bannerImageInput.value = bannerConfig?.image || '';
   if (bannerLinkInput) bannerLinkInput.value = bannerConfig?.link || '';
   if (bannerWhatsappInput) bannerWhatsappInput.value = bannerConfig?.whatsapp || '';
+  refreshBannerImagePreview(bannerConfig?.image || '');
 }
 
 function renderBannerPreview() {
@@ -2392,6 +2412,138 @@ function renderBannerPreview() {
   }
   card.appendChild(body);
   bannerPreviewContainer.appendChild(card);
+}
+
+function bannerImageValueIsPreviewable(value) {
+  return /^https?:\/\//i.test(value) || /^data:image\//i.test(value);
+}
+
+function refreshBannerImagePreview(value) {
+  if (!bannerImageDropzone) return;
+  const placeholder = bannerImageDropzone.querySelector('.upload-placeholder');
+  const previewValue = value && bannerImageValueIsPreviewable(value) ? value : '';
+  if (previewValue) {
+    bannerImageDropzone.classList.add('has-image');
+    if (bannerImagePreview) {
+      bannerImagePreview.src = previewValue;
+      bannerImagePreview.classList.remove('hidden');
+    }
+    placeholder?.classList.add('hidden');
+    bannerImageActions?.classList.remove('hidden');
+    bannerImageClearButton?.classList.remove('hidden');
+  } else {
+    bannerImageDropzone.classList.remove('has-image');
+    if (bannerImagePreview) {
+      bannerImagePreview.src = '';
+      bannerImagePreview.classList.add('hidden');
+    }
+    placeholder?.classList.remove('hidden');
+    bannerImageActions?.classList.add('hidden');
+    bannerImageClearButton?.classList.add('hidden');
+  }
+}
+
+function setBannerImageValue(value, { message = '' } = {}) {
+  if (bannerImageInput) {
+    bannerImageInput.value = value || '';
+  }
+  refreshBannerImagePreview(value || '');
+  if (bannerImageFileInput) {
+    bannerImageFileInput.value = '';
+  }
+  if (message && bannerFormInfo) {
+    bannerFormInfo.textContent = message;
+  }
+}
+
+function handleBannerImageText(text) {
+  if (!text) return false;
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (!bannerImageValueIsPreviewable(trimmed)) return false;
+  setBannerImageValue(trimmed, { message: 'Imagen asignada desde un enlace.' });
+  return true;
+}
+
+function handleBannerImageFile(file) {
+  if (!file) return;
+  if (!file.type?.startsWith('image/')) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'Solo se permiten archivos de imagen.';
+    return;
+  }
+  if (file.size > BANNER_IMAGE_MAX_BYTES) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'La imagen supera el tamaño máximo de 2 MB.';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = reader.result;
+    if (typeof result === 'string') {
+      setBannerImageValue(result, { message: `Imagen cargada: ${file.name}` });
+    }
+  };
+  reader.onerror = () => {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'No se pudo leer la imagen seleccionada.';
+  };
+  reader.readAsDataURL(file);
+}
+
+function setupBannerImageUploader() {
+  if (!bannerImageDropzone) return;
+  const preventDefaults = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  ['dragenter', 'dragover'].forEach(eventName => {
+    bannerImageDropzone.addEventListener(eventName, (event) => {
+      preventDefaults(event);
+      bannerImageDropzone.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'dragend'].forEach(eventName => {
+    bannerImageDropzone.addEventListener(eventName, (event) => {
+      preventDefaults(event);
+      if (eventName === 'dragleave') {
+        const related = event.relatedTarget;
+        if (related && bannerImageDropzone.contains(related)) {
+          return;
+        }
+      }
+      bannerImageDropzone.classList.remove('dragover');
+    });
+  });
+  bannerImageDropzone.addEventListener('drop', (event) => {
+    preventDefaults(event);
+    bannerImageDropzone.classList.remove('dragover');
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      handleBannerImageFile(file);
+      return;
+    }
+    const url = event.dataTransfer?.getData('text/uri-list') || event.dataTransfer?.getData('text/plain');
+    if (url) {
+      handleBannerImageText(url);
+    }
+  });
+  bannerImageDropzone.addEventListener('click', () => {
+    bannerImageFileInput?.click();
+  });
+  bannerImageDropzone.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      bannerImageFileInput?.click();
+    }
+  });
+  bannerImageFileInput?.addEventListener('change', () => {
+    const file = bannerImageFileInput.files?.[0];
+    if (file) {
+      handleBannerImageFile(file);
+    }
+  });
+  bannerImageClearButton?.addEventListener('click', () => {
+    setBannerImageValue('', { message: 'Se eliminó la imagen del banner.' });
+  });
+  refreshBannerImagePreview(bannerImageInput?.value.trim() || '');
 }
 
 function updateBannerDisplay({ force = false } = {}) {
@@ -4313,6 +4465,34 @@ function buildWhatsappUrl(number) {
   return `https://wa.me/${digits}`;
 }
 
+function decodeFirestoreValue(value) {
+  if (!value || typeof value !== 'object') return null;
+  if (Object.prototype.hasOwnProperty.call(value, 'nullValue')) return null;
+  if (Object.prototype.hasOwnProperty.call(value, 'booleanValue')) return Boolean(value.booleanValue);
+  if (Object.prototype.hasOwnProperty.call(value, 'integerValue')) return Number(value.integerValue);
+  if (Object.prototype.hasOwnProperty.call(value, 'doubleValue')) return Number(value.doubleValue);
+  if (Object.prototype.hasOwnProperty.call(value, 'timestampValue')) return value.timestampValue;
+  if (Object.prototype.hasOwnProperty.call(value, 'stringValue')) return value.stringValue;
+  if (Object.prototype.hasOwnProperty.call(value, 'bytesValue')) return value.bytesValue;
+  if (Object.prototype.hasOwnProperty.call(value, 'referenceValue')) return value.referenceValue;
+  if (Object.prototype.hasOwnProperty.call(value, 'geoPointValue')) {
+    const point = value.geoPointValue || {};
+    return { latitude: point.latitude ?? 0, longitude: point.longitude ?? 0 };
+  }
+  if (Object.prototype.hasOwnProperty.call(value, 'arrayValue')) {
+    const entries = value.arrayValue?.values || [];
+    return entries.map(decodeFirestoreValue);
+  }
+  if (Object.prototype.hasOwnProperty.call(value, 'mapValue')) {
+    const fields = value.mapValue?.fields || {};
+    return Object.keys(fields).reduce((acc, key) => {
+      acc[key] = decodeFirestoreValue(fields[key]);
+      return acc;
+    }, {});
+  }
+  return null;
+}
+
 function setBannerConfig(config, { persistLocal = true, syncRemote = false } = {}) {
   bannerConfig = normaliseBanner(config);
   if (persistLocal) {
@@ -4325,6 +4505,54 @@ function setBannerConfig(config, { persistLocal = true, syncRemote = false } = {
 }
 
 bannerConfig = loadBannerFromStorage();
+
+async function fetchBannerFromPublicDocument() {
+  try {
+    const projectId = window.FIREBASE_CONFIG?.projectId;
+    const collection = window.FIREBASE_DATA_DOCUMENT?.collection || 'app';
+    const document = window.FIREBASE_DATA_DOCUMENT?.document || 'state';
+    if (!projectId || !collection || !document || typeof fetch !== 'function') {
+      return null;
+    }
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${encodeURIComponent(collection)}/${encodeURIComponent(document)}`;
+    const apiKey = window.FIREBASE_CONFIG?.apiKey;
+    const url = apiKey ? `${baseUrl}?key=${encodeURIComponent(apiKey)}` : baseUrl;
+    const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    if (!response.ok) {
+      console.warn(`No se pudo cargar el banner público (estado ${response.status})`);
+      return null;
+    }
+    const payload = await response.json();
+    if (!payload || !payload.fields) {
+      return null;
+    }
+    const decoded = decodeFirestoreValue({ mapValue: { fields: payload.fields } }) || {};
+    const config = decoded.banner;
+    return config && typeof config === 'object' ? config : null;
+  } catch (error) {
+    console.warn('No se pudo obtener el banner público', error);
+    return null;
+  }
+}
+
+function shouldUsePublicBannerFallback() {
+  if (!bannerConfig) return true;
+  const hasContent = Boolean(bannerConfig.title || bannerConfig.description || bannerConfig.image);
+  return !hasContent;
+}
+
+function tryLoadPublicBannerConfig() {
+  if (!shouldUsePublicBannerFallback()) {
+    return;
+  }
+  fetchBannerFromPublicDocument().then((config) => {
+    if (!config) return;
+    if (!shouldUsePublicBannerFallback()) return;
+    setBannerConfig(config, { persistLocal: true, syncRemote: false });
+  });
+}
+
+tryLoadPublicBannerConfig();
 
 function saveCustomBudgets() {
   if (remoteState.enabled) {
@@ -9981,6 +10209,11 @@ document.addEventListener('DOMContentLoaded', () => {
   bannerTitleInput = $('#bannerTitle');
   bannerDescriptionInput = $('#bannerDescription');
   bannerImageInput = $('#bannerImage');
+  bannerImageDropzone = $('#bannerImageDropzone');
+  bannerImagePreview = $('#bannerImagePreview');
+  bannerImageActions = $('#bannerImageActions');
+  bannerImageClearButton = $('#bannerImageClear');
+  bannerImageFileInput = $('#bannerImageFile');
   bannerLinkInput = $('#bannerLink');
   bannerWhatsappInput = $('#bannerWhatsapp');
   bannerResetButton = $('#bannerReset');
@@ -10102,6 +10335,7 @@ document.addEventListener('DOMContentLoaded', () => {
   saveUserBtn = $('#saveUserBtn');
   cancelUserEdit = $('#cancelUserEdit');
 
+  setupBannerImageUploader();
   setupRewardImageUploader();
 
   users = loadUsersFromStorage();
