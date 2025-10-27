@@ -189,6 +189,9 @@ x; display:flex; flex-direction:column; gap:4px; font-size:13px; color:#e2e8f0; 
 .stacked { display:flex; flex-direction:column; gap:12px; }
 .form-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:12px; }
 .form-grid .full { grid-column: 1 / -1; }
+.banner-form-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.banner-form-toolbar select { flex:1 1 220px; min-width:200px; }
+.banner-form-toolbar .smallbtn { flex:0 0 auto; }
 textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:#0b1120; color:var(--light); min-height:88px; resize:vertical; }
 .data-table { width:100%; border-collapse:collapse; margin-top:12px; }
 .data-table th, .data-table td { border-bottom:1px solid rgba(255,255,255,0.08); padding:10px; text-align:left; font-size:13px; }
@@ -411,7 +414,9 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .site-banner__close:hover { transform:translateY(-1px) scale(1.03); box-shadow:0 18px 40px rgba(239,68,68,0.45); }
 .site-banner__close:focus-visible { outline:3px solid rgba(239,68,68,0.6); outline-offset:2px; }
 .banner-preview { margin-top:18px; }
-.banner-preview__card { pointer-events:none; opacity:0.92; }
+.banner-preview__card { pointer-events:none; opacity:0.92; border:1px solid rgba(148,163,184,0.25); }
+.banner-preview__card[data-enabled="false"] { opacity:0.55; }
+.banner-preview__card[data-active="true"] { border-color:rgba(78,143,202,0.55); box-shadow:0 0 0 2px rgba(78,143,202,0.35); }
 .banner-preview__empty { border:1px dashed rgba(148,163,184,0.35); border-radius:16px; padding:16px; font-size:13px; color:#94a3b8; }
 .banner-preview__meta { font-size:12px; color:#94a3b8; margin:12px 0 0; }
 .banner-preview__actions { pointer-events:none; }
@@ -1524,6 +1529,17 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <div class="section-subtitle" style="margin:0 0 8px;">Banner emergente</div>
       <p class="dim" style="margin:0 0 16px;">Crea un mensaje destacado que aparecerá como ventana emergente la primera vez que alguien visite la página.</p>
       <form id="bannerForm" class="stacked">
+        <div class="form-grid">
+          <div class="full">
+            <label class="label" for="bannerSelect">Selecciona el banner</label>
+            <div class="banner-form-toolbar">
+              <select id="bannerSelect"></select>
+              <button type="button" class="smallbtn" id="bannerAdd">Añadir banner</button>
+              <button type="button" class="smallbtn danger" id="bannerDelete">Eliminar</button>
+            </div>
+            <p class="dim" id="bannerSlotsInfo">Puedes crear hasta 5 banners distintos.</p>
+          </div>
+        </div>
         <div class="toggle-field">
           <input type="checkbox" id="bannerEnabled" />
           <label for="bannerEnabled">Activar banner emergente</label>
@@ -1563,6 +1579,28 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
             <label class="label" for="bannerWhatsapp">Número de WhatsApp</label>
             <input id="bannerWhatsapp" type="text" placeholder="Ej. 34600111222" />
             <p class="small-hint">Incluye el prefijo internacional sin símbolos.</p>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="label" for="bannerStartAt">Fecha de activación</label>
+            <input id="bannerStartAt" type="datetime-local" />
+            <p class="small-hint">El banner se mostrará a partir de esta fecha. Déjalo vacío para activar inmediatamente.</p>
+          </div>
+          <div>
+            <label class="label" for="bannerEndAt">Fecha de fin</label>
+            <input id="bannerEndAt" type="datetime-local" />
+            <p class="small-hint">Establece el día en el que dejará de mostrarse. Déjalo vacío para que no caduque.</p>
+          </div>
+          <div class="full">
+            <label class="label" for="bannerAudience">Audiencia objetivo</label>
+            <select id="bannerAudience">
+              <option value="all">Todos los usuarios</option>
+              <option value="comerciales">Solo comerciales</option>
+              <option value="delegados">Solo delegados</option>
+              <option value="clientes-registrados">Clientes registrados</option>
+            </select>
+            <p class="small-hint">El banner solo aparecerá para el tipo de usuario seleccionado.</p>
           </div>
         </div>
         <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
@@ -1694,15 +1732,35 @@ const STORAGE_KEYS = {
   bannerDismissed: 'panel.banner.dismissed.v1'
 };
 
-const DEFAULT_BANNER_CONFIG = Object.freeze({
+const MAX_BANNER_ITEMS = 5;
+const LEGACY_BANNER_ID = 'legacy';
+const BANNER_TARGETS = Object.freeze(['all', 'comerciales', 'delegados', 'clientes-registrados']);
+const BANNER_TARGET_LABELS = Object.freeze({
+  all: 'Todos los usuarios',
+  comerciales: 'Solo comerciales',
+  delegados: 'Solo delegados',
+  'clientes-registrados': 'Clientes registrados'
+});
+
+const DEFAULT_BANNER_ITEM = Object.freeze({
+  id: '',
   enabled: false,
   title: '',
   description: '',
   image: '',
   link: '',
   whatsapp: '',
+  target: 'all',
+  startAt: '',
+  endAt: '',
   version: 0,
   updatedAt: ''
+});
+
+const DEFAULT_BANNER_CONFIG = Object.freeze({
+  version: 0,
+  updatedAt: '',
+  items: []
 });
 
 const BANNER_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
@@ -2246,6 +2304,10 @@ let grid,
   cancelUserEdit,
   bannerForm,
   bannerFormInfo,
+  bannerSelectInput,
+  bannerAddButton,
+  bannerDeleteButton,
+  bannerSlotsInfo,
   bannerEnabledInput,
   bannerTitleInput,
   bannerDescriptionInput,
@@ -2257,6 +2319,9 @@ let grid,
   bannerImageFileInput,
   bannerLinkInput,
   bannerWhatsappInput,
+  bannerStartAtInput,
+  bannerEndAtInput,
+  bannerAudienceSelect,
   bannerResetButton,
   bannerPreviewContainer,
   siteBanner,
@@ -2300,7 +2365,9 @@ let notificationsOpen = false;
 let activeBudgetResponseId = '';
 let pendingFollowUpRequestId = '';
 let pendingSaleRequestId = '';
-let bannerConfig = { ...DEFAULT_BANNER_CONFIG };
+let bannerConfig = normaliseBanner(DEFAULT_BANNER_CONFIG);
+let bannerEditingId = '';
+let activeBanner = null;
 
 function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   if (!domReady) return;
@@ -2328,90 +2395,182 @@ function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
 
 function renderBannerForm() {
   if (!bannerForm) return;
-  if (bannerEnabledInput) bannerEnabledInput.checked = Boolean(bannerConfig?.enabled);
-  if (bannerTitleInput) bannerTitleInput.value = bannerConfig?.title || '';
-  if (bannerDescriptionInput) bannerDescriptionInput.value = bannerConfig?.description || '';
-  if (bannerImageInput) bannerImageInput.value = bannerConfig?.image || '';
-  if (bannerLinkInput) bannerLinkInput.value = bannerConfig?.link || '';
-  if (bannerWhatsappInput) bannerWhatsappInput.value = bannerConfig?.whatsapp || '';
-  refreshBannerImagePreview(bannerConfig?.image || '');
+  const items = Array.isArray(bannerConfig?.items) ? bannerConfig.items : [];
+  let selected = items.find(item => item.id === bannerEditingId) || null;
+  if (!selected && items.length) {
+    selected = items[0];
+    bannerEditingId = selected.id;
+  }
+  if (!items.length) {
+    bannerEditingId = '';
+  }
+  if (bannerSelectInput) {
+    if (items.length) {
+      const options = items
+        .map((item, index) => `<option value="${item.id}">${item.title || `Banner ${index + 1}`}</option>`)
+        .join('');
+      bannerSelectInput.innerHTML = options;
+      bannerSelectInput.disabled = false;
+      bannerSelectInput.value = bannerEditingId || items[0].id;
+    } else {
+      bannerSelectInput.innerHTML = '<option value="">Sin banners disponibles</option>';
+      bannerSelectInput.disabled = true;
+      bannerSelectInput.value = '';
+    }
+  }
+  if (bannerSlotsInfo) {
+    if (!items.length) {
+      bannerSlotsInfo.textContent = 'Aún no has creado ningún banner. Usa “Añadir banner” para empezar.';
+    } else if (items.length >= MAX_BANNER_ITEMS) {
+      bannerSlotsInfo.textContent = `Has alcanzado el máximo de ${MAX_BANNER_ITEMS} banners.`;
+    } else {
+      const remaining = MAX_BANNER_ITEMS - items.length;
+      bannerSlotsInfo.textContent = `Tienes ${items.length} banners configurados en el panel. Puedes crear ${remaining} más.`;
+    }
+  }
+  if (bannerAddButton) {
+    bannerAddButton.disabled = items.length >= MAX_BANNER_ITEMS;
+  }
+  const hasSelection = Boolean(selected);
+  if (bannerDeleteButton) {
+    bannerDeleteButton.disabled = !hasSelection;
+  }
+  if (bannerResetButton) {
+    bannerResetButton.disabled = !hasSelection;
+  }
+  if (bannerEnabledInput) {
+    bannerEnabledInput.checked = Boolean(selected?.enabled);
+    bannerEnabledInput.disabled = !hasSelection;
+  }
+  if (bannerTitleInput) {
+    bannerTitleInput.value = selected?.title || '';
+    bannerTitleInput.disabled = !hasSelection;
+  }
+  if (bannerDescriptionInput) {
+    bannerDescriptionInput.value = selected?.description || '';
+    bannerDescriptionInput.disabled = !hasSelection;
+  }
+  if (bannerImageInput) {
+    bannerImageInput.value = selected?.image || '';
+    bannerImageInput.disabled = !hasSelection;
+  }
+  if (bannerLinkInput) {
+    bannerLinkInput.value = selected?.link || '';
+    bannerLinkInput.disabled = !hasSelection;
+  }
+  if (bannerWhatsappInput) {
+    bannerWhatsappInput.value = selected?.whatsapp || '';
+    bannerWhatsappInput.disabled = !hasSelection;
+  }
+  if (bannerStartAtInput) {
+    bannerStartAtInput.value = hasSelection ? toDateTimeLocal(selected?.startAt) : '';
+    bannerStartAtInput.disabled = !hasSelection;
+  }
+  if (bannerEndAtInput) {
+    bannerEndAtInput.value = hasSelection ? toDateTimeLocal(selected?.endAt) : '';
+    bannerEndAtInput.disabled = !hasSelection;
+  }
+  if (bannerAudienceSelect) {
+    bannerAudienceSelect.value = hasSelection ? normaliseBannerTarget(selected?.target) : 'all';
+    bannerAudienceSelect.disabled = !hasSelection;
+  }
+  refreshBannerImagePreview(selected?.image || '');
 }
 
 function renderBannerPreview() {
   if (!domReady || !bannerPreviewContainer) return;
   bannerPreviewContainer.innerHTML = '';
-  const config = bannerConfig || DEFAULT_BANNER_CONFIG;
-  if (!config.enabled) {
+  const items = Array.isArray(bannerConfig?.items) ? bannerConfig.items : [];
+  if (!items.length) {
     const empty = document.createElement('div');
     empty.className = 'banner-preview__empty';
-    empty.textContent = 'El banner emergente está desactivado.';
+    empty.textContent = 'Añade tu primer banner para visualizar la ventana emergente.';
     bannerPreviewContainer.appendChild(empty);
     return;
   }
-  if (!config.title && !config.description && !config.image) {
-    const empty = document.createElement('div');
-    empty.className = 'banner-preview__empty';
-    empty.textContent = 'Añade un título, descripción o imagen para mostrar el banner.';
-    bannerPreviewContainer.appendChild(empty);
-    return;
-  }
-  const card = document.createElement('div');
-  card.className = 'site-banner__card banner-preview__card';
-  if (config.image) {
-    const media = document.createElement('div');
-    media.className = 'site-banner__media';
-    const img = document.createElement('img');
-    img.src = config.image;
-    img.alt = config.title ? `Imagen del banner ${config.title}` : 'Imagen del banner';
-    media.appendChild(img);
-    card.appendChild(media);
-  }
-  const body = document.createElement('div');
-  body.className = 'site-banner__body';
-  const title = document.createElement('h3');
-  title.className = 'site-banner__title';
-  title.textContent = config.title || 'Banner sin título';
-  body.appendChild(title);
-  if (config.description) {
-    const paragraph = document.createElement('p');
-    paragraph.className = 'site-banner__description';
-    paragraph.textContent = config.description;
-    body.appendChild(paragraph);
-  }
-  const actions = document.createElement('div');
-  actions.className = 'site-banner__actions banner-preview__actions';
-  let hasAction = false;
-  if (config.link) {
-    const action = document.createElement('span');
-    action.className = 'site-banner__action site-banner__action--primary';
-    action.textContent = 'Abrir enlace';
-    actions.appendChild(action);
-    hasAction = true;
-  }
-  const whatsappUrl = buildWhatsappUrl(config.whatsapp);
-  if (whatsappUrl) {
-    const action = document.createElement('span');
-    action.className = 'site-banner__action site-banner__action--whatsapp';
-    action.textContent = 'Escríbenos por WhatsApp';
-    actions.appendChild(action);
-    hasAction = true;
-  }
-  if (!hasAction) {
-    const hint = document.createElement('span');
-    hint.className = 'site-banner__hint';
-    hint.textContent = 'Añade un enlace o número de WhatsApp para mostrar acciones.';
-    actions.appendChild(hint);
-  }
-  body.appendChild(actions);
-  const updatedAt = parseDate(config.updatedAt);
-  if (updatedAt) {
-    const meta = document.createElement('p');
-    meta.className = 'banner-preview__meta';
-    meta.textContent = `Última actualización: ${formatDateES(updatedAt)}`;
-    body.appendChild(meta);
-  }
-  card.appendChild(body);
-  bannerPreviewContainer.appendChild(card);
+  const now = Date.now();
+  items.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.className = 'site-banner__card banner-preview__card';
+    card.dataset.enabled = item.enabled ? 'true' : 'false';
+    if (item.id && item.id === bannerEditingId) {
+      card.dataset.active = 'true';
+    }
+    if (item.image) {
+      const media = document.createElement('div');
+      media.className = 'site-banner__media';
+      const img = document.createElement('img');
+      img.src = item.image;
+      img.alt = item.title ? `Imagen del banner ${item.title}` : 'Imagen del banner';
+      media.appendChild(img);
+      card.appendChild(media);
+    }
+    const body = document.createElement('div');
+    body.className = 'site-banner__body';
+    const title = document.createElement('h3');
+    title.className = 'site-banner__title';
+    title.textContent = item.title || `Banner ${index + 1}`;
+    body.appendChild(title);
+    if (item.description) {
+      const paragraph = document.createElement('p');
+      paragraph.className = 'site-banner__description';
+      paragraph.textContent = item.description;
+      body.appendChild(paragraph);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'site-banner__actions banner-preview__actions';
+    let hasAction = false;
+    if (item.link) {
+      const action = document.createElement('span');
+      action.className = 'site-banner__action site-banner__action--primary';
+      action.textContent = 'Abrir enlace';
+      actions.appendChild(action);
+      hasAction = true;
+    }
+    if (buildWhatsappUrl(item.whatsapp)) {
+      const action = document.createElement('span');
+      action.className = 'site-banner__action site-banner__action--whatsapp';
+      action.textContent = 'Escríbenos por WhatsApp';
+      actions.appendChild(action);
+      hasAction = true;
+    }
+    if (!hasAction) {
+      const hint = document.createElement('span');
+      hint.className = 'site-banner__hint';
+      hint.textContent = 'Añade un enlace o un número de WhatsApp para mostrar acciones.';
+      actions.appendChild(hint);
+    }
+    body.appendChild(actions);
+    const statusParts = [];
+    statusParts.push(item.enabled ? 'Activado' : 'Borrador');
+    statusParts.push(BANNER_TARGET_LABELS[normaliseBannerTarget(item.target)] || BANNER_TARGET_LABELS.all);
+    if (item.enabled && !bannerIsActiveDuring(now, item)) {
+      statusParts.push('Fuera de fechas');
+    }
+    const status = document.createElement('p');
+    status.className = 'banner-preview__meta';
+    status.textContent = statusParts.join(' · ');
+    body.appendChild(status);
+    const schedule = document.createElement('p');
+    schedule.className = 'banner-preview__meta';
+    schedule.textContent = `Vigencia: ${formatBannerSchedule(item)}`;
+    body.appendChild(schedule);
+    if (!bannerHasContent(item)) {
+      const hint = document.createElement('p');
+      hint.className = 'banner-preview__meta';
+      hint.textContent = 'Completa el título, descripción o imagen para mostrar este banner.';
+      body.appendChild(hint);
+    }
+    const updatedAt = parseDate(item.updatedAt);
+    if (updatedAt) {
+      const meta = document.createElement('p');
+      meta.className = 'banner-preview__meta';
+      meta.textContent = `Última actualización: ${formatDateES(updatedAt)}`;
+      body.appendChild(meta);
+    }
+    card.appendChild(body);
+    bannerPreviewContainer.appendChild(card);
+  });
 }
 
 function bannerImageValueIsPreviewable(value) {
@@ -2548,9 +2707,55 @@ function setupBannerImageUploader() {
 
 function updateBannerDisplay({ force = false } = {}) {
   if (!domReady || !siteBanner) return;
-  const config = bannerConfig || DEFAULT_BANNER_CONFIG;
-  const hasContent = Boolean(config.title || config.description || config.image);
-  if (siteBannerTitleEl) siteBannerTitleEl.textContent = config.title || '';
+  const items = Array.isArray(bannerConfig?.items) ? bannerConfig.items : [];
+  const dismissedMap = loadDismissedBannerMap();
+  const now = Date.now();
+  const eligible = items.filter(item => {
+    if (!item || !item.enabled) return false;
+    if (!bannerHasContent(item)) return false;
+    if (!bannerIsActiveDuring(now, item)) return false;
+    if (!bannerMatchesAudience(item)) return false;
+    return !hasDismissedBanner(item, dismissedMap);
+  });
+  const previousId = activeBanner?.id || '';
+  let nextBanner = null;
+  if (eligible.length) {
+    if (!force && previousId && eligible.some(item => item.id === previousId)) {
+      nextBanner = eligible.find(item => item.id === previousId) || null;
+    } else {
+      const randomIndex = Math.floor(Math.random() * eligible.length);
+      nextBanner = eligible[randomIndex];
+    }
+  }
+  if (!nextBanner) {
+    activeBanner = null;
+    siteBanner.classList.add('hidden');
+    siteBanner.setAttribute('aria-hidden', 'true');
+    return;
+  }
+  activeBanner = nextBanner;
+  const rendered = applyBannerToDom(nextBanner);
+  if (!rendered) {
+    siteBanner.classList.add('hidden');
+    siteBanner.setAttribute('aria-hidden', 'true');
+    return;
+  }
+  siteBanner.classList.remove('hidden');
+  siteBanner.setAttribute('aria-hidden', 'false');
+}
+
+function applyBannerToDom(config) {
+  if (!config || !siteBanner) return false;
+  if (siteBannerCard) {
+    if (config.id) {
+      siteBannerCard.dataset.bannerId = config.id;
+    } else {
+      delete siteBannerCard.dataset.bannerId;
+    }
+  }
+  if (siteBannerTitleEl) {
+    siteBannerTitleEl.textContent = config.title || '';
+  }
   if (siteBannerDescriptionEl) {
     const hasDescription = Boolean(config.description);
     siteBannerDescriptionEl.textContent = config.description || '';
@@ -2591,20 +2796,9 @@ function updateBannerDisplay({ force = false } = {}) {
       siteBannerActions.appendChild(whatsappBtn);
       actionsCount += 1;
     }
-    if (actionsCount === 0) {
-      siteBannerActions.classList.add('hidden');
-    } else {
-      siteBannerActions.classList.remove('hidden');
-    }
+    siteBannerActions.classList.toggle('hidden', actionsCount === 0);
   }
-  const shouldShow = config.enabled && hasContent && !hasDismissedBanner(config);
-  if (shouldShow) {
-    siteBanner.classList.remove('hidden');
-    siteBanner.setAttribute('aria-hidden', 'false');
-  } else if (force || !hasContent || !config.enabled) {
-    siteBanner.classList.add('hidden');
-    siteBanner.setAttribute('aria-hidden', 'true');
-  }
+  return bannerHasContent(config);
 }
 
 function refreshBannerUI() {
@@ -2614,36 +2808,158 @@ function refreshBannerUI() {
   updateBannerDisplay({ force: true });
 }
 
+function handleBannerSelectionChange(event) {
+  bannerEditingId = event.target.value || '';
+  renderBannerForm();
+  renderBannerPreview();
+  if (bannerFormInfo) bannerFormInfo.textContent = '';
+}
+
+function handleBannerAdd(event) {
+  event.preventDefault();
+  const items = Array.isArray(bannerConfig?.items) ? [...bannerConfig.items] : [];
+  if (items.length >= MAX_BANNER_ITEMS) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el número máximo de banners.';
+    return;
+  }
+  const now = Date.now();
+  const newItem = normaliseBannerItem({ id: createId('banner'), version: now, updatedAt: new Date(now).toISOString() });
+  items.push(newItem);
+  bannerEditingId = newItem.id;
+  const nextConfig = {
+    ...bannerConfig,
+    version: now,
+    updatedAt: new Date(now).toISOString(),
+    items
+  };
+  setBannerConfig(nextConfig, { persistLocal: true, syncRemote: true });
+  if (bannerFormInfo) {
+    bannerFormInfo.textContent = 'Nuevo banner creado. Completa la información y guarda los cambios.';
+  }
+}
+
+function handleBannerDelete(event) {
+  event.preventDefault();
+  const items = Array.isArray(bannerConfig?.items) ? [...bannerConfig.items] : [];
+  if (!bannerEditingId) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'Selecciona un banner para poder eliminarlo.';
+    return;
+  }
+  const index = items.findIndex(item => item.id === bannerEditingId);
+  if (index === -1) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'No se encontró el banner seleccionado.';
+    return;
+  }
+  const [removed] = items.splice(index, 1);
+  clearBannerDismissedRecord(removed);
+  const now = Date.now();
+  const nextConfig = {
+    ...bannerConfig,
+    version: now,
+    updatedAt: new Date(now).toISOString(),
+    items
+  };
+  bannerEditingId = items[index]?.id || items[items.length - 1]?.id || '';
+  setBannerConfig(nextConfig, { persistLocal: true, syncRemote: true });
+  if (bannerFormInfo) {
+    bannerFormInfo.textContent = 'Banner eliminado correctamente.';
+  }
+}
+
 function handleBannerFormSubmit(event) {
   event.preventDefault();
+  const items = Array.isArray(bannerConfig?.items) ? [...bannerConfig.items] : [];
+  if (!bannerEditingId && items.length >= MAX_BANNER_ITEMS) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el número máximo de banners.';
+    return;
+  }
+  let index = items.findIndex(item => item.id === bannerEditingId);
+  if (index === -1) {
+    if (items.length >= MAX_BANNER_ITEMS) {
+      if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el número máximo de banners.';
+      return;
+    }
+    const placeholder = normaliseBannerItem({ id: bannerEditingId || createId('banner') });
+    items.push(placeholder);
+    index = items.length - 1;
+    bannerEditingId = placeholder.id;
+  }
+  const existing = items[index];
+  clearBannerDismissedRecord(existing);
   const enabled = Boolean(bannerEnabledInput?.checked);
+  const startIso = parseDateTimeLocalInput(bannerStartAtInput?.value || '');
+  const endIso = parseDateTimeLocalInput(bannerEndAtInput?.value || '');
+  if (startIso && endIso) {
+    const startTs = Date.parse(startIso);
+    const endTs = Date.parse(endIso);
+    if (Number.isFinite(startTs) && Number.isFinite(endTs) && endTs <= startTs) {
+      if (bannerFormInfo) bannerFormInfo.textContent = 'La fecha de fin debe ser posterior a la fecha de inicio.';
+      return;
+    }
+  }
   const now = Date.now();
-  const config = {
+  const updatedItem = {
+    ...existing,
     enabled,
     title: bannerTitleInput?.value.trim() || '',
     description: bannerDescriptionInput?.value.trim() || '',
     image: bannerImageInput?.value.trim() || '',
     link: bannerLinkInput?.value.trim() || '',
     whatsapp: bannerWhatsappInput?.value.trim() || '',
+    startAt: startIso,
+    endAt: endIso,
+    target: normaliseBannerTarget(bannerAudienceSelect?.value),
     version: now,
     updatedAt: new Date(now).toISOString()
   };
-  setBannerConfig(config, { persistLocal: true, syncRemote: true });
+  items[index] = updatedItem;
+  bannerEditingId = updatedItem.id;
+  const nextConfig = {
+    ...bannerConfig,
+    version: now,
+    updatedAt: new Date(now).toISOString(),
+    items
+  };
+  setBannerConfig(nextConfig, { persistLocal: true, syncRemote: true });
   if (bannerFormInfo) {
     bannerFormInfo.textContent = enabled
-      ? 'Banner actualizado. Se mostrará una vez por visitante.'
-      : 'Banner desactivado.';
+      ? 'Banner actualizado. Se mostrará a los usuarios seleccionados.'
+      : 'Banner guardado como borrador.';
   }
 }
 
 function handleBannerReset(event) {
   event.preventDefault();
+  const items = Array.isArray(bannerConfig?.items) ? [...bannerConfig.items] : [];
+  const index = items.findIndex(item => item.id === bannerEditingId);
+  if (index === -1) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'Selecciona un banner para poder vaciarlo.';
+    return;
+  }
+  const existing = items[index];
+  clearBannerDismissedRecord(existing);
   const now = Date.now();
-  setBannerConfig({
-    ...DEFAULT_BANNER_CONFIG,
+  const cleared = {
+    ...existing,
+    enabled: false,
+    title: '',
+    description: '',
+    image: '',
+    link: '',
+    whatsapp: '',
+    startAt: '',
+    endAt: '',
     version: now,
     updatedAt: new Date(now).toISOString()
-  }, { persistLocal: true, syncRemote: true });
+  };
+  items[index] = cleared;
+  const nextConfig = {
+    ...bannerConfig,
+    version: now,
+    updatedAt: new Date(now).toISOString(),
+    items
+  };
+  setBannerConfig(nextConfig, { persistLocal: true, syncRemote: true });
   if (bannerFormInfo) {
     bannerFormInfo.textContent = 'Contenido del banner eliminado.';
   }
@@ -2653,9 +2969,10 @@ function dismissBanner({ persist = true } = {}) {
   if (!siteBanner || siteBanner.classList.contains('hidden')) return;
   siteBanner.classList.add('hidden');
   siteBanner.setAttribute('aria-hidden', 'true');
-  if (persist && bannerConfig) {
-    markBannerDismissed(bannerConfig.version);
+  if (persist && activeBanner) {
+    markBannerDismissed(activeBanner);
   }
+  activeBanner = null;
 }
 
 function todayISO() {
@@ -2925,29 +3242,168 @@ function detectTariffType(item) {
   return 'C';
 }
 
-function normaliseBanner(raw) {
-  const base = { ...DEFAULT_BANNER_CONFIG };
-  if (!raw || typeof raw !== 'object') {
-    const now = Date.now();
-    base.version = now;
-    base.updatedAt = new Date(now).toISOString();
-    return base;
+function normaliseBannerTarget(value) {
+  const raw = (value || '').toString().trim().toLowerCase();
+  if (BANNER_TARGETS.includes(raw)) return raw;
+  if (raw === 'comercial') return 'comerciales';
+  if (raw === 'delegado' || raw === 'lider' || raw === 'líder') return 'delegados';
+  if (raw === 'clientes' || raw === 'cliente') return 'clientes-registrados';
+  return 'all';
+}
+
+function normaliseDateTimeValue(value) {
+  if (!value && value !== 0) return '';
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? '' : value.toISOString();
   }
-  base.enabled = Boolean(raw.enabled);
-  base.title = (raw.title ?? '').toString().trim();
-  base.description = (raw.description ?? '').toString().trim();
-  base.image = (raw.image ?? raw.photo ?? '').toString().trim();
-  base.link = (raw.link ?? raw.url ?? '').toString().trim();
-  base.whatsapp = (raw.whatsapp ?? raw.whatsApp ?? raw.phone ?? '').toString().trim();
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return '';
+    return new Date(value).toISOString();
+  }
+  const text = value?.toString().trim();
+  if (!text) return '';
+  const timestamp = Date.parse(text);
+  if (!Number.isFinite(timestamp)) return '';
+  return new Date(timestamp).toISOString();
+}
+
+function normaliseBannerItem(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const item = { ...DEFAULT_BANNER_ITEM };
+  let id = (raw.id || raw.bannerId || '').toString().trim();
+  if (!id) {
+    if (Object.prototype.hasOwnProperty.call(raw, 'enabled') || raw.title || raw.description || raw.image) {
+      id = LEGACY_BANNER_ID;
+    }
+  }
+  if (!id) id = createId('banner');
+  item.id = id;
+  item.enabled = Boolean(raw.enabled);
+  item.title = (raw.title ?? '').toString().trim();
+  item.description = (raw.description ?? '').toString().trim();
+  item.image = (raw.image ?? raw.photo ?? '').toString().trim();
+  item.link = (raw.link ?? raw.url ?? '').toString().trim();
+  item.whatsapp = (raw.whatsapp ?? raw.whatsApp ?? raw.phone ?? '').toString().trim();
+  item.target = normaliseBannerTarget(raw.target ?? raw.audience ?? raw.scope ?? raw.segment ?? 'all');
+  item.startAt = normaliseDateTimeValue(raw.startAt ?? raw.startsAt ?? raw.startDate ?? raw.activateAt ?? '');
+  item.endAt = normaliseDateTimeValue(raw.endAt ?? raw.endsAt ?? raw.endDate ?? raw.deactivateAt ?? '');
   let version = Number(raw.version);
   if (!Number.isFinite(version) || version <= 0) {
     const parsedUpdated = raw.updatedAt ? Date.parse(raw.updatedAt) : NaN;
     version = Number.isFinite(parsedUpdated) ? parsedUpdated : Date.now();
   }
-  base.version = version;
-  const updatedAtDate = raw.updatedAt ? new Date(raw.updatedAt) : new Date(version);
-  base.updatedAt = Number.isNaN(updatedAtDate.getTime()) ? new Date(version).toISOString() : updatedAtDate.toISOString();
+  item.version = version;
+  const updatedAt = raw.updatedAt ? new Date(raw.updatedAt) : new Date(version);
+  item.updatedAt = Number.isNaN(updatedAt.getTime()) ? new Date(version).toISOString() : updatedAt.toISOString();
+  return item;
+}
+
+function normaliseBanner(raw) {
+  const base = { ...DEFAULT_BANNER_CONFIG, items: [] };
+  if (!raw) {
+    const now = Date.now();
+    base.version = now;
+    base.updatedAt = new Date(now).toISOString();
+    return base;
+  }
+  let candidateItems = [];
+  if (Array.isArray(raw?.items)) {
+    candidateItems = raw.items;
+  } else if (Array.isArray(raw)) {
+    candidateItems = raw;
+  } else if (typeof raw === 'object') {
+    const looksLikeItem = Object.prototype.hasOwnProperty.call(raw, 'enabled')
+      || Object.prototype.hasOwnProperty.call(raw, 'title')
+      || Object.prototype.hasOwnProperty.call(raw, 'description')
+      || Object.prototype.hasOwnProperty.call(raw, 'image');
+    if (looksLikeItem) {
+      candidateItems = [raw];
+    }
+  }
+  const items = candidateItems
+    .map(normaliseBannerItem)
+    .filter(Boolean)
+    .slice(0, MAX_BANNER_ITEMS);
+  base.items = items;
+  let latestVersion = Number(raw?.version);
+  if (!Number.isFinite(latestVersion) || latestVersion <= 0) {
+    latestVersion = 0;
+  }
+  let latestUpdated = typeof raw?.updatedAt === 'string' ? normaliseDateTimeValue(raw.updatedAt) : '';
+  items.forEach(item => {
+    if (item.version > latestVersion) {
+      latestVersion = item.version;
+      latestUpdated = item.updatedAt;
+    }
+  });
+  if (!latestVersion) {
+    const now = Date.now();
+    latestVersion = now;
+    latestUpdated = new Date(now).toISOString();
+  }
+  base.version = latestVersion;
+  base.updatedAt = latestUpdated || new Date(latestVersion).toISOString();
   return base;
+}
+
+function parseDateTimeLocalInput(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+function toDateTimeLocal(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (number) => String(number).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function formatDateTimeForDisplay(value) {
+  const date = parseDate(value);
+  if (!date) return '';
+  try {
+    return date.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+  } catch (error) {
+    return date.toISOString().replace('T', ' ').slice(0, 16);
+  }
+}
+
+function formatBannerSchedule(item) {
+  const startLabel = item.startAt ? formatDateTimeForDisplay(item.startAt) : 'Inmediato';
+  const endLabel = item.endAt ? formatDateTimeForDisplay(item.endAt) : 'Sin fecha de fin';
+  return `${startLabel} → ${endLabel}`;
+}
+
+function bannerHasContent(banner) {
+  if (!banner) return false;
+  return Boolean(banner.title || banner.description || banner.image);
+}
+
+function bannerIsActiveDuring(reference, banner) {
+  if (!banner) return false;
+  const startTs = banner.startAt ? Date.parse(banner.startAt) : NaN;
+  if (Number.isFinite(startTs) && reference < startTs) return false;
+  const endTs = banner.endAt ? Date.parse(banner.endAt) : NaN;
+  if (Number.isFinite(endTs) && reference > endTs) return false;
+  return true;
+}
+
+function bannerMatchesAudience(banner) {
+  const target = normaliseBannerTarget(banner?.target);
+  if (target === 'all') return true;
+  const role = currentUser?.role || '';
+  switch (target) {
+    case 'comerciales':
+      return role === 'comercial';
+    case 'delegados':
+      return role === 'lider';
+    case 'clientes-registrados':
+      return role === CLIENT_ROLE && Boolean(currentUser?.selfRegistered);
+    default:
+      return true;
+  }
 }
 
 function normaliseTariff(item) {
@@ -4425,26 +4881,58 @@ function saveBannerToStorage(config) {
   }
 }
 
-function getBannerDismissedVersion() {
+function loadDismissedBannerMap() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.bannerDismissed);
-    if (!raw) return 0;
+    if (!raw) return {};
     const parsed = JSON.parse(raw);
-    if (typeof parsed === 'number') return parsed;
-    if (parsed && typeof parsed.version === 'number') return parsed.version;
-    const numeric = Number(parsed?.version);
-    return Number.isFinite(numeric) ? numeric : 0;
+    if (Array.isArray(parsed)) {
+      return parsed.reduce((acc, entry) => {
+        if (!entry || typeof entry !== 'object') return acc;
+        const id = (entry.id || entry.bannerId || LEGACY_BANNER_ID).toString();
+        const version = Number(entry.version);
+        if (id && Number.isFinite(version) && version > 0) {
+          acc[id] = version;
+        }
+        return acc;
+      }, {});
+    }
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.versions && typeof parsed.versions === 'object') {
+        return Object.keys(parsed.versions).reduce((acc, key) => {
+          const version = Number(parsed.versions[key]);
+          if (Number.isFinite(version) && version > 0) {
+            acc[key] = version;
+          }
+          return acc;
+        }, {});
+      }
+      if (parsed.id || parsed.bannerId) {
+        const id = (parsed.id || parsed.bannerId).toString();
+        const version = Number(parsed.version);
+        if (id && Number.isFinite(version) && version > 0) {
+          return { [id]: version };
+        }
+      }
+      if (typeof parsed.version === 'number' && parsed.version > 0) {
+        return { [LEGACY_BANNER_ID]: Number(parsed.version) };
+      }
+    }
+    const numeric = Number(parsed);
+    if (Number.isFinite(numeric) && numeric > 0) {
+      return { [LEGACY_BANNER_ID]: numeric };
+    }
   } catch (error) {
     console.warn('No se pudo leer el estado de visualización del banner', error);
-    return 0;
   }
+  return {};
 }
 
-function markBannerDismissed(version) {
+function persistDismissedBannerMap(map) {
   try {
     const payload = {
-      version: Number(version) || 0,
-      dismissedAt: new Date().toISOString()
+      versions: map,
+      updatedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEYS.bannerDismissed, JSON.stringify(payload));
   } catch (error) {
@@ -4452,11 +4940,61 @@ function markBannerDismissed(version) {
   }
 }
 
-function hasDismissedBanner(config) {
+function clearBannerDismissedRecord(banner) {
+  if (!banner) return;
+  const map = loadDismissedBannerMap();
+  const id = banner.id || LEGACY_BANNER_ID;
+  if (!map[id]) return;
+  delete map[id];
+  persistDismissedBannerMap(map);
+}
+
+function markBannerDismissed(banner) {
+  if (!banner) return;
+  const version = Number(banner.version);
+  if (!Number.isFinite(version) || version <= 0) return;
+  const id = banner.id || LEGACY_BANNER_ID;
+  const map = loadDismissedBannerMap();
+  map[id] = version;
+  if (id !== LEGACY_BANNER_ID) {
+    delete map[LEGACY_BANNER_ID];
+  }
+  persistDismissedBannerMap(map);
+}
+
+function hasDismissedBanner(config, map = loadDismissedBannerMap()) {
   if (!config) return false;
   const version = Number(config.version);
   if (!Number.isFinite(version) || version <= 0) return false;
-  return getBannerDismissedVersion() === version;
+  const id = config.id || LEGACY_BANNER_ID;
+  if (map[id] === version) return true;
+  if (id !== LEGACY_BANNER_ID && map[LEGACY_BANNER_ID] === version) return true;
+  return false;
+}
+
+function pruneDismissedBannerRecords(config) {
+  const map = loadDismissedBannerMap();
+  const items = Array.isArray(config?.items) ? config.items : [];
+  const validIds = new Set(items.map(item => item.id || LEGACY_BANNER_ID));
+  let changed = false;
+  Object.keys(map).forEach((id) => {
+    if (!validIds.has(id)) {
+      delete map[id];
+      changed = true;
+    }
+  });
+  items.forEach(item => {
+    const id = item.id || LEGACY_BANNER_ID;
+    const version = Number(item.version);
+    if (map[id] && map[id] !== version) {
+      delete map[id];
+      changed = true;
+    }
+  });
+  if (changed) {
+    persistDismissedBannerMap(map);
+  }
+  return map;
 }
 
 function buildWhatsappUrl(number) {
@@ -4495,6 +5033,7 @@ function decodeFirestoreValue(value) {
 
 function setBannerConfig(config, { persistLocal = true, syncRemote = false } = {}) {
   bannerConfig = normaliseBanner(config);
+  pruneDismissedBannerRecords(bannerConfig);
   if (persistLocal) {
     saveBannerToStorage(bannerConfig);
   }
@@ -4505,6 +5044,7 @@ function setBannerConfig(config, { persistLocal = true, syncRemote = false } = {
 }
 
 bannerConfig = loadBannerFromStorage();
+pruneDismissedBannerRecords(bannerConfig);
 
 async function fetchBannerFromPublicDocument() {
   try {
@@ -4537,8 +5077,8 @@ async function fetchBannerFromPublicDocument() {
 
 function shouldUsePublicBannerFallback() {
   if (!bannerConfig) return true;
-  const hasContent = Boolean(bannerConfig.title || bannerConfig.description || bannerConfig.image);
-  return !hasContent;
+  const items = Array.isArray(bannerConfig.items) ? bannerConfig.items : [];
+  return !items.some(bannerHasContent);
 }
 
 function tryLoadPublicBannerConfig() {
@@ -7438,6 +7978,7 @@ function handleStorageEvent(event) {
   }
   if (event.key === STORAGE_KEYS.banner) {
     bannerConfig = loadBannerFromStorage();
+    pruneDismissedBannerRecords(bannerConfig);
     refreshBannerUI();
   }
   if (event.key === STORAGE_KEYS.bannerDismissed) {
@@ -10205,6 +10746,10 @@ document.addEventListener('DOMContentLoaded', () => {
   rewardList = $('#rewardList');
   bannerForm = $('#bannerForm');
   bannerFormInfo = $('#bannerFormInfo');
+  bannerSelectInput = $('#bannerSelect');
+  bannerAddButton = $('#bannerAdd');
+  bannerDeleteButton = $('#bannerDelete');
+  bannerSlotsInfo = $('#bannerSlotsInfo');
   bannerEnabledInput = $('#bannerEnabled');
   bannerTitleInput = $('#bannerTitle');
   bannerDescriptionInput = $('#bannerDescription');
@@ -10216,6 +10761,9 @@ document.addEventListener('DOMContentLoaded', () => {
   bannerImageFileInput = $('#bannerImageFile');
   bannerLinkInput = $('#bannerLink');
   bannerWhatsappInput = $('#bannerWhatsapp');
+  bannerStartAtInput = $('#bannerStartAt');
+  bannerEndAtInput = $('#bannerEndAt');
+  bannerAudienceSelect = $('#bannerAudience');
   bannerResetButton = $('#bannerReset');
   bannerPreviewContainer = $('#bannerPreview');
   siteBanner = $('#siteBanner');
@@ -10394,6 +10942,9 @@ document.addEventListener('DOMContentLoaded', () => {
   clientRewardsContainer?.addEventListener('click', handleClientRewardAction);
 
   bannerForm?.addEventListener('submit', handleBannerFormSubmit);
+  bannerSelectInput?.addEventListener('change', handleBannerSelectionChange);
+  bannerAddButton?.addEventListener('click', handleBannerAdd);
+  bannerDeleteButton?.addEventListener('click', handleBannerDelete);
   bannerResetButton?.addEventListener('click', handleBannerReset);
   siteBanner?.addEventListener('click', (event) => {
     if (event.target === siteBanner) {
