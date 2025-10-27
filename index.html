@@ -1537,7 +1537,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
               <button type="button" class="smallbtn" id="bannerAdd">Añadir banner</button>
               <button type="button" class="smallbtn danger" id="bannerDelete">Eliminar</button>
             </div>
-            <p class="dim" id="bannerSlotsInfo">Puedes crear hasta 5 banners distintos.</p>
+            <p class="dim" id="bannerSlotsInfo">Puedes crear hasta 5 banners por tipo de usuario.</p>
           </div>
         </div>
         <div class="toggle-field">
@@ -1595,7 +1595,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
           <div class="full">
             <label class="label" for="bannerAudience">Audiencia objetivo</label>
             <select id="bannerAudience">
-              <option value="all">Todos los usuarios</option>
+              <option value="visitantes">Visitantes sin sesión</option>
               <option value="comerciales">Solo comerciales</option>
               <option value="delegados">Solo delegados</option>
               <option value="clientes-registrados">Clientes registrados</option>
@@ -1732,14 +1732,20 @@ const STORAGE_KEYS = {
   bannerDismissed: 'panel.banner.dismissed.v1'
 };
 
-const MAX_BANNER_ITEMS = 5;
+const MAX_BANNERS_PER_TARGET = 5;
 const LEGACY_BANNER_ID = 'legacy';
-const BANNER_TARGETS = Object.freeze(['all', 'comerciales', 'delegados', 'clientes-registrados']);
+const BANNER_TARGETS = Object.freeze(['visitantes', 'comerciales', 'delegados', 'clientes-registrados']);
 const BANNER_TARGET_LABELS = Object.freeze({
-  all: 'Todos los usuarios',
+  visitantes: 'Visitantes sin sesión',
   comerciales: 'Solo comerciales',
   delegados: 'Solo delegados',
   'clientes-registrados': 'Clientes registrados'
+});
+const BANNER_TARGET_LIMITS = Object.freeze({
+  visitantes: MAX_BANNERS_PER_TARGET,
+  comerciales: MAX_BANNERS_PER_TARGET,
+  delegados: MAX_BANNERS_PER_TARGET,
+  'clientes-registrados': MAX_BANNERS_PER_TARGET
 });
 
 const DEFAULT_BANNER_ITEM = Object.freeze({
@@ -1750,7 +1756,7 @@ const DEFAULT_BANNER_ITEM = Object.freeze({
   image: '',
   link: '',
   whatsapp: '',
-  target: 'all',
+  target: 'visitantes',
   startAt: '',
   endAt: '',
   version: 0,
@@ -2418,18 +2424,20 @@ function renderBannerForm() {
       bannerSelectInput.value = '';
     }
   }
+  const targetCounts = countBannersByTarget(items);
+  const slotsAvailable = hasAvailableBannerSlot(items);
   if (bannerSlotsInfo) {
     if (!items.length) {
       bannerSlotsInfo.textContent = 'Aún no has creado ningún banner. Usa “Añadir banner” para empezar.';
-    } else if (items.length >= MAX_BANNER_ITEMS) {
-      bannerSlotsInfo.textContent = `Has alcanzado el máximo de ${MAX_BANNER_ITEMS} banners.`;
     } else {
-      const remaining = MAX_BANNER_ITEMS - items.length;
-      bannerSlotsInfo.textContent = `Tienes ${items.length} banners configurados en el panel. Puedes crear ${remaining} más.`;
+      const summary = formatBannerTargetSummary(targetCounts);
+      bannerSlotsInfo.textContent = slotsAvailable
+        ? `Capacidad por audiencia — ${summary}.`
+        : `Has alcanzado el límite por audiencia. ${summary}.`;
     }
   }
   if (bannerAddButton) {
-    bannerAddButton.disabled = items.length >= MAX_BANNER_ITEMS;
+    bannerAddButton.disabled = !slotsAvailable;
   }
   const hasSelection = Boolean(selected);
   if (bannerDeleteButton) {
@@ -2471,7 +2479,10 @@ function renderBannerForm() {
     bannerEndAtInput.disabled = !hasSelection;
   }
   if (bannerAudienceSelect) {
-    bannerAudienceSelect.value = hasSelection ? normaliseBannerTarget(selected?.target) : 'all';
+    const defaultTarget = hasSelection
+      ? normaliseBannerTarget(selected?.target)
+      : findFirstAvailableBannerTarget(items);
+    bannerAudienceSelect.value = defaultTarget;
     bannerAudienceSelect.disabled = !hasSelection;
   }
   refreshBannerImagePreview(selected?.image || '');
@@ -2543,7 +2554,8 @@ function renderBannerPreview() {
     body.appendChild(actions);
     const statusParts = [];
     statusParts.push(item.enabled ? 'Activado' : 'Borrador');
-    statusParts.push(BANNER_TARGET_LABELS[normaliseBannerTarget(item.target)] || BANNER_TARGET_LABELS.all);
+    const audienceLabel = BANNER_TARGET_LABELS[normaliseBannerTarget(item.target)] || BANNER_TARGET_LABELS.visitantes;
+    statusParts.push(audienceLabel);
     if (item.enabled && !bannerIsActiveDuring(now, item)) {
       statusParts.push('Fuera de fechas');
     }
@@ -2818,12 +2830,18 @@ function handleBannerSelectionChange(event) {
 function handleBannerAdd(event) {
   event.preventDefault();
   const items = Array.isArray(bannerConfig?.items) ? [...bannerConfig.items] : [];
-  if (items.length >= MAX_BANNER_ITEMS) {
-    if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el número máximo de banners.';
+  if (!hasAvailableBannerSlot(items)) {
+    if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el límite de banners por audiencia.';
     return;
   }
   const now = Date.now();
-  const newItem = normaliseBannerItem({ id: createId('banner'), version: now, updatedAt: new Date(now).toISOString() });
+  const target = findFirstAvailableBannerTarget(items);
+  const newItem = normaliseBannerItem({
+    id: createId('banner'),
+    target,
+    version: now,
+    updatedAt: new Date(now).toISOString()
+  });
   items.push(newItem);
   bannerEditingId = newItem.id;
   const nextConfig = {
@@ -2869,23 +2887,21 @@ function handleBannerDelete(event) {
 function handleBannerFormSubmit(event) {
   event.preventDefault();
   const items = Array.isArray(bannerConfig?.items) ? [...bannerConfig.items] : [];
-  if (!bannerEditingId && items.length >= MAX_BANNER_ITEMS) {
-    if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el número máximo de banners.';
-    return;
-  }
   let index = items.findIndex(item => item.id === bannerEditingId);
   if (index === -1) {
-    if (items.length >= MAX_BANNER_ITEMS) {
-      if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el número máximo de banners.';
+    if (!hasAvailableBannerSlot(items)) {
+      if (bannerFormInfo) bannerFormInfo.textContent = 'Has alcanzado el límite de banners por audiencia.';
       return;
     }
-    const placeholder = normaliseBannerItem({ id: bannerEditingId || createId('banner') });
+    const placeholder = normaliseBannerItem({
+      id: bannerEditingId || createId('banner'),
+      target: findFirstAvailableBannerTarget(items)
+    });
     items.push(placeholder);
     index = items.length - 1;
     bannerEditingId = placeholder.id;
   }
   const existing = items[index];
-  clearBannerDismissedRecord(existing);
   const enabled = Boolean(bannerEnabledInput?.checked);
   const startIso = parseDateTimeLocalInput(bannerStartAtInput?.value || '');
   const endIso = parseDateTimeLocalInput(bannerEndAtInput?.value || '');
@@ -2898,6 +2914,13 @@ function handleBannerFormSubmit(event) {
     }
   }
   const now = Date.now();
+  const target = normaliseBannerTarget(bannerAudienceSelect?.value);
+  if (!hasAvailableBannerSlotForTarget(target, items, { excludeId: existing?.id })) {
+    if (bannerFormInfo) {
+      bannerFormInfo.textContent = 'No puedes configurar más banners para ese tipo de usuario.';
+    }
+    return;
+  }
   const updatedItem = {
     ...existing,
     enabled,
@@ -2908,10 +2931,11 @@ function handleBannerFormSubmit(event) {
     whatsapp: bannerWhatsappInput?.value.trim() || '',
     startAt: startIso,
     endAt: endIso,
-    target: normaliseBannerTarget(bannerAudienceSelect?.value),
+    target,
     version: now,
     updatedAt: new Date(now).toISOString()
   };
+  clearBannerDismissedRecord(existing);
   items[index] = updatedItem;
   bannerEditingId = updatedItem.id;
   const nextConfig = {
@@ -3248,7 +3272,76 @@ function normaliseBannerTarget(value) {
   if (raw === 'comercial') return 'comerciales';
   if (raw === 'delegado' || raw === 'lider' || raw === 'líder') return 'delegados';
   if (raw === 'clientes' || raw === 'cliente') return 'clientes-registrados';
-  return 'all';
+  if (raw === 'visitante' || raw === 'visitantes' || raw === 'publico' || raw === 'público' || raw === 'public' || raw === 'anonimo' || raw === 'anónimo') {
+    return 'visitantes';
+  }
+  if (raw === 'all' || raw === '*' || raw === '') return 'visitantes';
+  return 'visitantes';
+}
+
+function getBannerTargetLimit(target) {
+  const normalised = normaliseBannerTarget(target);
+  return BANNER_TARGET_LIMITS[normalised] ?? MAX_BANNERS_PER_TARGET;
+}
+
+function countBannersByTarget(items, { excludeId } = {}) {
+  const counts = {};
+  if (!Array.isArray(items)) return counts;
+  items.forEach(item => {
+    if (!item) return;
+    if (excludeId && item.id === excludeId) return;
+    const target = normaliseBannerTarget(item.target);
+    counts[target] = (counts[target] || 0) + 1;
+  });
+  return counts;
+}
+
+function hasAvailableBannerSlotForTarget(target, items, { excludeId } = {}) {
+  const counts = countBannersByTarget(items, { excludeId });
+  const normalised = normaliseBannerTarget(target);
+  return (counts[normalised] || 0) < getBannerTargetLimit(normalised);
+}
+
+function hasAvailableBannerSlot(items, { excludeId } = {}) {
+  const counts = countBannersByTarget(items, { excludeId });
+  return BANNER_TARGETS.some(target => (counts[target] || 0) < getBannerTargetLimit(target));
+}
+
+function findFirstAvailableBannerTarget(items, { excludeId } = {}) {
+  const counts = countBannersByTarget(items, { excludeId });
+  for (const target of BANNER_TARGETS) {
+    if ((counts[target] || 0) < getBannerTargetLimit(target)) {
+      return target;
+    }
+  }
+  return BANNER_TARGETS[0];
+}
+
+function formatBannerTargetSummary(counts) {
+  return BANNER_TARGETS
+    .map(target => {
+      const used = counts[target] || 0;
+      const limit = getBannerTargetLimit(target);
+      return `${BANNER_TARGET_LABELS[target]}: ${used}/${limit}`;
+    })
+    .join(' · ');
+}
+
+function enforceBannerTargetLimits(items) {
+  const counts = {};
+  return Array.isArray(items)
+    ? items.filter(item => {
+        if (!item) return false;
+        const target = normaliseBannerTarget(item.target);
+        const limit = getBannerTargetLimit(target);
+        counts[target] = counts[target] || 0;
+        if (counts[target] >= limit) {
+          return false;
+        }
+        counts[target] += 1;
+        return true;
+      })
+    : [];
 }
 
 function normaliseDateTimeValue(value) {
@@ -3320,10 +3413,11 @@ function normaliseBanner(raw) {
       candidateItems = [raw];
     }
   }
-  const items = candidateItems
-    .map(normaliseBannerItem)
-    .filter(Boolean)
-    .slice(0, MAX_BANNER_ITEMS);
+  const items = enforceBannerTargetLimits(
+    candidateItems
+      .map(normaliseBannerItem)
+      .filter(Boolean)
+  );
   base.items = items;
   let latestVersion = Number(raw?.version);
   if (!Number.isFinite(latestVersion) || latestVersion <= 0) {
@@ -3392,9 +3486,10 @@ function bannerIsActiveDuring(reference, banner) {
 
 function bannerMatchesAudience(banner) {
   const target = normaliseBannerTarget(banner?.target);
-  if (target === 'all') return true;
   const role = currentUser?.role || '';
   switch (target) {
+    case 'visitantes':
+      return !currentUser;
     case 'comerciales':
       return role === 'comercial';
     case 'delegados':
@@ -10040,6 +10135,7 @@ function setCurrentUser(user, { persist = true } = {}) {
   }
   updateUIForRole();
   prefillProfileForm();
+  updateBannerDisplay({ force: true });
 }
 
 function logout() {
