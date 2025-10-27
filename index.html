@@ -473,6 +473,10 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .login-hints li + li { margin-top:6px; }
 .muted-link { color:#93a0b5; font-size:12px; }
 .small-hint { font-size:12px; color:#94a3b8; margin:6px 0 0; }
+.backup-status { margin-top:14px; min-height:18px; color:#cbd5f5; font-weight:500; }
+.backup-status[data-state="working"] { color:#fbbf24; }
+.backup-status[data-state="success"] { color:#34d399; }
+.backup-status[data-state="error"] { color:#f87171; }
 .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.3); font-size:11px; letter-spacing:.4px; text-transform:uppercase; }
 .tag.tag-success { background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.45); color:#86efac; }
 .tag.tag-warning { background: rgba(234,179,8,0.18); border-color: rgba(234,179,8,0.45); color:#facc15; }
@@ -1373,6 +1377,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <button type="button" class="tab" data-tab="rewards">Recompensas</button>
       <button type="button" class="tab" data-tab="banner">Banner</button>
       <button type="button" class="tab" data-tab="analytics">Visitas y estadísticas</button>
+      <button type="button" class="tab" data-tab="backups">Copias de seguridad</button>
       <button type="button" class="tab" data-tab="users">Usuarios</button>
     </div>
 
@@ -1623,6 +1628,17 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
           <div id="clientProductChart" class="analytics-chart"></div>
         </section>
       </div>
+    </div>
+
+    <div id="adminBackupsTab" class="admin-tab hidden">
+      <div class="section-subtitle" style="margin:0 0 8px;">Copias de seguridad del panel</div>
+      <p class="dim" style="margin:0 0 18px;">Genera archivos de respaldo con toda la información dinámica creada por los usuarios y descarga un paquete completo del proyecto para restaurarlo en minutos.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:12px;">
+        <button type="button" class="utility-button" id="backupDataButton">Crear copia de datos dinámica</button>
+        <button type="button" class="utility-button" id="backupFullButton">Exportación completa del proyecto</button>
+      </div>
+      <p id="backupStatus" class="backup-status" aria-live="polite"></p>
+      <div class="small-hint" style="margin-top:12px;">Las copias incluyen usuarios, tarifas, leads, recompensas, mensajes, solicitudes y toda la configuración almacenada en el navegador.</div>
     </div>
 
     <div id="adminBannerTab" class="admin-tab hidden">
@@ -2006,6 +2022,20 @@ const KPI_HISTORY_MONTHS = 3;
 
 const REMOTE_TARGET = window.FIREBASE_DATA_DOCUMENT || { collection: 'app', document: 'state' };
 
+const BACKUP_STATIC_ASSETS = Object.freeze([
+  { path: 'index.html' },
+  { path: 'firebase-config.js' },
+  { path: 'netlify.toml', optional: true },
+  { path: 'vercel.json', optional: true },
+  { path: 'CNAME', optional: true },
+  { path: 'README.md', optional: true }
+]);
+
+const BACKUP_JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
+
+const STORAGE_LOCAL_KEY_NAMES = Object.freeze(Object.keys(STORAGE_KEYS).filter((name) => name !== 'session'));
+const STORAGE_SESSION_KEY_NAMES = Object.freeze(['session']);
+
 const remoteState = {
   enabled: Boolean(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId),
   ready: false,
@@ -2160,6 +2190,205 @@ function applyRemoteData(data) {
   }
 }
 
+function snapshotStorageValue(storage, key) {
+  try {
+    const raw = storage.getItem(key);
+    if (raw === null || raw === undefined) {
+      return { key, raw: null, parsed: null };
+    }
+    try {
+      return { key, raw, parsed: JSON.parse(raw) };
+    } catch (error) {
+      return { key, raw, parseError: error.message };
+    }
+  } catch (error) {
+    return { key, raw: null, parseError: error.message };
+  }
+}
+
+function collectStorageSnapshot() {
+  const localSnapshot = {};
+  for (const name of STORAGE_LOCAL_KEY_NAMES) {
+    localSnapshot[name] = snapshotStorageValue(localStorage, STORAGE_KEYS[name]);
+  }
+  const sessionSnapshot = {};
+  for (const name of STORAGE_SESSION_KEY_NAMES) {
+    sessionSnapshot[name] = snapshotStorageValue(sessionStorage, STORAGE_KEYS[name]);
+  }
+  return { localStorage: localSnapshot, sessionStorage: sessionSnapshot };
+}
+
+function collectDynamicDataSnapshot() {
+  const now = new Date();
+  const storageSnapshot = collectStorageSnapshot();
+  return {
+    generatedAt: now.toISOString(),
+    timezoneOffsetMinutes: now.getTimezoneOffset(),
+    origin: window.location.href,
+    pathname: window.location.pathname,
+    userAgent: navigator.userAgent,
+    totals: {
+      users: users.length,
+      tariffs: tariffs.length,
+      leads: leads.length,
+      rewards: rewards.length,
+      notifications: notifications.length,
+      callRequests: callRequests.length,
+      customBudgets: customBudgets.length,
+      messageThreads: messageThreads.length,
+      messageOffers: messageOffers.length,
+      analyticsEvents: analyticsEvents.length
+    },
+    data: {
+      users,
+      tariffs,
+      leads,
+      rewards,
+      notifications,
+      callRequests,
+      customBudgets,
+      messageThreads,
+      messageOffers,
+      analyticsEvents,
+      banner: bannerConfig
+    },
+    storage: storageSnapshot,
+    remote: {
+      enabled: remoteState.enabled,
+      target: REMOTE_TARGET,
+      lastError: remoteState.lastError ? String(remoteState.lastError) : null
+    }
+  };
+}
+
+function formatBackupFilename(prefix, extension) {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return `${prefix}-${timestamp}.${extension}`;
+}
+
+function downloadBlob(filename, blob) {
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
+function setBackupStatusMessage(state, message) {
+  if (!backupStatusMessage) return;
+  if (state) {
+    backupStatusMessage.dataset.state = state;
+  } else {
+    delete backupStatusMessage.dataset.state;
+  }
+  backupStatusMessage.textContent = message || '';
+}
+
+async function loadBackupZipLibrary() {
+  if (window.JSZip) {
+    return window.JSZip;
+  }
+  const module = await import(BACKUP_JSZIP_URL);
+  const JSZip = module?.default || module;
+  if (!JSZip) {
+    throw new Error('No se pudo cargar la librería de compresión.');
+  }
+  window.JSZip = JSZip;
+  return JSZip;
+}
+
+async function collectStaticFilesForExport() {
+  const files = [];
+  const missing = [];
+  for (const asset of BACKUP_STATIC_ASSETS) {
+    try {
+      const url = new URL(asset.path, window.location.href);
+      const response = await fetch(url.toString(), { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Respuesta ${response.status}`);
+      }
+      const content = await response.text();
+      files.push({ path: asset.path, content });
+    } catch (error) {
+      missing.push({ path: asset.path, optional: Boolean(asset.optional), error });
+      if (!asset.optional) {
+        const failure = new Error(`No se pudo descargar el archivo obligatorio ${asset.path}`);
+        failure.missing = missing;
+        failure.files = files;
+        throw failure;
+      }
+      console.warn(`No se pudo incluir ${asset.path} en la exportación`, error);
+    }
+  }
+  return { files, missingOptional: missing.filter((item) => item.optional) };
+}
+
+async function handleBackupDataExport(event) {
+  event?.preventDefault?.();
+  if (!backupDataButton) return;
+  if (backupDataButton.disabled) return;
+  backupDataButton.disabled = true;
+  setBackupStatusMessage('working', 'Generando copia de seguridad de los datos…');
+  try {
+    const snapshot = collectDynamicDataSnapshot();
+    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+    downloadBlob(formatBackupFilename('backup-datos', 'json'), blob);
+    setBackupStatusMessage('success', 'Copia de seguridad creada. Guarda el archivo JSON descargado en un lugar seguro.');
+  } catch (error) {
+    console.error('No se pudo generar la copia de seguridad', error);
+    setBackupStatusMessage('error', 'Ocurrió un error al generar la copia de seguridad. Revisa la consola para más detalles.');
+  } finally {
+    backupDataButton.disabled = false;
+  }
+}
+
+async function handleFullExport(event) {
+  event?.preventDefault?.();
+  if (!backupFullButton) return;
+  if (backupFullButton.disabled) return;
+  backupFullButton.disabled = true;
+  setBackupStatusMessage('working', 'Preparando la exportación completa del proyecto…');
+  try {
+    const JSZip = await loadBackupZipLibrary();
+    const zip = new JSZip();
+    const snapshot = collectDynamicDataSnapshot();
+    zip.file('backups/data-backup.json', JSON.stringify(snapshot, null, 2));
+    zip.file('backups/storage-snapshot.json', JSON.stringify(snapshot.storage, null, 2));
+    const { files, missingOptional } = await collectStaticFilesForExport();
+    files.forEach((file) => zip.file(file.path, file.content));
+    const blob = await zip.generateAsync({ type: 'blob' });
+    downloadBlob(formatBackupFilename('export-completo', 'zip'), blob);
+    const optionalNote = missingOptional.length
+      ? ` Algunos archivos opcionales no estaban disponibles: ${missingOptional.map((item) => item.path).join(', ')}.`
+      : '';
+    setBackupStatusMessage('success', `Exportación completa creada. Se descargó un ZIP listo para restaurar.${optionalNote}`);
+  } catch (error) {
+    console.error('No se pudo crear la exportación completa', error);
+    if (error?.missing && Array.isArray(error.missing)) {
+      const mandatoryMissing = error.missing.filter((item) => !item.optional).map((item) => item.path);
+      const optionalMissing = error.missing.filter((item) => item.optional).map((item) => item.path);
+      let message = 'No se pudo crear la exportación completa porque faltan archivos obligatorios.';
+      if (mandatoryMissing.length) {
+        message += ` Faltantes: ${mandatoryMissing.join(', ')}.`;
+      }
+      if (optionalMissing.length) {
+        message += ` También se omitieron archivos opcionales: ${optionalMissing.join(', ')}.`;
+      }
+      setBackupStatusMessage('error', message);
+    } else {
+      setBackupStatusMessage('error', 'No se pudo crear la exportación completa. Revisa la consola para más detalles.');
+    }
+  } finally {
+    backupFullButton.disabled = false;
+  }
+}
+
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 const uniq = (arr) => Array.from(new Set(arr.filter(x => x !== null && x !== undefined && x !== '')))
@@ -2286,6 +2515,7 @@ let grid,
   adminRewardsTab,
   adminBannerTab,
   adminAnalyticsTab,
+  adminBackupsTab,
   adminUsersTab,
   analyticsOverviewContainer,
   analyticsRangeControls,
@@ -2295,6 +2525,9 @@ let grid,
   analyticsSessionRangeLabel,
   analyticsProductRangeLabel,
   clientProductChart,
+  backupStatusMessage,
+  backupDataButton,
+  backupFullButton,
   tarifaList,
   tarifaForm,
   tarifaFormInfo,
@@ -11680,6 +11913,7 @@ document.addEventListener('DOMContentLoaded', () => {
   adminRewardsTab = $('#adminRewardsTab');
   adminBannerTab = $('#adminBannerTab');
   adminAnalyticsTab = $('#adminAnalyticsTab');
+  adminBackupsTab = $('#adminBackupsTab');
   adminUsersTab = $('#adminUsersTab');
   analyticsOverviewContainer = $('#analyticsOverview');
   analyticsRangeControls = $('#analyticsRangeControls');
@@ -11689,6 +11923,9 @@ document.addEventListener('DOMContentLoaded', () => {
   analyticsSessionRangeLabel = $('#analyticsSessionRange');
   analyticsProductRangeLabel = $('#analyticsProductRange');
   clientProductChart = $('#clientProductChart');
+  backupStatusMessage = $('#backupStatus');
+  backupDataButton = $('#backupDataButton');
+  backupFullButton = $('#backupFullButton');
   adminTabButtons = adminTabs ? Array.from(adminTabs.querySelectorAll('button[data-tab]')) : [];
   adminTabPanels = {
     sales: adminSalesTab,
@@ -11697,6 +11934,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rewards: adminRewardsTab,
     banner: adminBannerTab,
     analytics: adminAnalyticsTab,
+    backups: adminBackupsTab,
     users: adminUsersTab
   };
   activateAdminTab(adminActiveTab);
@@ -11995,6 +12233,9 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     activateAdminTab(button.dataset.tab);
   });
+
+  backupDataButton?.addEventListener('click', handleBackupDataExport);
+  backupFullButton?.addEventListener('click', handleFullExport);
 
   adminSalesRangeControls?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-range]');
