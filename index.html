@@ -389,6 +389,32 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .modal .modal-content { background:#0f1522; border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px; max-width:420px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.45); }
 .modal .modal-content h3 { margin-top:0; }
 .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+.site-banner { position:fixed; inset:0; background:rgba(11,15,23,0.82); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px; z-index:120; }
+.site-banner.hidden { display:none !important; }
+.site-banner__card { position:relative; background:#0f1522; border:1px solid rgba(148,163,184,0.25); border-radius:20px; box-shadow:0 32px 70px rgba(2,6,23,0.65); max-width:480px; width:100%; overflow:hidden; display:flex; flex-direction:column; }
+.site-banner__media { width:100%; height:220px; background:rgba(15,23,42,0.6); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.site-banner__media.hidden { display:none; }
+.site-banner__media img { width:100%; height:100%; object-fit:cover; }
+.site-banner__body { padding:24px; display:flex; flex-direction:column; gap:16px; }
+.site-banner__title { margin:0; font-size:22px; font-weight:700; }
+.site-banner__description { margin:0; color:#cbd5f5; line-height:1.6; }
+.site-banner__description.hidden { display:none; }
+.site-banner__actions { display:flex; flex-wrap:wrap; gap:10px; }
+.site-banner__actions .site-banner__hint { font-size:12px; color:#94a3b8; }
+.site-banner__action { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 20px; border-radius:999px; font-weight:600; font-size:14px; border:1px solid transparent; text-decoration:none; transition:transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease; }
+.site-banner__action:focus-visible { outline:3px solid rgba(148,163,184,0.65); outline-offset:2px; }
+.site-banner__action--primary { background:linear-gradient(135deg, #4e8fca, #6366f1); color:#fff; box-shadow:0 16px 36px rgba(79,120,255,0.35); }
+.site-banner__action--primary:hover { transform:translateY(-1px); box-shadow:0 20px 44px rgba(79,120,255,0.45); }
+.site-banner__action--whatsapp { background:rgba(34,197,94,0.18); color:#bbf7d0; border-color:rgba(34,197,94,0.45); box-shadow:0 16px 32px rgba(16,185,129,0.28); }
+.site-banner__action--whatsapp:hover { transform:translateY(-1px); background:rgba(34,197,94,0.28); border-color:rgba(34,197,94,0.6); color:#ecfdf5; }
+.site-banner__close { position:absolute; top:14px; right:14px; width:36px; height:36px; border-radius:50%; border:none; background:#ef4444; color:#fff; font-weight:700; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 14px 32px rgba(239,68,68,0.35); transition:transform .2s ease, box-shadow .2s ease; }
+.site-banner__close:hover { transform:translateY(-1px) scale(1.03); box-shadow:0 18px 40px rgba(239,68,68,0.45); }
+.site-banner__close:focus-visible { outline:3px solid rgba(239,68,68,0.6); outline-offset:2px; }
+.banner-preview { margin-top:18px; }
+.banner-preview__card { pointer-events:none; opacity:0.92; }
+.banner-preview__empty { border:1px dashed rgba(148,163,184,0.35); border-radius:16px; padding:16px; font-size:13px; color:#94a3b8; }
+.banner-preview__meta { font-size:12px; color:#94a3b8; margin:12px 0 0; }
+.banner-preview__actions { pointer-events:none; }
 .tile-actions { margin-top:auto; display:flex; gap:10px; flex-wrap:wrap; }
 .flex-between { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
 .login-hints { margin:0; padding-left:20px; color:#cbd5f5; font-size:14px; }
@@ -1206,6 +1232,20 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
         <span class="dim" id="profileFormInfo"></span>
       </div>
     </form>
+</div>
+</div>
+
+<div id="siteBanner" class="site-banner hidden" role="dialog" aria-modal="true" aria-labelledby="siteBannerTitle" aria-hidden="true">
+  <div class="site-banner__card" id="siteBannerCard" role="document">
+    <button type="button" class="site-banner__close" id="siteBannerClose" aria-label="Cerrar banner">×</button>
+    <div class="site-banner__media hidden" id="siteBannerImageWrapper">
+      <img id="siteBannerImage" alt="" />
+    </div>
+    <div class="site-banner__body">
+      <h3 class="site-banner__title" id="siteBannerTitle"></h3>
+      <p class="site-banner__description hidden" id="siteBannerDescription"></p>
+      <div class="site-banner__actions" id="siteBannerActions"></div>
+    </div>
   </div>
 </div>
 
@@ -1279,6 +1319,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <button type="button" class="tab" data-tab="tariffs">Tarifas</button>
       <button type="button" class="tab" data-tab="clients">Clientes directos</button>
       <button type="button" class="tab" data-tab="rewards">Recompensas</button>
+      <button type="button" class="tab" data-tab="banner">Banner</button>
       <button type="button" class="tab" data-tab="users">Usuarios</button>
     </div>
 
@@ -1479,6 +1520,48 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <div id="rewardList" class="rewards-grid"></div>
     </div>
 
+    <div id="adminBannerTab" class="admin-tab hidden">
+      <div class="section-subtitle" style="margin:0 0 8px;">Banner emergente</div>
+      <p class="dim" style="margin:0 0 16px;">Crea un mensaje destacado que aparecerá como ventana emergente la primera vez que alguien visite la página.</p>
+      <form id="bannerForm" class="stacked">
+        <div class="toggle-field">
+          <input type="checkbox" id="bannerEnabled" />
+          <label for="bannerEnabled">Activar banner emergente</label>
+        </div>
+        <div class="form-grid">
+          <div class="full">
+            <label class="label" for="bannerTitle">Título</label>
+            <input id="bannerTitle" type="text" placeholder="Título principal del banner" />
+          </div>
+          <div class="full">
+            <label class="label" for="bannerDescription">Descripción</label>
+            <textarea id="bannerDescription" placeholder="Mensaje adicional para el banner"></textarea>
+          </div>
+          <div class="full">
+            <label class="label" for="bannerImage">Imagen (URL)</label>
+            <input id="bannerImage" type="url" placeholder="https://..." />
+            <p class="small-hint">La imagen se recorta automáticamente para ajustarse al espacio disponible.</p>
+          </div>
+          <div>
+            <label class="label" for="bannerLink">Enlace principal</label>
+            <input id="bannerLink" type="url" placeholder="https://tuservicio.com" />
+            <p class="small-hint">Se abrirá en una nueva pestaña.</p>
+          </div>
+          <div>
+            <label class="label" for="bannerWhatsapp">Número de WhatsApp</label>
+            <input id="bannerWhatsapp" type="text" placeholder="Ej. 34600111222" />
+            <p class="small-hint">Incluye el prefijo internacional sin símbolos.</p>
+          </div>
+        </div>
+        <div class="modal-actions" style="justify-content:flex-start; padding-top:4px;">
+          <button type="submit" class="primary">Guardar banner</button>
+          <button type="button" class="smallbtn" id="bannerReset">Vaciar contenido</button>
+          <span class="dim" id="bannerFormInfo"></span>
+        </div>
+      </form>
+      <div id="bannerPreview" class="banner-preview"></div>
+    </div>
+
     <div id="adminUsersTab" class="admin-tab hidden">
       <div class="section-subtitle" style="margin:0 0 8px;">Gestión de usuarios</div>
       <form id="userForm" class="stacked gap-sm">
@@ -1594,8 +1677,21 @@ const STORAGE_KEYS = {
   messages: 'panel.mensajes.v1',
   offers: 'panel.ofertas.v1',
   session: 'panel.session.v2',
-  users: 'panel.usuarios.v1'
+  users: 'panel.usuarios.v1',
+  banner: 'panel.banner.v1',
+  bannerDismissed: 'panel.banner.dismissed.v1'
 };
+
+const DEFAULT_BANNER_CONFIG = Object.freeze({
+  enabled: false,
+  title: '',
+  description: '',
+  image: '',
+  link: '',
+  whatsapp: '',
+  version: 0,
+  updatedAt: ''
+});
 
 const CALL_REQUEST_STATUS_INFO = {
   pendiente: {
@@ -1789,6 +1885,7 @@ async function commitRemoteSync() {
       tariffs,
       leads,
       rewards,
+      banner: bannerConfig,
       updatedAt: serverTimestamp()
     }, { merge: true });
     remoteState.lastError = null;
@@ -1855,6 +1952,11 @@ function applyRemoteData(data) {
     } catch (error) {
       console.warn('No se pudieron sincronizar recompensas en localStorage', error);
     }
+  }
+  if (remoteState.data.banner) {
+    setBannerConfig(remoteState.data.banner, { persistLocal: true, syncRemote: false });
+  } else if (remoteState.data.banner === null) {
+    setBannerConfig(DEFAULT_BANNER_CONFIG, { persistLocal: true, syncRemote: false });
   }
   if (domReady) {
     renderEverythingAfterDataChange({ refreshFilters: true, refreshAi: Boolean(aiLastQuery) });
@@ -1985,6 +2087,7 @@ let grid,
   adminTariffsTab,
   adminClientsTab,
   adminRewardsTab,
+  adminBannerTab,
   adminUsersTab,
   tarifaList,
   tarifaForm,
@@ -2126,7 +2229,25 @@ let grid,
   userRoleFilter,
   userListContainer,
   saveUserBtn,
-  cancelUserEdit;
+  cancelUserEdit,
+  bannerForm,
+  bannerFormInfo,
+  bannerEnabledInput,
+  bannerTitleInput,
+  bannerDescriptionInput,
+  bannerImageInput,
+  bannerLinkInput,
+  bannerWhatsappInput,
+  bannerResetButton,
+  bannerPreviewContainer,
+  siteBanner,
+  siteBannerCard,
+  siteBannerImageWrapper,
+  siteBannerImage,
+  siteBannerTitleEl,
+  siteBannerDescriptionEl,
+  siteBannerActions,
+  siteBannerCloseBtn;
 
 let currentUser = null;
 let tariffs = [];
@@ -2160,6 +2281,7 @@ let notificationsOpen = false;
 let activeBudgetResponseId = '';
 let pendingFollowUpRequestId = '';
 let pendingSaleRequestId = '';
+let bannerConfig = { ...DEFAULT_BANNER_CONFIG };
 
 function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   if (!domReady) return;
@@ -2178,8 +2300,209 @@ function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   renderNotifications();
   renderMessageCenter();
   populateAiFiberOptions();
+  renderBannerPreview();
+  updateBannerDisplay({ force: true });
   if (refreshAi && aiLastQuery) {
     runAiSearch(aiLastQuery, { preserveFormState: true });
+  }
+}
+
+function renderBannerForm() {
+  if (!bannerForm) return;
+  if (bannerEnabledInput) bannerEnabledInput.checked = Boolean(bannerConfig?.enabled);
+  if (bannerTitleInput) bannerTitleInput.value = bannerConfig?.title || '';
+  if (bannerDescriptionInput) bannerDescriptionInput.value = bannerConfig?.description || '';
+  if (bannerImageInput) bannerImageInput.value = bannerConfig?.image || '';
+  if (bannerLinkInput) bannerLinkInput.value = bannerConfig?.link || '';
+  if (bannerWhatsappInput) bannerWhatsappInput.value = bannerConfig?.whatsapp || '';
+}
+
+function renderBannerPreview() {
+  if (!domReady || !bannerPreviewContainer) return;
+  bannerPreviewContainer.innerHTML = '';
+  const config = bannerConfig || DEFAULT_BANNER_CONFIG;
+  if (!config.enabled) {
+    const empty = document.createElement('div');
+    empty.className = 'banner-preview__empty';
+    empty.textContent = 'El banner emergente está desactivado.';
+    bannerPreviewContainer.appendChild(empty);
+    return;
+  }
+  if (!config.title && !config.description && !config.image) {
+    const empty = document.createElement('div');
+    empty.className = 'banner-preview__empty';
+    empty.textContent = 'Añade un título, descripción o imagen para mostrar el banner.';
+    bannerPreviewContainer.appendChild(empty);
+    return;
+  }
+  const card = document.createElement('div');
+  card.className = 'site-banner__card banner-preview__card';
+  if (config.image) {
+    const media = document.createElement('div');
+    media.className = 'site-banner__media';
+    const img = document.createElement('img');
+    img.src = config.image;
+    img.alt = config.title ? `Imagen del banner ${config.title}` : 'Imagen del banner';
+    media.appendChild(img);
+    card.appendChild(media);
+  }
+  const body = document.createElement('div');
+  body.className = 'site-banner__body';
+  const title = document.createElement('h3');
+  title.className = 'site-banner__title';
+  title.textContent = config.title || 'Banner sin título';
+  body.appendChild(title);
+  if (config.description) {
+    const paragraph = document.createElement('p');
+    paragraph.className = 'site-banner__description';
+    paragraph.textContent = config.description;
+    body.appendChild(paragraph);
+  }
+  const actions = document.createElement('div');
+  actions.className = 'site-banner__actions banner-preview__actions';
+  let hasAction = false;
+  if (config.link) {
+    const action = document.createElement('span');
+    action.className = 'site-banner__action site-banner__action--primary';
+    action.textContent = 'Abrir enlace';
+    actions.appendChild(action);
+    hasAction = true;
+  }
+  const whatsappUrl = buildWhatsappUrl(config.whatsapp);
+  if (whatsappUrl) {
+    const action = document.createElement('span');
+    action.className = 'site-banner__action site-banner__action--whatsapp';
+    action.textContent = 'Escríbenos por WhatsApp';
+    actions.appendChild(action);
+    hasAction = true;
+  }
+  if (!hasAction) {
+    const hint = document.createElement('span');
+    hint.className = 'site-banner__hint';
+    hint.textContent = 'Añade un enlace o número de WhatsApp para mostrar acciones.';
+    actions.appendChild(hint);
+  }
+  body.appendChild(actions);
+  const updatedAt = parseDate(config.updatedAt);
+  if (updatedAt) {
+    const meta = document.createElement('p');
+    meta.className = 'banner-preview__meta';
+    meta.textContent = `Última actualización: ${formatDateES(updatedAt)}`;
+    body.appendChild(meta);
+  }
+  card.appendChild(body);
+  bannerPreviewContainer.appendChild(card);
+}
+
+function updateBannerDisplay({ force = false } = {}) {
+  if (!domReady || !siteBanner) return;
+  const config = bannerConfig || DEFAULT_BANNER_CONFIG;
+  const hasContent = Boolean(config.title || config.description || config.image);
+  if (siteBannerTitleEl) siteBannerTitleEl.textContent = config.title || '';
+  if (siteBannerDescriptionEl) {
+    const hasDescription = Boolean(config.description);
+    siteBannerDescriptionEl.textContent = config.description || '';
+    siteBannerDescriptionEl.classList.toggle('hidden', !hasDescription);
+  }
+  if (siteBannerImageWrapper && siteBannerImage) {
+    if (config.image) {
+      siteBannerImageWrapper.classList.remove('hidden');
+      siteBannerImage.src = config.image;
+      siteBannerImage.alt = config.title ? `Imagen del banner ${config.title}` : 'Imagen del banner';
+    } else {
+      siteBannerImageWrapper.classList.add('hidden');
+      siteBannerImage.src = '';
+      siteBannerImage.alt = '';
+    }
+  }
+  if (siteBannerActions) {
+    siteBannerActions.innerHTML = '';
+    let actionsCount = 0;
+    if (config.link) {
+      const link = document.createElement('a');
+      link.className = 'site-banner__action site-banner__action--primary';
+      link.href = config.link;
+      link.target = '_blank';
+      link.rel = 'noreferrer noopener';
+      link.textContent = 'Abrir enlace';
+      siteBannerActions.appendChild(link);
+      actionsCount += 1;
+    }
+    const whatsappUrl = buildWhatsappUrl(config.whatsapp);
+    if (whatsappUrl) {
+      const whatsappBtn = document.createElement('a');
+      whatsappBtn.className = 'site-banner__action site-banner__action--whatsapp';
+      whatsappBtn.href = whatsappUrl;
+      whatsappBtn.target = '_blank';
+      whatsappBtn.rel = 'noreferrer noopener';
+      whatsappBtn.textContent = 'Escríbenos por WhatsApp';
+      siteBannerActions.appendChild(whatsappBtn);
+      actionsCount += 1;
+    }
+    if (actionsCount === 0) {
+      siteBannerActions.classList.add('hidden');
+    } else {
+      siteBannerActions.classList.remove('hidden');
+    }
+  }
+  const shouldShow = config.enabled && hasContent && !hasDismissedBanner(config);
+  if (shouldShow) {
+    siteBanner.classList.remove('hidden');
+    siteBanner.setAttribute('aria-hidden', 'false');
+  } else if (force || !hasContent || !config.enabled) {
+    siteBanner.classList.add('hidden');
+    siteBanner.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function refreshBannerUI() {
+  if (!domReady) return;
+  renderBannerForm();
+  renderBannerPreview();
+  updateBannerDisplay({ force: true });
+}
+
+function handleBannerFormSubmit(event) {
+  event.preventDefault();
+  const enabled = Boolean(bannerEnabledInput?.checked);
+  const now = Date.now();
+  const config = {
+    enabled,
+    title: bannerTitleInput?.value.trim() || '',
+    description: bannerDescriptionInput?.value.trim() || '',
+    image: bannerImageInput?.value.trim() || '',
+    link: bannerLinkInput?.value.trim() || '',
+    whatsapp: bannerWhatsappInput?.value.trim() || '',
+    version: now,
+    updatedAt: new Date(now).toISOString()
+  };
+  setBannerConfig(config, { persistLocal: true, syncRemote: true });
+  if (bannerFormInfo) {
+    bannerFormInfo.textContent = enabled
+      ? 'Banner actualizado. Se mostrará una vez por visitante.'
+      : 'Banner desactivado.';
+  }
+}
+
+function handleBannerReset(event) {
+  event.preventDefault();
+  const now = Date.now();
+  setBannerConfig({
+    ...DEFAULT_BANNER_CONFIG,
+    version: now,
+    updatedAt: new Date(now).toISOString()
+  }, { persistLocal: true, syncRemote: true });
+  if (bannerFormInfo) {
+    bannerFormInfo.textContent = 'Contenido del banner eliminado.';
+  }
+}
+
+function dismissBanner({ persist = true } = {}) {
+  if (!siteBanner || siteBanner.classList.contains('hidden')) return;
+  siteBanner.classList.add('hidden');
+  siteBanner.setAttribute('aria-hidden', 'true');
+  if (persist && bannerConfig) {
+    markBannerDismissed(bannerConfig.version);
   }
 }
 
@@ -2448,6 +2771,31 @@ function detectTariffType(item) {
   if (/fibra/.test(text) && !/m[oó]vil/.test(text)) return 'F';
   if (/m[oó]vil/.test(text)) return 'M';
   return 'C';
+}
+
+function normaliseBanner(raw) {
+  const base = { ...DEFAULT_BANNER_CONFIG };
+  if (!raw || typeof raw !== 'object') {
+    const now = Date.now();
+    base.version = now;
+    base.updatedAt = new Date(now).toISOString();
+    return base;
+  }
+  base.enabled = Boolean(raw.enabled);
+  base.title = (raw.title ?? '').toString().trim();
+  base.description = (raw.description ?? '').toString().trim();
+  base.image = (raw.image ?? raw.photo ?? '').toString().trim();
+  base.link = (raw.link ?? raw.url ?? '').toString().trim();
+  base.whatsapp = (raw.whatsapp ?? raw.whatsApp ?? raw.phone ?? '').toString().trim();
+  let version = Number(raw.version);
+  if (!Number.isFinite(version) || version <= 0) {
+    const parsedUpdated = raw.updatedAt ? Date.parse(raw.updatedAt) : NaN;
+    version = Number.isFinite(parsedUpdated) ? parsedUpdated : Date.now();
+  }
+  base.version = version;
+  const updatedAtDate = raw.updatedAt ? new Date(raw.updatedAt) : new Date(version);
+  base.updatedAt = Number.isNaN(updatedAtDate.getTime()) ? new Date(version).toISOString() : updatedAtDate.toISOString();
+  return base;
 }
 
 function normaliseTariff(item) {
@@ -3903,6 +4251,80 @@ function loadCustomBudgetsFromStorage() {
   }
   return [];
 }
+
+function loadBannerFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.banner);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return normaliseBanner(parsed);
+    }
+  } catch (error) {
+    console.warn('No se pudo cargar el banner guardado', error);
+  }
+  return normaliseBanner(DEFAULT_BANNER_CONFIG);
+}
+
+function saveBannerToStorage(config) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.banner, JSON.stringify(config));
+  } catch (error) {
+    console.warn('No se pudo guardar el banner', error);
+  }
+}
+
+function getBannerDismissedVersion() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.bannerDismissed);
+    if (!raw) return 0;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === 'number') return parsed;
+    if (parsed && typeof parsed.version === 'number') return parsed.version;
+    const numeric = Number(parsed?.version);
+    return Number.isFinite(numeric) ? numeric : 0;
+  } catch (error) {
+    console.warn('No se pudo leer el estado de visualización del banner', error);
+    return 0;
+  }
+}
+
+function markBannerDismissed(version) {
+  try {
+    const payload = {
+      version: Number(version) || 0,
+      dismissedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEYS.bannerDismissed, JSON.stringify(payload));
+  } catch (error) {
+    console.warn('No se pudo registrar el cierre del banner', error);
+  }
+}
+
+function hasDismissedBanner(config) {
+  if (!config) return false;
+  const version = Number(config.version);
+  if (!Number.isFinite(version) || version <= 0) return false;
+  return getBannerDismissedVersion() === version;
+}
+
+function buildWhatsappUrl(number) {
+  const digits = String(number || '').replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  return `https://wa.me/${digits}`;
+}
+
+function setBannerConfig(config, { persistLocal = true, syncRemote = false } = {}) {
+  bannerConfig = normaliseBanner(config);
+  if (persistLocal) {
+    saveBannerToStorage(bannerConfig);
+  }
+  if (syncRemote && remoteState.enabled) {
+    scheduleRemoteSync();
+  }
+  refreshBannerUI();
+}
+
+bannerConfig = loadBannerFromStorage();
 
 function saveCustomBudgets() {
   if (remoteState.enabled) {
@@ -6786,6 +7208,13 @@ function handleStorageEvent(event) {
     renderAdminRewards();
     renderCommercialPanel();
   }
+  if (event.key === STORAGE_KEYS.banner) {
+    bannerConfig = loadBannerFromStorage();
+    refreshBannerUI();
+  }
+  if (event.key === STORAGE_KEYS.bannerDismissed) {
+    updateBannerDisplay({ force: true });
+  }
   if (event.key === STORAGE_KEYS.notifications) {
     notifications = loadNotificationsFromStorage();
     renderNotifications();
@@ -9482,6 +9911,7 @@ document.addEventListener('DOMContentLoaded', () => {
   adminTariffsTab = $('#adminTariffsTab');
   adminClientsTab = $('#adminClientsTab');
   adminRewardsTab = $('#adminRewardsTab');
+  adminBannerTab = $('#adminBannerTab');
   adminUsersTab = $('#adminUsersTab');
   adminTabButtons = adminTabs ? Array.from(adminTabs.querySelectorAll('button[data-tab]')) : [];
   adminTabPanels = {
@@ -9489,6 +9919,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tariffs: adminTariffsTab,
     clients: adminClientsTab,
     rewards: adminRewardsTab,
+    banner: adminBannerTab,
     users: adminUsersTab
   };
   activateAdminTab(adminActiveTab);
@@ -9544,6 +9975,24 @@ document.addEventListener('DOMContentLoaded', () => {
   rewardImageActions = $('#rewardImageActions');
   rewardDescriptionInput = $('#rewardDescription');
   rewardList = $('#rewardList');
+  bannerForm = $('#bannerForm');
+  bannerFormInfo = $('#bannerFormInfo');
+  bannerEnabledInput = $('#bannerEnabled');
+  bannerTitleInput = $('#bannerTitle');
+  bannerDescriptionInput = $('#bannerDescription');
+  bannerImageInput = $('#bannerImage');
+  bannerLinkInput = $('#bannerLink');
+  bannerWhatsappInput = $('#bannerWhatsapp');
+  bannerResetButton = $('#bannerReset');
+  bannerPreviewContainer = $('#bannerPreview');
+  siteBanner = $('#siteBanner');
+  siteBannerCard = $('#siteBannerCard');
+  siteBannerImageWrapper = $('#siteBannerImageWrapper');
+  siteBannerImage = $('#siteBannerImage');
+  siteBannerTitleEl = $('#siteBannerTitle');
+  siteBannerDescriptionEl = $('#siteBannerDescription');
+  siteBannerActions = $('#siteBannerActions');
+  siteBannerCloseBtn = $('#siteBannerClose');
   clientNameInput = $('#clientName');
   clientContactInput = $('#clientContact');
   clientNotesInput = $('#clientNotes');
@@ -9670,6 +10119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   populateReferralTariffs();
   populateAiLinesOptions();
   renderEverythingAfterDataChange({ refreshAi: Boolean(aiLastQuery) });
+  renderBannerForm();
   $('#imprimir')?.addEventListener('click', () => window.print());
 
   loginForm?.addEventListener('submit', handleLoginSubmit);
@@ -9708,6 +10158,21 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#cancelRewardEdit')?.addEventListener('click', () => resetRewardForm());
   rewardList?.addEventListener('click', handleRewardListAction);
   clientRewardsContainer?.addEventListener('click', handleClientRewardAction);
+
+  bannerForm?.addEventListener('submit', handleBannerFormSubmit);
+  bannerResetButton?.addEventListener('click', handleBannerReset);
+  siteBanner?.addEventListener('click', (event) => {
+    if (event.target === siteBanner) {
+      dismissBanner();
+    }
+  });
+  siteBannerCard?.addEventListener('click', (event) => event.stopPropagation());
+  siteBannerCloseBtn?.addEventListener('click', () => dismissBanner());
+  siteBannerActions?.addEventListener('click', (event) => {
+    if (event.target.closest('a.site-banner__action')) {
+      dismissBanner();
+    }
+  });
 
   leadList?.addEventListener('click', handleLeadListAction);
   commercialLeads?.addEventListener('click', handleLeadListAction);
@@ -9820,6 +10285,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeFollowUpModal();
       closeCallSaleModal();
       hideNotifications();
+      dismissBanner();
     }
   });
 
