@@ -1637,6 +1637,9 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <div style="display:flex; flex-wrap:wrap; gap:12px;">
         <button type="button" class="utility-button" id="backupDataButton">Crear copia de datos dinámica</button>
         <button type="button" class="utility-button" id="backupFullButton">Exportación completa del proyecto</button>
+        <button type="button" class="utility-button" id="backupExcelButton">Descargar copia en Excel</button>
+        <button type="button" class="utility-button" id="backupExcelImportButton">Restaurar datos desde Excel</button>
+        <input type="file" id="backupExcelFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" />
       </div>
       <p id="backupStatus" class="backup-status" aria-live="polite"></p>
       <div class="small-hint" style="margin-top:12px;">Las copias incluyen usuarios, tarifas, leads, recompensas, mensajes, solicitudes y toda la configuración almacenada en el navegador.</div>
@@ -2106,6 +2109,73 @@ const BACKUP_STATIC_ASSETS = Object.freeze([
 ]);
 
 const BACKUP_JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
+
+const BACKUP_XLSX_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm';
+const BACKUP_EXCEL_META_SHEET = 'Resumen';
+const BACKUP_EXCEL_BANNER_SHEET = 'Banner';
+const BACKUP_EXCEL_BANNER_ITEMS_SHEET = 'BannerItems';
+const BACKUP_EXCEL_SHEETS = Object.freeze([
+  {
+    key: 'users',
+    title: 'Usuarios',
+    type: 'array',
+    sample: () => normaliseUser({ username: 'usuario', password: '', role: 'basico' })
+  },
+  {
+    key: 'tariffs',
+    title: 'Tarifas',
+    type: 'array',
+    sample: () => normaliseTariff({ id: 'tarifa-demo', nombre: 'Tarifa de ejemplo', precio: 0, moneda: 'EUR', lineas: 1, plataformas: [] })
+  },
+  {
+    key: 'leads',
+    title: 'Leads',
+    type: 'array',
+    sample: () => normaliseLead({ id: 'lead-demo', clientName: 'Cliente Demo', status: 'pendiente' })
+  },
+  {
+    key: 'rewards',
+    title: 'Recompensas',
+    type: 'array',
+    sample: () => normaliseReward({ id: 'reward-demo', title: 'Regalo', pointsCost: 1 })
+  },
+  {
+    key: 'notifications',
+    title: 'Notificaciones',
+    type: 'array',
+    sample: () => normaliseNotification({ id: 'notif-demo', user: 'usuario', message: 'Mensaje' })
+  },
+  {
+    key: 'callRequests',
+    title: 'SolicitudesLlamada',
+    type: 'array',
+    sample: () => normaliseCallRequest({ id: 'call-demo', name: 'Contacto', phone: '' })
+  },
+  {
+    key: 'customBudgets',
+    title: 'Presupuestos',
+    type: 'array',
+    sample: () => normaliseCustomBudget({ id: 'pres-demo', summary: 'Resumen', contact: 'Contacto' })
+  },
+  {
+    key: 'messageThreads',
+    title: 'HilosMensajes',
+    type: 'array',
+    sample: () => normaliseMessageThread({ id: 'thread-demo', user: 'usuario', messages: [] })
+  },
+  {
+    key: 'messageOffers',
+    title: 'OfertasMensajes',
+    type: 'array',
+    sample: () => normaliseOffer({ id: 'offer-demo', title: 'Oferta', description: '' })
+  },
+  {
+    key: 'analyticsEvents',
+    title: 'EventosAnalitica',
+    type: 'array',
+    sample: () => normaliseAnalyticsEvent({ id: 'analytics-demo', type: 'page-visit', timestamp: new Date().toISOString(), username: 'usuario', role: 'basico', meta: {} })
+  }
+]);
 
 const STORAGE_LOCAL_KEY_NAMES = Object.freeze(Object.keys(STORAGE_KEYS).filter((name) => name !== 'session'));
 const STORAGE_SESSION_KEY_NAMES = Object.freeze(['session']);
@@ -3223,6 +3293,244 @@ async function collectStaticFilesForExport() {
   return { files, missingOptional: missing.filter((item) => item.optional) };
 }
 
+async function loadBackupXlsxLibrary() {
+  if (window.XLSX) {
+    return window.XLSX;
+  }
+  const module = await import(BACKUP_XLSX_URL);
+  const XLSX = module?.default || module;
+  if (!XLSX || !XLSX.utils) {
+    throw new Error('No se pudo cargar la librería de hojas de cálculo.');
+  }
+  window.XLSX = XLSX;
+  return XLSX;
+}
+
+function formatValueForSheet(value) {
+  if (value === null || value === undefined) return '';
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+    try {
+      return JSON.stringify(value);
+    } catch (error) {
+      return String(value);
+    }
+  }
+  return value;
+}
+
+function gatherSheetHeaders(records, sampleFactory) {
+  const headers = [];
+  const seen = new Set();
+  const register = (record) => {
+    if (!record || typeof record !== 'object') return;
+    Object.keys(record).forEach((key) => {
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      headers.push(key);
+    });
+  };
+  if (Array.isArray(records)) {
+    records.forEach(register);
+  }
+  if (typeof sampleFactory === 'function') {
+    const sample = sampleFactory();
+    register(sample);
+  }
+  return headers;
+}
+
+function createSheetFromRecords(records, sampleFactory, XLSX) {
+  const list = Array.isArray(records) ? records.filter((item) => item && typeof item === 'object') : [];
+  const headers = gatherSheetHeaders(list, sampleFactory);
+  if (!list.length) {
+    return headers.length ? XLSX.utils.aoa_to_sheet([headers]) : XLSX.utils.aoa_to_sheet([[]]);
+  }
+  const prepared = list.map((record) => {
+    const row = {};
+    headers.forEach((header) => {
+      row[header] = formatValueForSheet(record[header]);
+    });
+    return row;
+  });
+  return XLSX.utils.json_to_sheet(prepared, { header: headers });
+}
+
+function createExcelWorkbookFromSnapshot(snapshot, XLSX) {
+  const workbook = XLSX.utils.book_new();
+  const metaRows = [
+    { Campo: 'Generado', Valor: snapshot.generatedAt || new Date().toISOString() },
+    { Campo: 'Zona horaria (minutos)', Valor: snapshot.timezoneOffsetMinutes ?? '' },
+    { Campo: 'Origen', Valor: snapshot.origin || '' },
+    { Campo: 'Ruta', Valor: snapshot.pathname || '' },
+    { Campo: 'Navegador', Valor: snapshot.userAgent || '' },
+    { Campo: 'Totales', Valor: snapshot.totals ? JSON.stringify(snapshot.totals) : '' }
+  ];
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(metaRows, { header: ['Campo', 'Valor'] }),
+    BACKUP_EXCEL_META_SHEET
+  );
+
+  const data = snapshot?.data || {};
+  BACKUP_EXCEL_SHEETS.forEach((config) => {
+    const sheet = createSheetFromRecords(data[config.key], config.sample, XLSX);
+    XLSX.utils.book_append_sheet(workbook, sheet, config.title);
+  });
+
+  const banner = normaliseBanner(data.banner);
+  const bannerSheet = XLSX.utils.json_to_sheet([
+    {
+      version: banner.version || '',
+      updatedAt: banner.updatedAt || '',
+      totalItems: Array.isArray(banner.items) ? banner.items.length : 0
+    }
+  ], { header: ['version', 'updatedAt', 'totalItems'] });
+  XLSX.utils.book_append_sheet(workbook, bannerSheet, BACKUP_EXCEL_BANNER_SHEET);
+
+  const bannerSample = () => normaliseBannerItem({ id: 'banner-demo', title: 'Banner', enabled: true });
+  const bannerItemsSheet = createSheetFromRecords(Array.isArray(banner.items) ? banner.items : [], bannerSample, XLSX);
+  XLSX.utils.book_append_sheet(workbook, bannerItemsSheet, BACKUP_EXCEL_BANNER_ITEMS_SHEET);
+
+  return workbook;
+}
+
+function parseExcelCellValue(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    const lower = trimmed.toLowerCase();
+    if (lower === 'true') return true;
+    if (lower === 'false') return false;
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        return JSON.parse(trimmed);
+      } catch (error) {
+        // ignore malformed JSON
+      }
+    }
+    return trimmed;
+  }
+  return value;
+}
+
+function parseExcelRow(row) {
+  if (!row || typeof row !== 'object') return {};
+  const parsed = {};
+  Object.keys(row).forEach((key) => {
+    const value = parseExcelCellValue(row[key]);
+    if (value === '' || value === null || value === undefined) {
+      return;
+    }
+    parsed[key] = value;
+  });
+  return parsed;
+}
+
+function isExcelRowEmpty(row) {
+  if (!row) return true;
+  return Object.keys(row).length === 0;
+}
+
+function extractExcelPayload(workbook, XLSX) {
+  const payload = {};
+  BACKUP_EXCEL_SHEETS.forEach((config) => {
+    const sheet = workbook.Sheets[config.title];
+    if (!sheet) return;
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+    const parsedRows = rows.map(parseExcelRow).filter((row) => !isExcelRowEmpty(row));
+    if (parsedRows.length) {
+      payload[config.key] = parsedRows;
+    } else {
+      payload[config.key] = [];
+    }
+  });
+
+  if (workbook.Sheets[BACKUP_EXCEL_BANNER_SHEET] || workbook.Sheets[BACKUP_EXCEL_BANNER_ITEMS_SHEET]) {
+    const banner = {};
+    const bannerSheet = workbook.Sheets[BACKUP_EXCEL_BANNER_SHEET];
+    if (bannerSheet) {
+      const rows = XLSX.utils.sheet_to_json(bannerSheet, { defval: '', raw: false });
+      if (rows.length) {
+        Object.assign(banner, parseExcelRow(rows[0]));
+      }
+    }
+    delete banner.totalItems;
+    const itemsSheet = workbook.Sheets[BACKUP_EXCEL_BANNER_ITEMS_SHEET];
+    if (itemsSheet) {
+      const rows = XLSX.utils.sheet_to_json(itemsSheet, { defval: '', raw: false });
+      const parsedItems = rows.map(parseExcelRow).filter((row) => !isExcelRowEmpty(row));
+      banner.items = parsedItems;
+    } else if (!banner.items) {
+      banner.items = [];
+    }
+    payload.banner = banner;
+  }
+  return payload;
+}
+
+async function handleBackupExcelExport(event) {
+  event?.preventDefault?.();
+  if (!backupExcelButton) return;
+  if (backupExcelButton.disabled) return;
+  backupExcelButton.disabled = true;
+  try {
+    setBackupStatusMessage('working', 'Generando copia de seguridad en Excel…');
+    const XLSX = await loadBackupXlsxLibrary();
+    const snapshot = collectDynamicDataSnapshot();
+    const workbook = createExcelWorkbookFromSnapshot(snapshot, XLSX);
+    const arrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([arrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    downloadBlob(formatBackupFilename('backup-datos', 'xlsx'), blob);
+    setBackupStatusMessage('success', 'Copia de seguridad en Excel creada correctamente.');
+  } catch (error) {
+    console.error('No se pudo generar la copia de seguridad en Excel', error);
+    setBackupStatusMessage('error', 'No se pudo generar el archivo Excel. Revisa la consola para más detalles.');
+  } finally {
+    backupExcelButton.disabled = false;
+  }
+}
+
+function requestExcelFileSelection(event) {
+  event?.preventDefault?.();
+  if (!backupExcelFileInput || backupExcelFileInput.disabled) return;
+  backupExcelFileInput.click();
+}
+
+async function handleBackupExcelFileChange(event) {
+  const input = event?.target;
+  const [file] = input?.files || [];
+  if (!file) return;
+  if (backupExcelImportButton) {
+    backupExcelImportButton.disabled = true;
+  }
+  setBackupStatusMessage('working', `Importando datos desde ${file.name}…`);
+  try {
+    const XLSX = await loadBackupXlsxLibrary();
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const payload = extractExcelPayload(workbook, XLSX);
+    if (!payload || !Object.keys(payload).length) {
+      setBackupStatusMessage('warning', 'El archivo seleccionado no contiene datos reconocidos.');
+      return;
+    }
+    applyRemoteData(payload);
+    scheduleRemoteSync();
+    setBackupStatusMessage('success', 'Datos restaurados desde la copia de Excel.');
+  } catch (error) {
+    console.error('No se pudo importar la copia de Excel', error);
+    setBackupStatusMessage('error', 'Ocurrió un error al importar el archivo Excel. Verifica el formato e inténtalo de nuevo.');
+  } finally {
+    if (backupExcelImportButton) {
+      backupExcelImportButton.disabled = false;
+    }
+    if (input) {
+      input.value = '';
+    }
+  }
+}
+
 async function handleBackupDataExport(event) {
   event?.preventDefault?.();
   if (!backupDataButton) return;
@@ -3444,6 +3752,9 @@ let grid,
   backupStatusMessage,
   backupDataButton,
   backupFullButton,
+  backupExcelButton,
+  backupExcelImportButton,
+  backupExcelFileInput,
   tarifaList,
   tarifaForm,
   tarifaFormInfo,
@@ -13192,6 +13503,9 @@ document.addEventListener('DOMContentLoaded', () => {
   backupStatusMessage = $('#backupStatus');
   backupDataButton = $('#backupDataButton');
   backupFullButton = $('#backupFullButton');
+  backupExcelButton = $('#backupExcelButton');
+  backupExcelImportButton = $('#backupExcelImportButton');
+  backupExcelFileInput = $('#backupExcelFileInput');
   adminTabButtons = adminTabs ? Array.from(adminTabs.querySelectorAll('button[data-tab]')) : [];
   adminTabPanels = {
     sales: adminSalesTab,
@@ -13502,6 +13816,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   backupDataButton?.addEventListener('click', handleBackupDataExport);
   backupFullButton?.addEventListener('click', handleFullExport);
+  backupExcelButton?.addEventListener('click', handleBackupExcelExport);
+  backupExcelImportButton?.addEventListener('click', requestExcelFileSelection);
+  backupExcelFileInput?.addEventListener('change', handleBackupExcelFileChange);
 
   adminSalesRangeControls?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-range]');
