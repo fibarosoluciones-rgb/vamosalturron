@@ -477,6 +477,7 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .backup-status[data-state="working"] { color:#fbbf24; }
 .backup-status[data-state="success"] { color:#34d399; }
 .backup-status[data-state="error"] { color:#f87171; }
+.backup-status[data-state="warning"] { color:#fbbf24; }
 .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.3); font-size:11px; letter-spacing:.4px; text-transform:uppercase; }
 .tag.tag-success { background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.45); color:#86efac; }
 .tag.tag-warning { background: rgba(234,179,8,0.18); border-color: rgba(234,179,8,0.45); color:#facc15; }
@@ -1829,6 +1830,18 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 <script src="./firebase-config.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js';
+import {
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  getIdTokenResult
+} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js';
 import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
 const BASE_DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 12.5, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "FIBRA 300 Y 2 LINEAS CON LLAMADAS ILIMITADAS Y 50 GI COMPARTIDOS", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0002", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 99.9, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "qwe", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0003", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "zxc", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0004", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 258.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "rty", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0005", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 46.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "fgh", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0006", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 21.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "cvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0007", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 12.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "tyu", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0008", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 45.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0009", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 14.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "fvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0010", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 13.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "uik", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0011", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0012", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 57.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "pñl", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0013", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 912.5, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "R45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0014", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 999.9, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "RF43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0015", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 978.0, "compañia": "simyo", "familia": "MEDIA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "F34F", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0016", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 958.0, "compañia": "jazztel", "familia": "MEDIA", "moneda": "EUR", "permanencia": "no", "descripción": "34F45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0017", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 946.0, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "34F43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0018", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 921.0, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F3RF", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0019", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 997.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "656H", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0020", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 5745.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "9 meses", "descripción": "H768", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0021", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 6745.0, "compañia": "mm", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "no", "descripción": "5G34G", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0022", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 5868.0, "compañia": "pp", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "12 meses", "descripción": "F3RT", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0023", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 9999.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F324TG6", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0024", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 3858.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "EF5655", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}];
@@ -2021,6 +2034,8 @@ const COMMISSION_RATES = {
 const KPI_HISTORY_MONTHS = 3;
 
 const REMOTE_TARGET = window.FIREBASE_DATA_DOCUMENT || { collection: 'app', document: 'state' };
+const FUNCTIONS_REGION = window.FIREBASE_FUNCTIONS_REGION || 'europe-west1';
+const APP_CHECK_SITE_KEY = window.APP_CHECK_SITE_KEY || '';
 
 const BACKUP_STATIC_ASSETS = Object.freeze([
   { path: 'index.html' },
@@ -2038,6 +2053,9 @@ const STORAGE_SESSION_KEY_NAMES = Object.freeze(['session']);
 
 const remoteState = {
   enabled: Boolean(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId),
+  authReady: false,
+  authPromise: null,
+  authError: null,
   ready: false,
   writing: false,
   pending: false,
@@ -2047,10 +2065,21 @@ const remoteState = {
 };
 
 let firebaseAppInstance = null;
+let firebaseAuth = null;
 let firestoreDb = null;
+let firebaseFunctions = null;
+let manualBackupCallable = null;
+let listBackupsCallable = null;
 let remoteDocRef = null;
 let remoteSyncTimer = null;
 let remoteDataArrived = false;
+let firebaseAuthInitPromise = null;
+let appCheckInitialised = false;
+
+const firebaseSession = {
+  claims: {},
+  user: null,
+};
 
 let domReady = false;
 let syncStatusEl = null;
@@ -2085,6 +2114,122 @@ function renderSyncStatus() {
   syncStatusEl.dataset.state = syncStatus.state;
 }
 
+async function ensureFirebaseCore() {
+  if (!remoteState.enabled) return null;
+  if (!firebaseAppInstance) {
+    firebaseAppInstance = initializeApp(window.FIREBASE_CONFIG);
+  }
+  if (APP_CHECK_SITE_KEY && !appCheckInitialised) {
+    try {
+      initializeAppCheck(firebaseAppInstance, {
+        provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true
+      });
+      appCheckInitialised = true;
+    } catch (error) {
+      console.warn('App Check no disponible', error);
+    }
+  }
+  if (!firebaseAuth) {
+    firebaseAuth = getAuth(firebaseAppInstance);
+    if (typeof firebaseAuth.useDeviceLanguage === 'function') {
+      firebaseAuth.useDeviceLanguage();
+    }
+  }
+  if (!firebaseFunctions) {
+    firebaseFunctions = getFunctions(firebaseAppInstance, FUNCTIONS_REGION);
+    manualBackupCallable = httpsCallable(firebaseFunctions, 'triggerManualBackup');
+    listBackupsCallable = httpsCallable(firebaseFunctions, 'listBackups');
+  }
+  if (!firebaseAuthInitPromise) {
+    firebaseAuthInitPromise = setPersistence(firebaseAuth, browserLocalPersistence)
+      .catch((error) => {
+        console.warn('No se pudo establecer la persistencia de Firebase Auth', error);
+      })
+      .then(() => {
+        onAuthStateChanged(firebaseAuth, handleFirebaseAuthChange);
+      });
+  }
+  await firebaseAuthInitPromise;
+  return firebaseAuth;
+}
+
+async function refreshFirebaseClaims(force = false) {
+  if (!firebaseAuth?.currentUser) {
+    firebaseSession.claims = {};
+    return firebaseSession.claims;
+  }
+  try {
+    const result = await getIdTokenResult(firebaseAuth.currentUser, force);
+    firebaseSession.claims = result?.claims || {};
+    return firebaseSession.claims;
+  } catch (error) {
+    console.error('No se pudieron obtener los claims personalizados', error);
+    firebaseSession.claims = {};
+    return firebaseSession.claims;
+  }
+}
+
+function hasAdminPrivileges() {
+  return Boolean(firebaseSession.claims?.admin);
+}
+
+function teardownRemoteSync() {
+  if (remoteState.unsub) {
+    try { remoteState.unsub(); } catch (_) { /* noop */ }
+    remoteState.unsub = null;
+  }
+  remoteDocRef = null;
+  remoteState.ready = false;
+  remoteState.data = null;
+}
+
+async function handleFirebaseAuthChange(user) {
+  firebaseSession.user = user;
+  if (!user) {
+    firebaseSession.claims = {};
+    remoteState.authReady = false;
+    remoteState.authError = null;
+    teardownRemoteSync();
+    setSyncStatus('offline', 'Inicia sesión para sincronizar');
+    if (currentUser) {
+      setCurrentUser(null);
+    }
+    return;
+  }
+
+  await refreshFirebaseClaims(true);
+  remoteState.authReady = true;
+  remoteState.authError = null;
+  if (currentUser) {
+    currentUser.firebaseAdmin = hasAdminPrivileges();
+    currentUser.firebaseClaims = { ...firebaseSession.claims };
+    updateUserInfo();
+  }
+
+  if (hasAdminPrivileges()) {
+    setSyncStatus('connecting', 'Autenticado como administrador');
+    initRemoteSync();
+  } else {
+    teardownRemoteSync();
+    setSyncStatus('offline', 'Sincronización reservada para administradores');
+  }
+}
+
+async function ensureRemoteAuth() {
+  if (!remoteState.enabled) return null;
+  await ensureFirebaseCore();
+  if (firebaseAuth.currentUser) {
+    remoteState.authReady = true;
+    remoteState.authError = null;
+    return firebaseAuth.currentUser;
+  }
+  const error = new Error('Se requiere autenticación');
+  error.code = 'auth/required';
+  remoteState.authError = error;
+  throw error;
+}
+
 function scheduleRemoteSync() {
   if (!remoteState.enabled) return;
   remoteState.pending = true;
@@ -2115,7 +2260,10 @@ async function commitRemoteSync() {
   } catch (error) {
     remoteState.lastError = error;
     console.error('No se pudo sincronizar con Firestore', error);
-    setSyncStatus('error', 'Error al guardar');
+    const statusMessage = error?.code === 'permission-denied'
+      ? 'Permisos insuficientes'
+      : 'Error al guardar';
+    setSyncStatus('error', statusMessage);
   } finally {
     remoteState.writing = false;
     if (!remoteState.lastError) {
@@ -2266,6 +2414,15 @@ function formatBackupFilename(prefix, extension) {
   return `${prefix}-${timestamp}.${extension}`;
 }
 
+function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const power = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const sized = value / Math.pow(1024, power);
+  return `${sized.toFixed(power === 0 ? 0 : 1)} ${units[power]}`;
+}
+
 function downloadBlob(filename, blob) {
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
@@ -2334,12 +2491,34 @@ async function handleBackupDataExport(event) {
   if (!backupDataButton) return;
   if (backupDataButton.disabled) return;
   backupDataButton.disabled = true;
-  setBackupStatusMessage('working', 'Generando copia de seguridad de los datos…');
   try {
+    let remoteFailure = false;
+    if (currentUser?.firebaseAdmin && manualBackupCallable) {
+      setBackupStatusMessage('working', 'Solicitando copia remota en la nube…');
+      try {
+        await ensureFirebaseCore();
+        const response = await manualBackupCallable();
+        const payload = response?.data || {};
+        const remoteSummary = payload.destination
+          ? `Copia en GCS: ${payload.destination} (${formatBytes(payload.sizeBytes || 0)})`
+          : 'Copia en la nube iniciada';
+        setBackupStatusMessage('syncing', `${remoteSummary}. Generando copia descargable…`);
+      } catch (error) {
+        console.error('No se pudo lanzar la copia remota', error);
+        remoteFailure = true;
+        setBackupStatusMessage('warning', 'La copia remota falló. Se generará solo la copia local.');
+      }
+    } else {
+      setBackupStatusMessage('working', 'Generando copia de seguridad de los datos…');
+    }
     const snapshot = collectDynamicDataSnapshot();
     const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
     downloadBlob(formatBackupFilename('backup-datos', 'json'), blob);
-    setBackupStatusMessage('success', 'Copia de seguridad creada. Guarda el archivo JSON descargado en un lugar seguro.');
+    if (remoteFailure) {
+      setBackupStatusMessage('warning', 'Copia local creada. Revisa la consola para reintentar la copia remota.');
+    } else {
+      setBackupStatusMessage('success', 'Copia de seguridad creada. Guarda el archivo JSON descargado en un lugar seguro.');
+    }
   } catch (error) {
     console.error('No se pudo generar la copia de seguridad', error);
     setBackupStatusMessage('error', 'Ocurrió un error al generar la copia de seguridad. Revisa la consola para más detalles.');
@@ -11032,7 +11211,7 @@ function hideRegisterModal() {
   registerForm?.reset();
 }
 
-function handleRegisterSubmit(event) {
+async function handleRegisterSubmit(event) {
   event.preventDefault();
   if (!registerForm) return;
   const username = registerUserInput?.value.trim().toLowerCase();
@@ -11057,6 +11236,10 @@ function handleRegisterSubmit(event) {
   const firstName = registerFirstNameInput?.value.trim() || '';
   const lastName = registerLastNameInput?.value.trim() || '';
   const email = registerEmailInput?.value.trim() || '';
+  if (!email) {
+    if (registerError) registerError.textContent = 'Añade un email válido.';
+    return;
+  }
   const newRecord = normaliseUser({
     username,
     password,
@@ -11066,14 +11249,28 @@ function handleRegisterSubmit(event) {
     email,
     selfRegistered: true
   });
-  users.push(newRecord);
-  saveUsers();
-  updateAvailableUsersHint();
-  renderUserList();
-  hideRegisterModal();
-  setCurrentUser(buildUserSnapshot(newRecord));
-  if (currentUser?.role === CLIENT_ROLE) {
-    showCommercialFlash('Tu cuenta se creó correctamente. Ya puedes solicitar tarifas.');
+  try {
+    await ensureFirebaseCore();
+    await createUserWithEmailAndPassword(firebaseAuth, email, password);
+    await refreshFirebaseClaims(true);
+    users.push(newRecord);
+    saveUsers();
+    updateAvailableUsersHint();
+    renderUserList();
+    hideRegisterModal();
+    setCurrentUser(buildUserSnapshot(newRecord));
+    if (currentUser?.role === CLIENT_ROLE) {
+      showCommercialFlash('Tu cuenta se creó correctamente. Ya puedes solicitar tarifas.');
+    }
+  } catch (error) {
+    console.error('No se pudo registrar en Firebase', error);
+    if (registerError) {
+      if (error?.code === 'auth/email-already-in-use') {
+        registerError.textContent = 'Ese correo ya está registrado. Usa otro o inicia sesión.';
+      } else {
+        registerError.textContent = 'No se pudo crear la cuenta. Revisa los datos e inténtalo de nuevo.';
+      }
+    }
   }
 }
 
@@ -11236,21 +11433,51 @@ function hideLoginModal() {
   loginForm?.reset();
 }
 
-function handleLoginSubmit(event) {
+async function handleLoginSubmit(event) {
   event.preventDefault();
   const username = loginUserInput?.value.trim().toLowerCase();
   const password = loginPassInput?.value;
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) {
-    if (loginError) loginError.textContent = 'Credenciales no válidas.';
+  if (!username || !password) {
+    if (loginError) loginError.textContent = 'Introduce usuario y contraseña.';
     return;
   }
-  setCurrentUser(buildUserSnapshot(user));
-  hideLoginModal();
+  const user = users.find(u => u.username === username);
+  if (!user) {
+    if (loginError) loginError.textContent = 'No existe una cuenta con ese usuario.';
+    return;
+  }
+  if (!user.email) {
+    if (loginError) loginError.textContent = 'La cuenta no tiene email asignado. Contacta con un administrador.';
+    return;
+  }
+  try {
+    await ensureFirebaseCore();
+    await signInWithEmailAndPassword(firebaseAuth, user.email, password);
+    await refreshFirebaseClaims(true);
+    setCurrentUser(buildUserSnapshot(user));
+    hideLoginModal();
+  } catch (error) {
+    console.error('Error al iniciar sesión con Firebase', error);
+    if (loginError) {
+      if (error?.code === 'auth/wrong-password') {
+        loginError.textContent = 'Contraseña incorrecta.';
+      } else if (error?.code === 'auth/user-not-found') {
+        loginError.textContent = 'No existe una cuenta en Firebase con ese email.';
+      } else if (error?.code === 'auth/too-many-requests') {
+        loginError.textContent = 'Demasiados intentos. Vuelve a intentarlo más tarde.';
+      } else {
+        loginError.textContent = 'No se pudo iniciar sesión. Revisa las credenciales.';
+      }
+    }
+  }
 }
 
 function setCurrentUser(user, { persist = true } = {}) {
   const previousUser = currentUser;
+  if (user) {
+    user.firebaseAdmin = hasAdminPrivileges();
+    user.firebaseClaims = { ...firebaseSession.claims };
+  }
   currentUser = user;
   if (persist) {
     persistSessionUser(user);
@@ -11273,7 +11500,14 @@ function setCurrentUser(user, { persist = true } = {}) {
   updateBannerDisplay({ force: true });
 }
 
-function logout() {
+async function logout() {
+  try {
+    if (firebaseAuth) {
+      await signOut(firebaseAuth);
+    }
+  } catch (error) {
+    console.warn('No se pudo cerrar la sesión de Firebase', error);
+  }
   setCurrentUser(null);
 }
 
@@ -11287,12 +11521,14 @@ function updateUserInfo() {
   } else {
     const displayName = userDisplayName(currentUser);
     const role = currentUser.role;
+    const firebaseBadge = currentUser.firebaseAdmin ? '<span class="role-tag" data-role="admin">Firebase admin</span>' : '';
     const avatar = currentUser.photo ? `<img class="avatar" src="${currentUser.photo}" alt="${displayName}">` : '';
     userInfo.innerHTML = `
       ${avatar}
       <span class="dim">Sesión iniciada:</span>
       <span class="name">${displayName}</span>
       <span class="role-tag" data-role="${role}">${roleLabel(role)}</span>
+      ${firebaseBadge}
       <button class="smallbtn" id="openProfile">Mi perfil</button>
       <button class="smallbtn" id="logoutBtn">Cerrar sesión</button>
     `;
@@ -11791,6 +12027,8 @@ async function initRemoteSync() {
     if (!firebaseAppInstance) {
       firebaseAppInstance = initializeApp(window.FIREBASE_CONFIG);
     }
+    setSyncStatus('connecting', 'Autenticando…');
+    await ensureRemoteAuth();
     if (!firestoreDb) {
       firestoreDb = getFirestore(firebaseAppInstance);
     }
@@ -11812,7 +12050,10 @@ async function initRemoteSync() {
       }, (error) => {
         remoteState.lastError = error;
         console.error('Error en la suscripción a Firestore', error);
-        setSyncStatus('error', 'Error de sincronización');
+        const statusMessage = error?.code === 'permission-denied'
+          ? 'Permisos insuficientes'
+          : 'Error de sincronización';
+        setSyncStatus('error', statusMessage);
       });
     }
     const existing = await getDoc(remoteDocRef);
@@ -11829,7 +12070,15 @@ async function initRemoteSync() {
   } catch (error) {
     remoteState.lastError = error;
     console.error('No se pudo iniciar la sincronización remota', error);
-    setSyncStatus('error', 'Sin conexión');
+    if (error?.code === 'auth/required') {
+      setSyncStatus('offline', 'Inicia sesión para sincronizar');
+    } else if (typeof error?.code === 'string' && error.code.startsWith('auth/')) {
+      setSyncStatus('error', 'Error de autenticación');
+    } else if (error?.code === 'permission-denied') {
+      setSyncStatus('error', 'Permisos insuficientes');
+    } else {
+      setSyncStatus('error', 'Sin conexión');
+    }
   }
 }
 
