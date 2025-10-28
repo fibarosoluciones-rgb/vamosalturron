@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const { Storage } = require("@google-cloud/storage");
 const { onRequest } = require("firebase-functions/v2/https");
-const { onSchedule: firebaseOnSchedule } = require("firebase-functions/v2/scheduler");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
 
 admin.initializeApp();
@@ -13,15 +13,6 @@ const storage = new Storage();
 
 if (!PROJECT_ID) {
   throw new Error("Project ID is not defined in the environment");
-}
-
-const region = (name) => ({ region: name });
-
-function onSchedule(schedule, runtimeOptions, handler) {
-  if (typeof schedule === "string" && typeof handler === "function" && runtimeOptions && runtimeOptions.region) {
-    return firebaseOnSchedule({ schedule, ...runtimeOptions }, handler);
-  }
-  return firebaseOnSchedule(schedule, runtimeOptions);
 }
 
 async function getAccessToken() {
@@ -101,20 +92,26 @@ async function findLatestBackupPrefix() {
   return `gs://${BUCKET_NAME}/firestore/${latest}/`;
 }
 
-exports.scheduledBackup = onSchedule("every 60 minutes", region("europe-southwest1"), async () => {
-  const { folder, time } = formatTimestampPath();
-  const destination = `gs://${BUCKET_NAME}/firestore/${folder}/${time}/`;
-  logger.info("Starting Firestore backup", { destination });
+exports.scheduledBackup = onSchedule(
+  {
+    schedule: "every 60 minutes",
+    region: "europe-west1",
+  },
+  async () => {
+    const { folder, time } = formatTimestampPath();
+    const destination = `gs://${BUCKET_NAME}/firestore/${folder}/${time}/`;
+    logger.info("Starting Firestore backup", { destination });
 
-  try {
-    const result = await triggerFirestoreExport(destination);
-    logger.info("Firestore backup requested successfully", { operation: result.name, destination });
-    return result;
-  } catch (error) {
-    logger.error("Error during Firestore backup", { error: error.message, destination });
-    throw error;
+    try {
+      const result = await triggerFirestoreExport(destination);
+      logger.info("Firestore backup requested successfully", { operation: result.name, destination });
+      return result;
+    } catch (error) {
+      logger.error("Error during Firestore backup", { error: error.message, destination });
+      throw error;
+    }
   }
-});
+).runWith({ region: "europe-southwest1" });
 
 exports.importLatestBackup = onRequest({ region: "europe-southwest1" }, async (req, res) => {
   const authHeader = req.get("Authorization") || "";
