@@ -47,33 +47,3 @@ Si quieres que el panel funcione completamente online y que los cambios del admi
 6. Publica el sitio. La primera vez que un administrador acceda se creará el documento `app/state` con las tarifas, usuarios y leads por defecto.
 
 A partir de ese momento, todas las modificaciones que el administrador realice desde el panel se almacenarán en Firestore y cualquier usuario conectado verá los cambios en tiempo real sin necesidad de recargar la página.
-
-## Copias de seguridad automáticas de Firestore
-
-Este repositorio incluye funciones de Cloud Functions v2 que crean una copia de seguridad completa de Firestore cada 60 minutos y una utilidad para restaurar la copia más reciente desde el bucket `vamosalturron-3242c-backups` en la región `europe-southwest1`.
-
-### Probar el backup manualmente
-1. Ve a [Google Cloud Console](https://console.cloud.google.com/functions/list?project=vamosalturron-3242c).
-2. Selecciona la función **scheduledBackup**.
-3. Pulsa **Trigger function** para lanzar una copia bajo demanda y revisa los logs para confirmar que se ha solicitado correctamente.
-
-### Dónde se guardan las copias
-- Abre [Cloud Storage](https://console.cloud.google.com/storage/browser/vamosalturron-3242c-backups?project=vamosalturron-3242c).
-- Las carpetas se crean con el formato `firestore/YYYY-MM-DD/HHmm/` dentro del bucket `vamosalturron-3242c-backups`.
-
-### Restaurar la última copia desde la interfaz web
-1. Despliega el sitio y abre `/admin/restore.html` en tu hosting de Firebase.
-2. Introduce el valor configurado en `ADMIN_TOKEN`.
-3. Pulsa **Restaurar último backup** y espera la confirmación del inicio de la importación.
-
-### Restaurar una copia concreta desde consola
-
-```bash
-gcloud firestore import gs://vamosalturron-3242c-backups/firestore/YYYY-MM-DD/HHmm/
-```
-
-### Configurar el deploy automático en GitHub
-1. En tu repositorio, abre **Settings → Secrets and variables → Actions**.
-2. Crea el secreto **FIREBASE_TOKEN** con el resultado de `firebase login:ci` en tu máquina local.
-3. Crea el secreto **ADMIN_TOKEN** con el token que usarás para proteger la restauración.
-4. Tras configurar los secretos, cualquier push o merge en `main` ejecutará el workflow que despliega automáticamente `functions` y `hosting`. Las copias de seguridad se ejecutarán cada 60 minutos tras el deploy.
