@@ -196,40 +196,6 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .data-table { width:100%; border-collapse:collapse; margin-top:12px; }
 .data-table th, .data-table td { border-bottom:1px solid rgba(255,255,255,0.08); padding:10px; text-align:left; font-size:13px; }
 .data-table tbody tr:hover { background: rgba(78,143,202,0.08); }
-.analytics-grid { display:grid; gap:20px; }
-.analytics-section { background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.2); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px; }
-.analytics-toolbar { display:flex; flex-direction:column; gap:12px; }
-@media (min-width: 720px) {
-  .analytics-toolbar { flex-direction:row; align-items:center; justify-content:space-between; }
-}
-.analytics-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
-.analytics-card { background:rgba(78,143,202,0.12); border:1px solid rgba(78,143,202,0.35); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:6px; }
-.analytics-card-label { font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:#cbd5f5; opacity:0.9; }
-.analytics-card-value { font-size:28px; font-weight:700; color:#fff; line-height:1.1; }
-.analytics-card-meta { font-size:12px; color:#bfdbfe; display:flex; flex-wrap:wrap; gap:12px; }
-.analytics-table { display:flex; flex-direction:column; gap:12px; }
-.analytics-empty { border:1px dashed rgba(148,163,184,0.35); border-radius:12px; padding:16px; text-align:center; color:#94a3b8; font-size:13px; }
-.analytics-chart { display:flex; flex-direction:column; gap:12px; }
-.analytics-chart-row { display:grid; gap:12px; padding:14px; border-radius:14px; border:1px solid rgba(148,163,184,0.16); background:rgba(11,17,32,0.85); }
-@media (min-width: 640px) {
-  .analytics-chart-row { grid-template-columns:minmax(0,1fr) minmax(0,1.6fr); align-items:center; }
-}
-.analytics-chart-info { display:flex; flex-direction:column; gap:4px; }
-.analytics-chart-name { font-weight:600; font-size:15px; color:#fff; }
-.analytics-chart-company { font-size:12px; color:#94a3b8; }
-.analytics-chart-series { display:flex; flex-direction:column; gap:8px; }
-.analytics-bar { position:relative; height:26px; border-radius:999px; background:rgba(148,163,184,0.12); overflow:hidden; }
-.analytics-bar::before { content:''; position:absolute; inset:0; border-radius:999px; transform-origin:left center; transform:scaleX(var(--analytics-width, 0)); opacity:0.85; }
-.analytics-bar[data-kind="visits"]::before { background:linear-gradient(135deg,#4e8fca,#60a5fa); }
-.analytics-bar[data-kind="clicks"]::before { background:linear-gradient(135deg,#8b5cf6,#ec4899); }
-.analytics-bar[data-kind="requests"]::before { background:linear-gradient(135deg,#22c55e,#facc15); }
-.analytics-bar span { position:relative; z-index:1; display:flex; align-items:center; justify-content:flex-end; height:100%; padding:0 12px; font-size:12px; font-weight:600; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.45); }
-.analytics-chart-meta { font-size:12px; color:#cbd5f5; display:flex; gap:12px; flex-wrap:wrap; }
-.analytics-chart-meta span { display:flex; align-items:center; gap:6px; }
-.analytics-chart-meta span::before { content:''; width:10px; height:10px; border-radius:50%; }
-.analytics-chart-meta .meta-visits::before { background:linear-gradient(135deg,#4e8fca,#60a5fa); }
-.analytics-chart-meta .meta-clicks::before { background:linear-gradient(135deg,#8b5cf6,#ec4899); }
-.analytics-chart-meta .meta-requests::before { background:linear-gradient(135deg,#22c55e,#facc15); }
 .status-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
 .status-pill[data-status="pendiente"] { background: rgba(244,178,55,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.45); }
 .status-pill[data-status="vendido"] { background: rgba(34,197,94,0.18); color:#86efac; border:1px solid rgba(34,197,94,0.45); }
@@ -324,20 +290,7 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .upload-dropzone.has-image img { display:block; width:100%; height:100%; object-fit:cover; border-radius:12px; }
 .upload-actions { margin-top:8px; display:flex; justify-content:flex-end; }
 .reward-card .title { font-size:17px; font-weight:700; }
-.reward-card .cost { font-size:14px; color:#fbbf24; font-weight:600; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
-.reward-card .cost.discounted { flex-direction:row; flex-wrap:wrap; }
-.reward-card .original-cost { text-decoration:line-through; opacity:0.6; font-size:13px; }
-.reward-card .discounted-price { font-size:16px; font-weight:700; color:#facc15; }
-.reward-card .discount-pill { display:inline-flex; align-items:center; justify-content:center; padding:2px 10px; border-radius:999px; background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.45); color:#fde68a; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
-.reward-card.discounted { border-color:rgba(250,204,21,0.55); box-shadow:0 24px 60px rgba(250,204,21,0.25); animation:pulseGlow 2.8s ease-in-out infinite alternate; }
-.reward-card.discounted::before { content:""; position:absolute; inset:-30% -30% auto -30%; height:140px; background:radial-gradient(circle at center, rgba(250,204,21,0.35), transparent 70%); pointer-events:none; filter:blur(2px); }
-.discount-timer { font-size:12px; color:#fde68a; display:flex; align-items:center; gap:6px; font-weight:600; }
-.discount-info { display:flex; flex-direction:column; gap:4px; font-size:12px; color:#e2e8f0; }
-.discount-info.expired { color:#fca5a5; }
-@keyframes pulseGlow {
-  from { box-shadow:0 18px 48px rgba(250,204,21,0.15); }
-  to { box-shadow:0 24px 70px rgba(250,204,21,0.35); }
-}
+.reward-card .cost { font-size:14px; color:#fbbf24; font-weight:600; }
 .reward-card .validity { font-size:12px; color:#a8b3c7; }
 .reward-card .requests { font-size:12px; color:#a8b3c7; }
 .reward-card .actions { margin-top:auto; display:flex; gap:10px; flex-wrap:wrap; }
@@ -473,10 +426,6 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .login-hints li + li { margin-top:6px; }
 .muted-link { color:#93a0b5; font-size:12px; }
 .small-hint { font-size:12px; color:#94a3b8; margin:6px 0 0; }
-.backup-status { margin-top:14px; min-height:18px; color:#cbd5f5; font-weight:500; }
-.backup-status[data-state="working"] { color:#fbbf24; }
-.backup-status[data-state="success"] { color:#34d399; }
-.backup-status[data-state="error"] { color:#f87171; }
 .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.3); font-size:11px; letter-spacing:.4px; text-transform:uppercase; }
 .tag.tag-success { background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.45); color:#86efac; }
 .tag.tag-warning { background: rgba(234,179,8,0.18); border-color: rgba(234,179,8,0.45); color:#facc15; }
@@ -1376,8 +1325,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <button type="button" class="tab" data-tab="clients">Clientes directos</button>
       <button type="button" class="tab" data-tab="rewards">Recompensas</button>
       <button type="button" class="tab" data-tab="banner">Banner</button>
-      <button type="button" class="tab" data-tab="analytics">Visitas y estadísticas</button>
-      <button type="button" class="tab" data-tab="backups">Copias de seguridad</button>
       <button type="button" class="tab" data-tab="users">Usuarios</button>
     </div>
 
@@ -1536,16 +1483,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
             <input id="rewardPoints" type="number" min="1" step="1" required />
           </div>
           <div>
-            <label class="label" for="rewardDiscountPercent">Descuento temporal (%)</label>
-            <input id="rewardDiscountPercent" type="number" min="0" max="99" step="0.5" placeholder="Ej. 15" />
-            <p class="dim" style="margin-top:6px;">Introduce 0 para desactivar el descuento.</p>
-          </div>
-          <div>
-            <label class="label" for="rewardDiscountUntil">Descuento activo hasta</label>
-            <input id="rewardDiscountUntil" type="datetime-local" />
-            <p class="dim" style="margin-top:6px;">Tras esta fecha y hora el precio volverá automáticamente al original.</p>
-          </div>
-          <div>
             <label class="label" for="rewardUnits">Unidades en stock</label>
             <input id="rewardUnits" type="number" min="0" step="1" placeholder="Ej. 100" />
             <p class="dim" style="margin-top:6px;">Deja vacío si no hay límite de unidades.</p>
@@ -1586,59 +1523,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
         </div>
       </form>
       <div id="rewardList" class="rewards-grid"></div>
-    </div>
-
-    <div id="adminAnalyticsTab" class="admin-tab hidden">
-      <div class="analytics-grid">
-        <section class="analytics-section">
-          <div class="section-subtitle" style="margin:0;">Visitas generales</div>
-          <p class="dim" style="margin:4px 0 12px;">Consulta cómo evoluciona el tráfico por periodos clave.</p>
-          <div id="analyticsOverview" class="analytics-kpis"></div>
-        </section>
-
-        <section class="analytics-section">
-          <div class="analytics-toolbar">
-            <div>
-              <div class="section-subtitle" style="margin:0;">Detalle por usuario</div>
-              <p class="dim" id="analyticsUserRange" style="margin:4px 0 0;"></p>
-            </div>
-            <div class="range-switcher" id="analyticsRangeControls">
-              <span class="range-switcher-label">Periodo</span>
-              <div class="range-switcher-buttons">
-                <button type="button" data-range="day">Día</button>
-                <button type="button" data-range="week">Semana</button>
-                <button type="button" data-range="month" class="active">Mes</button>
-                <button type="button" data-range="year">Año</button>
-              </div>
-            </div>
-          </div>
-          <div id="analyticsUserTable" class="analytics-table"></div>
-        </section>
-
-        <section class="analytics-section">
-          <div class="section-subtitle" style="margin:0;">Inicios de sesión recientes</div>
-          <p class="dim" style="margin:4px 0 0;">Controla quién accede y cuándo desde el panel.</p>
-          <p class="dim" id="analyticsSessionRange" style="margin:0 0 12px;"></p>
-          <div id="analyticsSessionTable" class="analytics-table"></div>
-        </section>
-
-        <section class="analytics-section">
-          <div class="section-subtitle" style="margin:0;">Productos más atractivos para clientes</div>
-          <p class="dim" id="analyticsProductRange" style="margin:4px 0 12px;"></p>
-          <div id="clientProductChart" class="analytics-chart"></div>
-        </section>
-      </div>
-    </div>
-
-    <div id="adminBackupsTab" class="admin-tab hidden">
-      <div class="section-subtitle" style="margin:0 0 8px;">Copias de seguridad del panel</div>
-      <p class="dim" style="margin:0 0 18px;">Genera archivos de respaldo con toda la información dinámica creada por los usuarios y descarga un paquete completo del proyecto para restaurarlo en minutos.</p>
-      <div style="display:flex; flex-wrap:wrap; gap:12px;">
-        <button type="button" class="utility-button" id="backupDataButton">Crear copia de datos dinámica</button>
-        <button type="button" class="utility-button" id="backupFullButton">Exportación completa del proyecto</button>
-      </div>
-      <p id="backupStatus" class="backup-status" aria-live="polite"></p>
-      <div class="small-hint" style="margin-top:12px;">Las copias incluyen usuarios, tarifas, leads, recompensas, mensajes, solicitudes y toda la configuración almacenada en el navegador.</div>
     </div>
 
     <div id="adminBannerTab" class="admin-tab hidden">
@@ -1845,8 +1729,7 @@ const STORAGE_KEYS = {
   session: 'panel.session.v2',
   users: 'panel.usuarios.v1',
   banner: 'panel.banner.v1',
-  bannerDismissed: 'panel.banner.dismissed.v1',
-  analytics: 'panel.analytics.v1'
+  bannerDismissed: 'panel.banner.dismissed.v1'
 };
 
 const MAX_BANNERS_PER_TARGET = 5;
@@ -1919,13 +1802,10 @@ const CALL_REQUEST_STATUS_ORDER = ['pendiente', 'seguimiento', 'informacion', 'v
 
 const REWARD_LOW_STOCK_THRESHOLD = 15;
 
-const DEFAULT_ADMIN_USERNAME = 'admin';
-const DEFAULT_ADMIN_PASSWORD = 'admin123';
-
 const DEFAULT_USERS = [
   {
-    username: DEFAULT_ADMIN_USERNAME,
-    password: DEFAULT_ADMIN_PASSWORD,
+    username: 'admin',
+    password: 'admin123',
     role: 'admin',
     firstName: 'Alicia',
     lastName: 'Admin',
@@ -1954,17 +1834,6 @@ const CLIENT_ROLE = 'cliente';
 const ADMIN_GROUP_ID = '__admins__';
 const MESSAGE_ALLOWED_ROLES = ['admin', 'comercial', 'lider', CLIENT_ROLE];
 const MESSAGE_RECIPIENT_ROLES = ['comercial', 'lider', CLIENT_ROLE];
-const ANALYTICS_EVENT_TYPES = Object.freeze({
-  PAGE_VISIT: 'page-visit',
-  LOGIN: 'login',
-  LOGOUT: 'logout',
-  PRODUCT_VISIT: 'product-visit',
-  PRODUCT_CLICK: 'product-click',
-  PRODUCT_REQUEST: 'product-request'
-});
-const MAX_ANALYTICS_EVENTS = 2000;
-const ANALYTICS_DEFAULT_RANGE = 'month';
-const ANONYMOUS_USERNAME = '__anon__';
 const TARIFF_TYPE_LABELS = {
   C: 'Fibra y móvil',
   F: 'Solo fibra',
@@ -2021,20 +1890,6 @@ const COMMISSION_RATES = {
 const KPI_HISTORY_MONTHS = 3;
 
 const REMOTE_TARGET = window.FIREBASE_DATA_DOCUMENT || { collection: 'app', document: 'state' };
-
-const BACKUP_STATIC_ASSETS = Object.freeze([
-  { path: 'index.html' },
-  { path: 'firebase-config.js' },
-  { path: 'netlify.toml', optional: true },
-  { path: 'vercel.json', optional: true },
-  { path: 'CNAME', optional: true },
-  { path: 'README.md', optional: true }
-]);
-
-const BACKUP_JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
-
-const STORAGE_LOCAL_KEY_NAMES = Object.freeze(Object.keys(STORAGE_KEYS).filter((name) => name !== 'session'));
-const STORAGE_SESSION_KEY_NAMES = Object.freeze(['session']);
 
 const remoteState = {
   enabled: Boolean(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId),
@@ -2103,20 +1958,11 @@ async function commitRemoteSync() {
   remoteState.writing = true;
   setSyncStatus('syncing', 'Guardando…');
   try {
-    const analyticsToSync = Array.isArray(analyticsEvents)
-      ? analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
-      : [];
     await setDoc(remoteDocRef, {
       users,
       tariffs,
       leads,
       rewards,
-      notifications,
-      callRequests,
-      customBudgets,
-      messageThreads,
-      messageOffers,
-      analyticsEvents: analyticsToSync,
       banner: bannerConfig,
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -2147,14 +1993,10 @@ function applyRemoteData(data) {
     const list = remoteState.data.users.map(normaliseUser).filter(Boolean);
     cleanManagedUsers(list);
     users = list;
-    const adminEnsured = ensureDefaultAdminUser({ persist: false });
     try {
       localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
     } catch (error) {
       console.warn('No se pudieron sincronizar usuarios en localStorage', error);
-    }
-    if (adminEnsured) {
-      saveUsers();
     }
     if (currentUser) {
       const updated = getUserByUsername(currentUser.username);
@@ -2189,57 +2031,6 @@ function applyRemoteData(data) {
       console.warn('No se pudieron sincronizar recompensas en localStorage', error);
     }
   }
-  if (Array.isArray(remoteState.data.notifications)) {
-    notifications = remoteState.data.notifications.map(normaliseNotification).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.notifications, JSON.stringify(notifications));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar notificaciones en localStorage', error);
-    }
-  }
-  if (Array.isArray(remoteState.data.callRequests)) {
-    callRequests = remoteState.data.callRequests.map(normaliseCallRequest).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.callRequests, JSON.stringify(callRequests));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar solicitudes de llamada en localStorage', error);
-    }
-  }
-  if (Array.isArray(remoteState.data.customBudgets)) {
-    customBudgets = remoteState.data.customBudgets.map(normaliseCustomBudget).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.customBudgets, JSON.stringify(customBudgets));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar presupuestos a medida en localStorage', error);
-    }
-  }
-  if (Array.isArray(remoteState.data.messageThreads)) {
-    messageThreads = remoteState.data.messageThreads.map(normaliseMessageThread).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(messageThreads));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar los mensajes internos en localStorage', error);
-    }
-  }
-  if (Array.isArray(remoteState.data.messageOffers)) {
-    messageOffers = remoteState.data.messageOffers.map(normaliseOffer).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.offers, JSON.stringify(messageOffers));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar las ofertas internas en localStorage', error);
-    }
-  }
-  if (Array.isArray(remoteState.data.analyticsEvents)) {
-    analyticsEvents = remoteState.data.analyticsEvents.map(normaliseAnalyticsEvent).filter(Boolean);
-    if (analyticsEvents.length > MAX_ANALYTICS_EVENTS) {
-      analyticsEvents = analyticsEvents.slice(-MAX_ANALYTICS_EVENTS);
-    }
-    try {
-      localStorage.setItem(STORAGE_KEYS.analytics, JSON.stringify(analyticsEvents));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar los eventos analíticos en localStorage', error);
-    }
-  }
   if (remoteState.data.banner) {
     setBannerConfig(remoteState.data.banner, { persistLocal: true, syncRemote: false });
   } else if (remoteState.data.banner === null) {
@@ -2247,205 +2038,6 @@ function applyRemoteData(data) {
   }
   if (domReady) {
     renderEverythingAfterDataChange({ refreshFilters: true, refreshAi: Boolean(aiLastQuery) });
-  }
-}
-
-function snapshotStorageValue(storage, key) {
-  try {
-    const raw = storage.getItem(key);
-    if (raw === null || raw === undefined) {
-      return { key, raw: null, parsed: null };
-    }
-    try {
-      return { key, raw, parsed: JSON.parse(raw) };
-    } catch (error) {
-      return { key, raw, parseError: error.message };
-    }
-  } catch (error) {
-    return { key, raw: null, parseError: error.message };
-  }
-}
-
-function collectStorageSnapshot() {
-  const localSnapshot = {};
-  for (const name of STORAGE_LOCAL_KEY_NAMES) {
-    localSnapshot[name] = snapshotStorageValue(localStorage, STORAGE_KEYS[name]);
-  }
-  const sessionSnapshot = {};
-  for (const name of STORAGE_SESSION_KEY_NAMES) {
-    sessionSnapshot[name] = snapshotStorageValue(sessionStorage, STORAGE_KEYS[name]);
-  }
-  return { localStorage: localSnapshot, sessionStorage: sessionSnapshot };
-}
-
-function collectDynamicDataSnapshot() {
-  const now = new Date();
-  const storageSnapshot = collectStorageSnapshot();
-  return {
-    generatedAt: now.toISOString(),
-    timezoneOffsetMinutes: now.getTimezoneOffset(),
-    origin: window.location.href,
-    pathname: window.location.pathname,
-    userAgent: navigator.userAgent,
-    totals: {
-      users: users.length,
-      tariffs: tariffs.length,
-      leads: leads.length,
-      rewards: rewards.length,
-      notifications: notifications.length,
-      callRequests: callRequests.length,
-      customBudgets: customBudgets.length,
-      messageThreads: messageThreads.length,
-      messageOffers: messageOffers.length,
-      analyticsEvents: analyticsEvents.length
-    },
-    data: {
-      users,
-      tariffs,
-      leads,
-      rewards,
-      notifications,
-      callRequests,
-      customBudgets,
-      messageThreads,
-      messageOffers,
-      analyticsEvents,
-      banner: bannerConfig
-    },
-    storage: storageSnapshot,
-    remote: {
-      enabled: remoteState.enabled,
-      target: REMOTE_TARGET,
-      lastError: remoteState.lastError ? String(remoteState.lastError) : null
-    }
-  };
-}
-
-function formatBackupFilename(prefix, extension) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  return `${prefix}-${timestamp}.${extension}`;
-}
-
-function downloadBlob(filename, blob) {
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.href = url;
-  link.download = filename;
-  link.rel = 'noopener';
-  document.body.appendChild(link);
-  link.click();
-  setTimeout(() => {
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, 0);
-}
-
-function setBackupStatusMessage(state, message) {
-  if (!backupStatusMessage) return;
-  if (state) {
-    backupStatusMessage.dataset.state = state;
-  } else {
-    delete backupStatusMessage.dataset.state;
-  }
-  backupStatusMessage.textContent = message || '';
-}
-
-async function loadBackupZipLibrary() {
-  if (window.JSZip) {
-    return window.JSZip;
-  }
-  const module = await import(BACKUP_JSZIP_URL);
-  const JSZip = module?.default || module;
-  if (!JSZip) {
-    throw new Error('No se pudo cargar la librería de compresión.');
-  }
-  window.JSZip = JSZip;
-  return JSZip;
-}
-
-async function collectStaticFilesForExport() {
-  const files = [];
-  const missing = [];
-  for (const asset of BACKUP_STATIC_ASSETS) {
-    try {
-      const url = new URL(asset.path, window.location.href);
-      const response = await fetch(url.toString(), { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`Respuesta ${response.status}`);
-      }
-      const content = await response.text();
-      files.push({ path: asset.path, content });
-    } catch (error) {
-      missing.push({ path: asset.path, optional: Boolean(asset.optional), error });
-      if (!asset.optional) {
-        const failure = new Error(`No se pudo descargar el archivo obligatorio ${asset.path}`);
-        failure.missing = missing;
-        failure.files = files;
-        throw failure;
-      }
-      console.warn(`No se pudo incluir ${asset.path} en la exportación`, error);
-    }
-  }
-  return { files, missingOptional: missing.filter((item) => item.optional) };
-}
-
-async function handleBackupDataExport(event) {
-  event?.preventDefault?.();
-  if (!backupDataButton) return;
-  if (backupDataButton.disabled) return;
-  backupDataButton.disabled = true;
-  setBackupStatusMessage('working', 'Generando copia de seguridad de los datos…');
-  try {
-    const snapshot = collectDynamicDataSnapshot();
-    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-    downloadBlob(formatBackupFilename('backup-datos', 'json'), blob);
-    setBackupStatusMessage('success', 'Copia de seguridad creada. Guarda el archivo JSON descargado en un lugar seguro.');
-  } catch (error) {
-    console.error('No se pudo generar la copia de seguridad', error);
-    setBackupStatusMessage('error', 'Ocurrió un error al generar la copia de seguridad. Revisa la consola para más detalles.');
-  } finally {
-    backupDataButton.disabled = false;
-  }
-}
-
-async function handleFullExport(event) {
-  event?.preventDefault?.();
-  if (!backupFullButton) return;
-  if (backupFullButton.disabled) return;
-  backupFullButton.disabled = true;
-  setBackupStatusMessage('working', 'Preparando la exportación completa del proyecto…');
-  try {
-    const JSZip = await loadBackupZipLibrary();
-    const zip = new JSZip();
-    const snapshot = collectDynamicDataSnapshot();
-    zip.file('backups/data-backup.json', JSON.stringify(snapshot, null, 2));
-    zip.file('backups/storage-snapshot.json', JSON.stringify(snapshot.storage, null, 2));
-    const { files, missingOptional } = await collectStaticFilesForExport();
-    files.forEach((file) => zip.file(file.path, file.content));
-    const blob = await zip.generateAsync({ type: 'blob' });
-    downloadBlob(formatBackupFilename('export-completo', 'zip'), blob);
-    const optionalNote = missingOptional.length
-      ? ` Algunos archivos opcionales no estaban disponibles: ${missingOptional.map((item) => item.path).join(', ')}.`
-      : '';
-    setBackupStatusMessage('success', `Exportación completa creada. Se descargó un ZIP listo para restaurar.${optionalNote}`);
-  } catch (error) {
-    console.error('No se pudo crear la exportación completa', error);
-    if (error?.missing && Array.isArray(error.missing)) {
-      const mandatoryMissing = error.missing.filter((item) => !item.optional).map((item) => item.path);
-      const optionalMissing = error.missing.filter((item) => item.optional).map((item) => item.path);
-      let message = 'No se pudo crear la exportación completa porque faltan archivos obligatorios.';
-      if (mandatoryMissing.length) {
-        message += ` Faltantes: ${mandatoryMissing.join(', ')}.`;
-      }
-      if (optionalMissing.length) {
-        message += ` También se omitieron archivos opcionales: ${optionalMissing.join(', ')}.`;
-      }
-      setBackupStatusMessage('error', message);
-    } else {
-      setBackupStatusMessage('error', 'No se pudo crear la exportación completa. Revisa la consola para más detalles.');
-    }
-  } finally {
-    backupFullButton.disabled = false;
   }
 }
 
@@ -2574,20 +2166,7 @@ let grid,
   adminClientsTab,
   adminRewardsTab,
   adminBannerTab,
-  adminAnalyticsTab,
-  adminBackupsTab,
   adminUsersTab,
-  analyticsOverviewContainer,
-  analyticsRangeControls,
-  analyticsUserTable,
-  analyticsUserRangeLabel,
-  analyticsSessionTable,
-  analyticsSessionRangeLabel,
-  analyticsProductRangeLabel,
-  clientProductChart,
-  backupStatusMessage,
-  backupDataButton,
-  backupFullButton,
   tarifaList,
   tarifaForm,
   tarifaFormInfo,
@@ -2613,8 +2192,6 @@ let grid,
   rewardIdInput,
   rewardTitleInput,
   rewardPointsInput,
-  rewardDiscountPercentInput,
-  rewardDiscountUntilInput,
   rewardUnitsInput,
   rewardValidFromInput,
   rewardValidUntilInput,
@@ -2771,8 +2348,6 @@ let callRequests = [];
 let customBudgets = [];
 let messageThreads = [];
 let messageOffers = [];
-let analyticsEvents = [];
-let discountCountdownTimer = null;
 let messageTabButtons = [];
 let messageTabPanels = {};
 let messageCenterActiveTab = 'messages';
@@ -2785,7 +2360,6 @@ let aiWizardState = null;
 let aiWizardHistory = [];
 let adminActiveTab = 'sales';
 let adminSalesRange = 'month';
-let analyticsRange = ANALYTICS_DEFAULT_RANGE;
 let adminTabButtons = [];
 let adminTabPanels = {};
 let adminTariffCompanyFilter = 'all';
@@ -2800,7 +2374,6 @@ let pendingSaleRequestId = '';
 let bannerConfig = normaliseBanner(DEFAULT_BANNER_CONFIG);
 let bannerEditingId = '';
 let activeBanner = null;
-const sessionProductViews = new Set();
 
 function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   if (!domReady) return;
@@ -2821,11 +2394,6 @@ function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   populateAiFiberOptions();
   renderBannerPreview();
   updateBannerDisplay({ force: true });
-  if (adminActiveTab === 'analytics') {
-    renderAnalyticsTab();
-  } else {
-    renderAnalyticsOverview();
-  }
   if (refreshAi && aiLastQuery) {
     runAiSearch(aiLastQuery, { preserveFormState: true });
   }
@@ -3439,162 +3007,6 @@ function createId(prefix = 'id') {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
 }
 
-function normaliseAnalyticsEvent(raw) {
-  if (!raw || !raw.type) return null;
-  const type = String(raw.type);
-  const timestampSource = raw.timestamp || raw.date || raw.createdAt || raw.loggedAt;
-  const timestamp = timestampSource ? new Date(timestampSource) : new Date();
-  if (Number.isNaN(timestamp.getTime())) return null;
-  const usernameRaw = typeof raw.username === 'string' ? raw.username.trim().toLowerCase() : '';
-  const username = usernameRaw || ANONYMOUS_USERNAME;
-  const role = raw.role || (username === ANONYMOUS_USERNAME ? 'visitante' : '');
-  const meta = raw.meta && typeof raw.meta === 'object' ? { ...raw.meta } : {};
-  return {
-    id: raw.id || createId('analytics'),
-    type,
-    timestamp: timestamp.toISOString(),
-    username,
-    role,
-    meta
-  };
-}
-
-function loadAnalyticsEventsFromStorage() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.analytics);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normaliseAnalyticsEvent).filter(Boolean);
-  } catch (error) {
-    console.warn('No se pudieron cargar los eventos analíticos', error);
-    return [];
-  }
-}
-
-function saveAnalyticsEvents() {
-  try {
-    localStorage.setItem(STORAGE_KEYS.analytics, JSON.stringify(analyticsEvents));
-  } catch (error) {
-    console.warn('No se pudieron guardar los eventos analíticos', error);
-  }
-}
-
-function analyticsEventDate(event) {
-  if (!event) return null;
-  const timestamp = event.timestamp || event.createdAt;
-  if (!timestamp) return null;
-  const date = new Date(timestamp);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function analyticsEventInRange(event, start, end) {
-  const date = analyticsEventDate(event);
-  if (!date) return false;
-  return date >= start && date <= end;
-}
-
-function buildTariffMeta(tariff) {
-  if (!tariff) return {};
-  return {
-    tariffId: tariff.id || '',
-    tariffCode: tariff.codigo || '',
-    tariffName: tariff.nombre || '',
-    tariffCompany: tariff['compañia'] || tariff.compania || ''
-  };
-}
-
-function recordAnalyticsEvent(type, { username, role, meta, timestamp } = {}) {
-  if (!type) return null;
-  const safeMeta = meta && typeof meta === 'object' ? { ...meta } : {};
-  const event = normaliseAnalyticsEvent({
-    type,
-    timestamp: timestamp || new Date().toISOString(),
-    username: typeof username === 'string' ? username.trim().toLowerCase() : '',
-    role,
-    meta: safeMeta
-  });
-  if (!event) return null;
-  if (!event.role && event.username && event.username !== ANONYMOUS_USERNAME) {
-    const record = getUserByUsername(event.username);
-    if (record) {
-      event.role = record.role || '';
-      if (!event.meta.displayName) {
-        const displayName = userDisplayName(record);
-        if (displayName) event.meta.displayName = displayName;
-      }
-    }
-  }
-  if (event.username === ANONYMOUS_USERNAME) {
-    event.role = event.role || 'visitante';
-  }
-  analyticsEvents.push(event);
-  if (analyticsEvents.length > MAX_ANALYTICS_EVENTS) {
-    analyticsEvents = analyticsEvents.slice(-MAX_ANALYTICS_EVENTS);
-  }
-  saveAnalyticsEvents();
-  if (adminActiveTab === 'analytics') {
-    renderAnalyticsTab();
-  } else if (analyticsOverviewContainer) {
-    renderAnalyticsOverview();
-  }
-  return event;
-}
-
-function recordPageVisit() {
-  const username = currentUser?.username || '';
-  const role = currentUser?.role || (username ? '' : 'visitante');
-  recordAnalyticsEvent(ANALYTICS_EVENT_TYPES.PAGE_VISIT, {
-    username,
-    role,
-    meta: {
-      path: window.location.pathname,
-      url: window.location.href
-    }
-  });
-}
-
-function recordLoginEvent(user, { restored = false } = {}) {
-  if (!user || !user.username) return;
-  recordAnalyticsEvent(ANALYTICS_EVENT_TYPES.LOGIN, {
-    username: user.username,
-    role: user.role,
-    meta: { restored: Boolean(restored) }
-  });
-}
-
-function recordLogoutEvent(user) {
-  if (!user || !user.username) return;
-  recordAnalyticsEvent(ANALYTICS_EVENT_TYPES.LOGOUT, {
-    username: user.username,
-    role: user.role
-  });
-}
-
-function recordProductVisit(tariff, { force = false, username, role } = {}) {
-  if (!tariff) return;
-  const viewerUsername = typeof username === 'string' ? username.trim().toLowerCase() : (currentUser?.username || '');
-  const viewerKey = viewerUsername || ANONYMOUS_USERNAME;
-  const sessionKey = `${viewerKey}:${tariff.id}`;
-  if (!force && sessionProductViews.has(sessionKey)) return;
-  sessionProductViews.add(sessionKey);
-  recordAnalyticsEvent(ANALYTICS_EVENT_TYPES.PRODUCT_VISIT, {
-    username: viewerUsername,
-    role: role || currentUser?.role || (viewerUsername ? '' : 'visitante'),
-    meta: buildTariffMeta(tariff)
-  });
-}
-
-function recordProductInteraction(type, tariff, { username, role, meta } = {}) {
-  if (!tariff || !type) return;
-  const extraMeta = meta && typeof meta === 'object' ? meta : {};
-  recordAnalyticsEvent(type, {
-    username: typeof username === 'string' ? username.trim().toLowerCase() : (currentUser?.username || ''),
-    role: role || currentUser?.role || (currentUser ? currentUser.role : ''),
-    meta: { ...buildTariffMeta(tariff), ...extraMeta }
-  });
-}
-
 function parseDate(value) {
   if (!value) return null;
   const date = new Date(value);
@@ -3788,44 +3200,6 @@ function saveUsers() {
   } catch (error) {
     console.warn('No se pudieron guardar los usuarios', error);
   }
-}
-
-function ensureDefaultAdminUser({ persist = true } = {}) {
-  const template = DEFAULT_USERS.find(user => user.username === DEFAULT_ADMIN_USERNAME);
-  if (!template) return false;
-  const adminTemplate = normaliseUser({ ...template });
-  if (!adminTemplate) return false;
-  const existing = getUserByUsername(DEFAULT_ADMIN_USERNAME);
-  let changed = false;
-  if (!existing) {
-    users.push(adminTemplate);
-    changed = true;
-  } else {
-    if (existing.role !== 'admin') {
-      existing.role = 'admin';
-      changed = true;
-    }
-    if (existing.password !== DEFAULT_ADMIN_PASSWORD) {
-      existing.password = DEFAULT_ADMIN_PASSWORD;
-      changed = true;
-    }
-    if (!existing.firstName && adminTemplate.firstName) {
-      existing.firstName = adminTemplate.firstName;
-      changed = true;
-    }
-    if (!existing.lastName && adminTemplate.lastName) {
-      existing.lastName = adminTemplate.lastName;
-      changed = true;
-    }
-    if (!existing.email && adminTemplate.email) {
-      existing.email = adminTemplate.email;
-      changed = true;
-    }
-  }
-  if (changed && persist) {
-    saveUsers();
-  }
-  return changed;
 }
 
 function getUserByUsername(username) {
@@ -5002,11 +4376,6 @@ function handleAiResultsClick(event) {
   if (!id) return;
   if (button.dataset.action === 'ai-focus') {
     focusTariffCard(id);
-    const tariff = tariffs.find(item => item.id === id);
-    if (tariff) {
-      recordProductInteraction(ANALYTICS_EVENT_TYPES.PRODUCT_CLICK, tariff, { action: 'ai-focus' });
-      recordProductVisit(tariff, { force: true });
-    }
   }
   if (button.dataset.action === 'ai-lead') {
     const tariff = tariffs.find(item => item.id === id);
@@ -5096,21 +4465,6 @@ function normaliseReward(raw) {
       totalUnits = parsedUnits;
     }
   }
-  const rawDiscountPercent = Number.parseFloat(raw.discountPercent ?? raw.discount_percent ?? raw.discount ?? raw.descuento ?? 0);
-  const discountPercent = Number.isFinite(rawDiscountPercent) && rawDiscountPercent > 0
-    ? Math.min(99, Math.max(0, rawDiscountPercent))
-    : 0;
-  let discountUntil = '';
-  const rawDiscountUntil = raw.discountUntil || raw.discount_until || raw.discountExpiresAt || raw.descuentoHasta || '';
-  if (rawDiscountUntil) {
-    const parsedDiscountUntil = new Date(rawDiscountUntil);
-    if (!Number.isNaN(parsedDiscountUntil.getTime())) {
-      discountUntil = parsedDiscountUntil.toISOString();
-    }
-  }
-  if (discountPercent <= 0) {
-    discountUntil = '';
-  }
   const reward = {
     id: raw.id || createId('reward'),
     title,
@@ -5122,9 +4476,7 @@ function normaliseReward(raw) {
     validUntil: raw.validUntil || raw.valid_until || '',
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.updated_at || new Date().toISOString(),
-    archived: Boolean(raw.archived),
-    discountPercent,
-    discountUntil
+    archived: Boolean(raw.archived)
   };
   const requests = Array.isArray(raw.requests)
     ? raw.requests.map(normaliseRewardRequest).filter(Boolean)
@@ -7970,118 +7322,6 @@ function formatPointsDelta(value) {
   return formatPoints(0);
 }
 
-function toDateTimeLocalInputValue(iso) {
-  if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-function fromDateTimeLocalInputValue(value) {
-  if (!value) return '';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '';
-  return parsed.toISOString();
-}
-
-function formatDiscountPercent(value) {
-  if (!Number.isFinite(value)) return '0%';
-  const display = Number(value);
-  const useDecimals = Math.abs(display % 1) > 0;
-  return `${display.toLocaleString('es-ES', {
-    minimumFractionDigits: useDecimals ? 1 : 0,
-    maximumFractionDigits: 2
-  })}%`;
-}
-
-function getRewardDiscountState(reward, referenceDate = new Date()) {
-  const baseCost = reward?.pointsCost ? Math.max(0, Math.round(Number(reward.pointsCost) || 0)) : 0;
-  const percentRaw = Number.parseFloat(reward?.discountPercent ?? 0);
-  const hasPercent = Number.isFinite(percentRaw) && percentRaw > 0;
-  const clampedPercent = hasPercent ? Math.min(99, Math.max(0, percentRaw)) : 0;
-  const expiresAtRaw = reward?.discountUntil || '';
-  const expiresDate = expiresAtRaw ? new Date(expiresAtRaw) : null;
-  const expiresValid = expiresDate && !Number.isNaN(expiresDate.getTime());
-  const scheduled = clampedPercent > 0 && expiresValid;
-  if (!scheduled) {
-    return {
-      active: false,
-      percent: clampedPercent,
-      finalCost: baseCost,
-      expiresAt: expiresValid ? expiresDate.toISOString() : '',
-      remainingMs: 0,
-      scheduled: Boolean(clampedPercent) && Boolean(reward?.discountUntil),
-      expired: false
-    };
-  }
-  const now = referenceDate instanceof Date ? referenceDate.getTime() : Date.now();
-  const remainingMs = expiresDate.getTime() - now;
-  if (remainingMs <= 0) {
-    return {
-      active: false,
-      percent: clampedPercent,
-      finalCost: baseCost,
-      expiresAt: expiresDate.toISOString(),
-      remainingMs: 0,
-      scheduled: true,
-      expired: true
-    };
-  }
-  const finalCost = Math.max(1, Math.round(baseCost * (1 - clampedPercent / 100)));
-  return {
-    active: true,
-    percent: clampedPercent,
-    finalCost,
-    expiresAt: expiresDate.toISOString(),
-    remainingMs,
-    scheduled: true,
-    expired: false
-  };
-}
-
-function formatDiscountCountdown(ms) {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return `Termina en ${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
-}
-
-function updateDiscountCountdowns() {
-  const elements = document.querySelectorAll('[data-discount-expiration]');
-  if (!elements.length) return;
-  const now = Date.now();
-  let requiresRefresh = false;
-  elements.forEach((element) => {
-    const iso = element.getAttribute('data-discount-expiration');
-    if (!iso) return;
-    const target = Date.parse(iso);
-    if (Number.isNaN(target)) return;
-    const remaining = target - now;
-    if (remaining <= 0) {
-      element.textContent = 'Descuento finalizado';
-      requiresRefresh = true;
-    } else {
-      element.textContent = formatDiscountCountdown(remaining);
-    }
-  });
-  if (requiresRefresh) {
-    renderAdminRewards();
-    renderClientPlan();
-  }
-}
-
-function ensureDiscountCountdownTicker() {
-  if (discountCountdownTimer) return;
-  discountCountdownTimer = setInterval(updateDiscountCountdowns, 1000);
-}
-
 function isRewardActive(reward, referenceDate = todayISO()) {
   if (!reward || reward.archived) return false;
   if (reward.validFrom && reward.validFrom > referenceDate) return false;
@@ -8304,26 +7544,14 @@ function renderClientRewards(record) {
     return;
   }
   const balance = record.pointsBalance || 0;
-  const now = new Date();
   clientRewardsContainer.innerHTML = active
-    .slice()
-    .sort((a, b) => {
-      const discountA = getRewardDiscountState(a, now);
-      const discountB = getRewardDiscountState(b, now);
-      if (discountA.active !== discountB.active) return discountA.active ? -1 : 1;
-      const costA = discountA.active ? discountA.finalCost : a.pointsCost;
-      const costB = discountB.active ? discountB.finalCost : b.pointsCost;
-      if (costA !== costB) return costA - costB;
-      return a.pointsCost - b.pointsCost;
-    })
+    .sort((a, b) => a.pointsCost - b.pointsCost)
     .map(reward => {
       const userRequests = reward.requests.filter(entry => entry.username === record.username);
       const pending = userRequests.filter(entry => entry.status !== 'entregado');
       const delivered = userRequests.filter(entry => entry.status === 'entregado');
       const hasPending = pending.length > 0;
-      const discount = getRewardDiscountState(reward, now);
-      const effectiveCost = discount.active ? discount.finalCost : reward.pointsCost;
-      const unlocked = balance >= effectiveCost;
+      const unlocked = balance >= reward.pointsCost;
       const imageMarkup = reward.imageUrl
         ? `<figure class="reward-thumb"><img src="${escapeHtml(reward.imageUrl)}" alt="Imagen de ${escapeHtml(reward.title)}" loading="lazy" /></figure>`
         : '<figure class="reward-thumb placeholder"><span>Sin imagen</span></figure>';
@@ -8334,9 +7562,6 @@ function renderClientRewards(record) {
       const stockBadge = formatRewardStockBadge(reward);
       const cardClasses = ['reward-card'];
       const outOfStock = stockBadge.outOfStock;
-      if (discount.active) {
-        cardClasses.push('discounted');
-      }
       if (unlocked && !outOfStock) {
         cardClasses.push('unlocked');
       } else {
@@ -8346,21 +7571,15 @@ function renderClientRewards(record) {
         cardClasses.push('out-of-stock');
       }
       const cardClass = cardClasses.join(' ');
-      let actionButton = `<button type="button" class="smallbtn" disabled>Necesitas ${formatPoints(effectiveCost)}</button>`;
+      let actionButton = `<button type="button" class="smallbtn" disabled>Necesitas ${reward.pointsCost} pts</button>`;
       if (outOfStock) {
         actionButton = '<button type="button" class="smallbtn" disabled>Sin stock</button>';
       } else if (unlocked && !hasPending) {
-        actionButton = `<button type="button" class="primary" data-action="redeem-reward" data-id="${reward.id}">Canjear por ${formatPoints(effectiveCost)}</button>`;
+        actionButton = `<button type="button" class="primary" data-action="redeem-reward" data-id="${reward.id}">Canjear por ${reward.pointsCost} pts</button>`;
       } else if (hasPending) {
         actionButton = '<button type="button" class="smallbtn" disabled>Solicitud en curso</button>';
       }
       const description = reward.description ? `<p class="dim">${reward.description}</p>` : '';
-      const costMarkup = discount.active
-        ? `<div class="cost discounted"><span class="original-cost">${formatPoints(reward.pointsCost)}</span><span class="discounted-price">${formatPoints(effectiveCost)}</span><span class="discount-pill">-${formatDiscountPercent(discount.percent)}</span></div>`
-        : `<div class="cost">${formatPoints(effectiveCost)}</div>`;
-      const countdownMarkup = discount.active
-        ? `<div class="discount-timer" data-discount-expiration="${discount.expiresAt}">${formatDiscountCountdown(discount.remainingMs)}</div>`
-        : '';
       const statusPieces = [];
       if (stockBadge.markup && (stockBadge.outOfStock || stockBadge.lowStock)) {
         statusPieces.push(stockBadge.markup);
@@ -8373,8 +7592,7 @@ function renderClientRewards(record) {
         <div class="${cardClass}" data-id="${reward.id}">
           ${imageMarkup}
           <div class="title">${reward.title}</div>
-          ${costMarkup}
-          ${countdownMarkup}
+          <div class="cost">${formatPoints(reward.pointsCost)}</div>
           <div class="validity">${formatRewardValidity(reward)}</div>
           ${description}
           ${statusMarkup}
@@ -8383,7 +7601,6 @@ function renderClientRewards(record) {
       `;
     })
     .join('');
-  updateDiscountCountdowns();
 }
 
 function renderClientPointsHistory(record) {
@@ -8422,14 +7639,12 @@ function handleRewardRedemption(rewardId) {
   const record = getUserByUsername(currentUser.username);
   if (!record) return;
   ensureUserPointsStructure(record);
-  const discount = getRewardDiscountState(reward, new Date());
-  const redemptionCost = discount.active ? discount.finalCost : reward.pointsCost;
   const stockState = getRewardStockState(reward);
   if (stockState?.outOfStock) {
     showCommercialFlash('Esta recompensa está sin stock por el momento.');
     return;
   }
-  if (record.pointsBalance < redemptionCost) {
+  if (record.pointsBalance < reward.pointsCost) {
     showCommercialFlash('Todavía no tienes puntos suficientes para esta recompensa.');
     return;
   }
@@ -8438,12 +7653,12 @@ function handleRewardRedemption(rewardId) {
     showCommercialFlash('Ya tienes una solicitud pendiente de esta recompensa.');
     return;
   }
-  recordPointsMovement(record, -redemptionCost, `Canje de recompensa: ${reward.title}`, { relatedId: reward.id, type: 'spent' });
+  recordPointsMovement(record, -reward.pointsCost, `Canje de recompensa: ${reward.title}`, { relatedId: reward.id, type: 'spent' });
   reward.requests.push({
     id: createId('rewardreq'),
     username: record.username,
     status: 'pendiente',
-    points: redemptionCost,
+    points: reward.pointsCost,
     requestedAt: new Date().toISOString(),
     deliveredAt: null
   });
@@ -8463,22 +7678,11 @@ function renderAdminRewards() {
     return;
   }
   const today = todayISO();
-  const now = new Date();
   rewardList.innerHTML = rewards
     .slice()
-    .sort((a, b) => {
-      const discountA = getRewardDiscountState(a, now);
-      const discountB = getRewardDiscountState(b, now);
-      if (discountA.active !== discountB.active) return discountA.active ? -1 : 1;
-      const costA = discountA.active ? discountA.finalCost : a.pointsCost;
-      const costB = discountB.active ? discountB.finalCost : b.pointsCost;
-      if (costA !== costB) return costA - costB;
-      return a.pointsCost - b.pointsCost;
-    })
+    .sort((a, b) => a.pointsCost - b.pointsCost)
     .map(reward => {
       const active = isRewardActive(reward, today);
-      const discount = getRewardDiscountState(reward, now);
-      const effectiveCost = discount.active ? discount.finalCost : reward.pointsCost;
       const total = reward.requests.length;
       const pending = reward.requests.filter(entry => entry.status !== 'entregado').length;
       const stockBadge = formatRewardStockBadge(reward);
@@ -8529,9 +7733,6 @@ function renderAdminRewards() {
       if (outOfStock) {
         cardClasses.push('out-of-stock');
       }
-      if (discount.active) {
-        cardClasses.push('discounted');
-      }
       const cardClass = cardClasses.join(' ');
       const statusPieces = [];
       if (stockBadge.markup) statusPieces.push(stockBadge.markup);
@@ -8539,20 +7740,11 @@ function renderAdminRewards() {
       const statusMarkup = statusPieces.length
         ? `<div class="reward-status">${statusPieces.join('')}</div>`
         : '';
-      const costMarkup = discount.active
-        ? `<div class="cost discounted"><span class="original-cost">${formatPoints(reward.pointsCost)}</span><span class="discounted-price">${formatPoints(effectiveCost)}</span><span class="discount-pill">-${formatDiscountPercent(discount.percent)}</span></div>`
-        : `<div class="cost">${formatPoints(reward.pointsCost)}</div>`;
-      const discountInfo = discount.active
-        ? `<div class="discount-info"><span>Precio temporal: ${formatPoints(effectiveCost)}</span><span class="discount-timer" data-discount-expiration="${discount.expiresAt}">${formatDiscountCountdown(discount.remainingMs)}</span></div>`
-        : discount.expired
-          ? `<div class="discount-info expired">Descuento caducado el ${formatDateTime(discount.expiresAt)}</div>`
-          : '';
       return `
         <div class="${cardClass}" data-id="${reward.id}">
           ${imageMarkup}
           <div class="title">${reward.title}</div>
-          ${costMarkup}
-          ${discountInfo}
+          <div class="cost">${formatPoints(reward.pointsCost)}</div>
           <div class="validity">${formatRewardValidity(reward)}</div>
           ${description}
           ${statusMarkup}
@@ -8565,7 +7757,6 @@ function renderAdminRewards() {
       `;
     })
     .join('');
-  updateDiscountCountdowns();
 }
 
 function rewardImageValueIsPreviewable(value) {
@@ -8692,8 +7883,6 @@ function setupRewardImageUploader() {
 function resetRewardForm() {
   rewardForm?.reset();
   if (rewardIdInput) rewardIdInput.value = '';
-  if (rewardDiscountPercentInput) rewardDiscountPercentInput.value = '';
-  if (rewardDiscountUntilInput) rewardDiscountUntilInput.value = '';
   if (rewardUnitsInput) rewardUnitsInput.value = '';
   if (rewardFormInfo) rewardFormInfo.textContent = '';
   resetRewardImageField();
@@ -8704,8 +7893,6 @@ function fillRewardForm(reward) {
   if (rewardIdInput) rewardIdInput.value = reward.id;
   if (rewardTitleInput) rewardTitleInput.value = reward.title;
   if (rewardPointsInput) rewardPointsInput.value = reward.pointsCost;
-  if (rewardDiscountPercentInput) rewardDiscountPercentInput.value = reward.discountPercent ? String(reward.discountPercent) : '0';
-  if (rewardDiscountUntilInput) rewardDiscountUntilInput.value = toDateTimeLocalInputValue(reward.discountUntil || '');
   if (rewardUnitsInput) rewardUnitsInput.value = reward.totalUnits ?? '';
   if (rewardValidFromInput) rewardValidFromInput.value = reward.validFrom || '';
   if (rewardValidUntilInput) rewardValidUntilInput.value = reward.validUntil || '';
@@ -8719,28 +7906,9 @@ function handleRewardFormSubmit(event) {
   if (!rewardForm) return;
   const title = rewardTitleInput?.value.trim();
   const pointsValue = Number(rewardPointsInput?.value || 0);
-  const discountPercentRaw = Number.parseFloat(rewardDiscountPercentInput?.value ?? '0');
-  const discountPercent = Number.isFinite(discountPercentRaw) ? Math.min(99, Math.max(0, discountPercentRaw)) : 0;
-  const discountUntilRaw = rewardDiscountUntilInput?.value || '';
-  let discountUntil = '';
   const unitsRaw = (rewardUnitsInput?.value ?? '').trim();
   let totalUnits = null;
   const imageUrl = rewardImageInput?.value.trim() || '';
-  if (discountPercent > 0) {
-    if (!discountUntilRaw) {
-      if (rewardFormInfo) rewardFormInfo.textContent = 'Indica cuándo termina el descuento temporal.';
-      return;
-    }
-    discountUntil = fromDateTimeLocalInputValue(discountUntilRaw);
-    if (!discountUntil) {
-      if (rewardFormInfo) rewardFormInfo.textContent = 'Introduce una fecha y hora de finalización válidas.';
-      return;
-    }
-    if (Date.parse(discountUntil) <= Date.now()) {
-      if (rewardFormInfo) rewardFormInfo.textContent = 'La fecha de fin del descuento debe ser futura.';
-      return;
-    }
-  }
   if (unitsRaw) {
     const parsedUnits = Number.parseInt(unitsRaw, 10);
     if (!Number.isFinite(parsedUnits) || parsedUnits < 0) {
@@ -8776,8 +7944,6 @@ function handleRewardFormSubmit(event) {
     existing.validUntil = rewardValidUntilInput?.value || '';
     existing.imageUrl = imageUrl;
     existing.totalUnits = totalUnits;
-    existing.discountPercent = discountPercent;
-    existing.discountUntil = discountPercent > 0 ? discountUntil : '';
     existing.updatedAt = now;
     if (rewardFormInfo) rewardFormInfo.textContent = 'Recompensa actualizada correctamente.';
   } else {
@@ -8793,8 +7959,6 @@ function handleRewardFormSubmit(event) {
       createdAt: now,
       updatedAt: now,
       archived: false,
-      discountPercent,
-      discountUntil: discountPercent > 0 ? discountUntil : '',
       requests: []
     };
     rewards.push(reward);
@@ -8938,17 +8102,8 @@ function handleStorageEvent(event) {
     renderMessageOffers(messageCenterActiveTab === 'offers');
     updateNotificationBadge();
   }
-  if (event.key === STORAGE_KEYS.analytics) {
-    analyticsEvents = loadAnalyticsEventsFromStorage();
-    if (adminActiveTab === 'analytics') {
-      renderAnalyticsTab();
-    } else {
-      renderAnalyticsOverview();
-    }
-  }
   if (event.key === STORAGE_KEYS.users) {
     users = loadUsersFromStorage();
-    ensureDefaultAdminUser();
     updateAvailableUsersHint();
     renderUserList();
     if (currentUser) {
@@ -9068,11 +8223,6 @@ function buildTariffCard(item) {
         </div>
       </div>
     `;
-  recordProductVisit(item);
-  tile.addEventListener('click', (event) => {
-    if (event.target.closest('button')) return;
-    recordProductInteraction(ANALYTICS_EVENT_TYPES.PRODUCT_CLICK, item, { action: 'card' });
-  });
   const actions = document.createElement('div');
   actions.className = 'tile-actions';
   if (!currentUser) {
@@ -9094,7 +8244,6 @@ function buildTariffCard(item) {
     editBtn.className = 'smallbtn';
     editBtn.textContent = 'Editar';
     editBtn.addEventListener('click', () => {
-      recordProductInteraction(ANALYTICS_EVENT_TYPES.PRODUCT_CLICK, item, { action: 'admin-edit' });
       prefillTariffForm(item);
       const targetTop = tarifaForm?.offsetTop || adminPanel?.offsetTop || 0;
       window.scrollTo({ top: targetTop, behavior: 'smooth' });
@@ -10255,319 +9404,6 @@ function renderClientStatCard(stats, index) {
   `;
 }
 
-function ensureAnalyticsRange(range) {
-  return ['day', 'week', 'month', 'year'].includes(range) ? range : ANALYTICS_DEFAULT_RANGE;
-}
-
-function renderAnalyticsOverview() {
-  if (!analyticsOverviewContainer) return;
-  const periods = [
-    { key: 'day', label: 'Hoy' },
-    { key: 'week', label: 'Esta semana' },
-    { key: 'month', label: 'Este mes' },
-    { key: 'year', label: 'Este año' }
-  ];
-  const cards = periods.map(period => {
-    const { start, end } = getTimeframeRange(period.key);
-    const events = analyticsEvents.filter(event => event.type === ANALYTICS_EVENT_TYPES.PAGE_VISIT && analyticsEventInRange(event, start, end));
-    const totalVisits = events.length;
-    const registeredVisits = events.filter(event => event.username && event.username !== ANONYMOUS_USERNAME).length;
-    const anonymousVisits = Math.max(totalVisits - registeredVisits, 0);
-    const uniqueVisitors = new Set(events.map(event => event.username || ANONYMOUS_USERNAME));
-    return `
-      <div class="analytics-card">
-        <span class="analytics-card-label">${escapeHtml(period.label)}</span>
-        <span class="analytics-card-value">${formatInteger(totalVisits)}</span>
-        <div class="analytics-card-meta">
-          <span>${formatInteger(uniqueVisitors.size)} visitantes únicos</span>
-          <span>${formatInteger(registeredVisits)} visitas registradas</span>
-          <span>${formatInteger(anonymousVisits)} visitas anónimas</span>
-        </div>
-      </div>
-    `;
-  }).join('');
-  analyticsOverviewContainer.innerHTML = cards || '<div class="analytics-empty">Aún no hay visitas registradas.</div>';
-}
-
-function renderAnalyticsUserTable() {
-  if (!analyticsUserTable) return;
-  const rangeKey = ensureAnalyticsRange(analyticsRange);
-  const { start, end, label } = getTimeframeRange(rangeKey);
-  if (analyticsUserRangeLabel) analyticsUserRangeLabel.textContent = label;
-  const stats = new Map();
-
-  const ensureEntry = (usernameValue, roleHint, displayNameHint) => {
-    const key = usernameValue && usernameValue !== ANONYMOUS_USERNAME ? usernameValue : ANONYMOUS_USERNAME;
-    if (!stats.has(key)) {
-      const isAnonymous = key === ANONYMOUS_USERNAME;
-      const record = !isAnonymous ? getUserByUsername(key) : null;
-      const displayName = displayNameHint || (record ? userDisplayName(record) : null) || (isAnonymous ? 'Visitantes sin sesión' : key);
-      stats.set(key, {
-        username: isAnonymous ? '' : key,
-        role: roleHint || record?.role || (isAnonymous ? 'visitante' : ''),
-        displayName,
-        visits: 0,
-        logins: 0,
-        logouts: 0,
-        productViews: 0,
-        productClicks: 0,
-        productRequests: 0,
-        lastActivity: null,
-        anonymous: isAnonymous
-      });
-    }
-    const entry = stats.get(key);
-    if (roleHint && !entry.role) entry.role = roleHint;
-    if (displayNameHint && displayNameHint !== entry.displayName) entry.displayName = displayNameHint;
-    return entry;
-  };
-
-  analyticsEvents.forEach(event => {
-    if (!analyticsEventInRange(event, start, end)) return;
-    const entry = ensureEntry(event.username, event.role, event.meta?.displayName);
-    switch (event.type) {
-      case ANALYTICS_EVENT_TYPES.PAGE_VISIT:
-        entry.visits += 1;
-        break;
-      case ANALYTICS_EVENT_TYPES.LOGIN:
-        entry.logins += 1;
-        break;
-      case ANALYTICS_EVENT_TYPES.LOGOUT:
-        entry.logouts += 1;
-        break;
-      case ANALYTICS_EVENT_TYPES.PRODUCT_VISIT:
-        entry.productViews += 1;
-        break;
-      case ANALYTICS_EVENT_TYPES.PRODUCT_CLICK:
-        entry.productClicks += 1;
-        break;
-      case ANALYTICS_EVENT_TYPES.PRODUCT_REQUEST:
-        entry.productRequests += 1;
-        break;
-      default:
-        break;
-    }
-    const date = analyticsEventDate(event);
-    if (date && (!entry.lastActivity || date > entry.lastActivity)) {
-      entry.lastActivity = date;
-    }
-  });
-
-  const rowsData = Array.from(stats.values()).filter(entry => (
-    entry.visits || entry.logins || entry.productViews || entry.productClicks || entry.productRequests || entry.logouts
-  ));
-
-  rowsData.sort((a, b) => {
-    if (b.visits !== a.visits) return b.visits - a.visits;
-    if (b.productClicks !== a.productClicks) return b.productClicks - a.productClicks;
-    if (b.productRequests !== a.productRequests) return b.productRequests - a.productRequests;
-    return a.displayName.localeCompare(b.displayName, 'es');
-  });
-
-  if (!rowsData.length) {
-    analyticsUserTable.innerHTML = '<div class="analytics-empty">Aún no hay actividad registrada para el periodo seleccionado.</div>';
-    return;
-  }
-
-  const rows = rowsData.map(entry => {
-    const roleText = entry.role ? roleLabel(entry.role) : entry.anonymous ? 'Visitante' : '—';
-    const lastActivity = entry.lastActivity ? formatDateTime(entry.lastActivity.toISOString()) : '—';
-    const usernameLine = entry.username ? `<span class="dim">@${escapeHtml(entry.username)}</span>` : '';
-    return `
-      <tr>
-        <td><div style="display:flex; flex-direction:column; gap:2px;"><strong>${escapeHtml(entry.displayName)}</strong>${usernameLine}</div></td>
-        <td>${escapeHtml(roleText || '')}</td>
-        <td>${formatInteger(entry.visits)}</td>
-        <td>${formatInteger(entry.logins)}</td>
-        <td>${formatInteger(entry.productViews)}</td>
-        <td>${formatInteger(entry.productClicks)}</td>
-        <td>${formatInteger(entry.productRequests)}</td>
-        <td>${escapeHtml(lastActivity)}</td>
-      </tr>
-    `;
-  }).join('');
-
-  analyticsUserTable.innerHTML = `
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Rol</th>
-          <th>Visitas</th>
-          <th>Inicios</th>
-          <th>Vistas</th>
-          <th>Clics</th>
-          <th>Solicitudes</th>
-          <th>Última actividad</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-
-function renderAnalyticsSessions() {
-  if (!analyticsSessionTable) return;
-  const rangeKey = ensureAnalyticsRange(analyticsRange);
-  const { start, end, label } = getTimeframeRange(rangeKey);
-  if (analyticsSessionRangeLabel) analyticsSessionRangeLabel.textContent = label;
-  const loginEvents = analyticsEvents
-    .filter(event => event.type === ANALYTICS_EVENT_TYPES.LOGIN && analyticsEventInRange(event, start, end))
-    .sort((a, b) => {
-      const dateA = analyticsEventDate(a)?.getTime() || 0;
-      const dateB = analyticsEventDate(b)?.getTime() || 0;
-      return dateB - dateA;
-    })
-    .slice(0, 15);
-
-  if (!loginEvents.length) {
-    analyticsSessionTable.innerHTML = '<div class="analytics-empty">No hay inicios de sesión en este periodo.</div>';
-    return;
-  }
-
-  const rows = loginEvents.map(event => {
-    const date = analyticsEventDate(event);
-    const record = event.username && event.username !== ANONYMOUS_USERNAME ? getUserByUsername(event.username) : null;
-    const displayName = event.meta?.displayName || (record ? userDisplayName(record) : null) || (event.username === ANONYMOUS_USERNAME ? 'Visitante' : event.username);
-    const roleText = event.role ? roleLabel(event.role) : (record ? roleLabel(record.role) : (event.username === ANONYMOUS_USERNAME ? 'Visitante' : ''));
-    const method = event.meta?.restored ? 'Sesión restaurada' : 'Acceso manual';
-    return `
-      <tr>
-        <td>${escapeHtml(displayName)}</td>
-        <td>${escapeHtml(roleText || '')}</td>
-        <td>${escapeHtml(date ? formatDateTime(date.toISOString()) : '—')}</td>
-        <td>${escapeHtml(method)}</td>
-      </tr>
-    `;
-  }).join('');
-
-  analyticsSessionTable.innerHTML = `
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Rol</th>
-          <th>Fecha</th>
-          <th>Tipo de acceso</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-
-function renderClientProductChart() {
-  if (!clientProductChart) return;
-  const rangeKey = ensureAnalyticsRange(analyticsRange);
-  const { start, end, label } = getTimeframeRange(rangeKey);
-  if (analyticsProductRangeLabel) analyticsProductRangeLabel.textContent = label;
-  const stats = new Map();
-
-  const ensureEntry = (tariffId, meta = {}) => {
-    if (!tariffId) return null;
-    if (!stats.has(tariffId)) {
-      const tariffRecord = tariffs.find(item => item.id === tariffId);
-      const name = meta.tariffName || tariffRecord?.nombre || 'Tarifa sin nombre';
-      const company = meta.tariffCompany || tariffRecord?.['compañia'] || tariffRecord?.compania || 'Sin compañía';
-      stats.set(tariffId, { id: tariffId, name, company, visits: 0, clicks: 0, requests: 0 });
-    }
-    const entry = stats.get(tariffId);
-    if (meta.tariffName) entry.name = meta.tariffName;
-    if (meta.tariffCompany) entry.company = meta.tariffCompany;
-    return entry;
-  };
-
-  analyticsEvents.forEach(event => {
-    if (!analyticsEventInRange(event, start, end)) return;
-    const meta = event.meta || {};
-    const tariffId = meta.tariffId;
-    if (!tariffId) return;
-    const entry = ensureEntry(tariffId, meta);
-    if (!entry) return;
-    if (event.type === ANALYTICS_EVENT_TYPES.PRODUCT_VISIT) entry.visits += 1;
-    if (event.type === ANALYTICS_EVENT_TYPES.PRODUCT_CLICK) entry.clicks += 1;
-    if (event.type === ANALYTICS_EVENT_TYPES.PRODUCT_REQUEST && (meta.origin === CLIENT_ROLE || !meta.origin)) {
-      entry.requests += 1;
-    }
-  });
-
-  leads.forEach(lead => {
-    if (!lead?.tariffId) return;
-    const createdAt = parseDate(lead.createdAt);
-    if (!createdAt || createdAt < start || createdAt > end) return;
-    const entry = ensureEntry(lead.tariffId, { tariffName: lead.tariffNombre, tariffCompany: lead.tariffCompania });
-    if (!entry) return;
-    if (lead.origin === CLIENT_ROLE && entry.requests === 0) {
-      entry.requests += 1;
-    }
-  });
-
-  const rowsData = Array.from(stats.values()).filter(entry => entry.visits || entry.clicks || entry.requests);
-
-  if (!rowsData.length) {
-    clientProductChart.innerHTML = '<div class="analytics-empty">Todavía no hay interacción con los productos en este periodo.</div>';
-    return;
-  }
-
-  rowsData.sort((a, b) => {
-    if (b.requests !== a.requests) return b.requests - a.requests;
-    if (b.visits !== a.visits) return b.visits - a.visits;
-    if (b.clicks !== a.clicks) return b.clicks - a.clicks;
-    return a.name.localeCompare(b.name, 'es');
-  });
-
-  const topEntries = rowsData.slice(0, 8);
-  const maxMetric = Math.max(...topEntries.map(entry => Math.max(entry.requests, entry.visits, entry.clicks)), 1);
-  const widthFor = (value) => {
-    if (!value || maxMetric <= 0) return 0;
-    const ratio = value / maxMetric;
-    return Math.min(Math.max(ratio, 0.08), 1);
-  };
-
-  const rows = topEntries.map(entry => {
-    const visitsWidth = widthFor(entry.visits).toFixed(3);
-    const clicksWidth = widthFor(entry.clicks).toFixed(3);
-    const requestsWidth = widthFor(entry.requests).toFixed(3);
-    return `
-      <div class="analytics-chart-row">
-        <div class="analytics-chart-info">
-          <div class="analytics-chart-name">${escapeHtml(entry.name)}</div>
-          <div class="analytics-chart-company">${escapeHtml(entry.company || 'Sin compañía')}</div>
-        </div>
-        <div class="analytics-chart-series">
-          <div class="analytics-bar" data-kind="visits" style="--analytics-width:${visitsWidth};"><span>${formatInteger(entry.visits)} visitas</span></div>
-          <div class="analytics-bar" data-kind="clicks" style="--analytics-width:${clicksWidth};"><span>${formatInteger(entry.clicks)} clics</span></div>
-          <div class="analytics-bar" data-kind="requests" style="--analytics-width:${requestsWidth};"><span>${formatInteger(entry.requests)} solicitudes</span></div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const legend = `
-    <div class="analytics-chart-meta">
-      <span class="meta-visits">Visitas</span>
-      <span class="meta-clicks">Clics</span>
-      <span class="meta-requests">Solicitudes</span>
-    </div>
-  `;
-
-  clientProductChart.innerHTML = rows + legend;
-}
-
-function renderAnalyticsTab() {
-  analyticsRange = ensureAnalyticsRange(analyticsRange);
-  if (analyticsRangeControls) {
-    const buttons = analyticsRangeControls.querySelectorAll('button[data-range]');
-    buttons.forEach(button => {
-      button.classList.toggle('active', button.dataset.range === analyticsRange);
-    });
-  }
-  renderAnalyticsOverview();
-  renderAnalyticsUserTable();
-  renderAnalyticsSessions();
-  renderClientProductChart();
-}
-
 function renderAdminSalesStats() {
   if (!adminSalesStats || !adminClientStats) return;
   const rangeKey = adminSalesRange || 'month';
@@ -10661,9 +9497,6 @@ function activateAdminTab(tab) {
   });
   if (target === 'sales') {
     renderAdminSalesStats();
-  }
-  if (target === 'analytics') {
-    renderAnalyticsTab();
   }
 }
 
@@ -11026,9 +9859,7 @@ function renderTeamPanel() {
 }
 
 function openLeadModal(tariff) {
-  if (!leadModal || !leadForm || !tariff) return;
-  recordProductInteraction(ANALYTICS_EVENT_TYPES.PRODUCT_CLICK, tariff, { action: 'lead-modal' });
-  recordProductVisit(tariff, { force: true });
+  if (!leadModal || !leadForm) return;
   leadModal.classList.remove('hidden');
   if (leadTariffName) leadTariffName.textContent = `${tariff.nombre} (${tariff.codigo})`;
   leadForm.reset();
@@ -11049,9 +9880,7 @@ function resetRequestForm() {
 }
 
 function openRequestModal(tariff) {
-  if (!requestModal || !requestForm || !tariff) return;
-  recordProductInteraction(ANALYTICS_EVENT_TYPES.PRODUCT_CLICK, tariff, { action: 'request-modal' });
-  recordProductVisit(tariff, { force: true });
+  if (!requestModal || !requestForm) return;
   resetRequestForm();
   requestModal.classList.remove('hidden');
   if (requestTariffName) requestTariffName.textContent = `${tariff.nombre} (${tariff.codigo})`;
@@ -11166,11 +9995,6 @@ function handleLeadFormSubmit(event) {
   };
   leads.push(lead);
   saveLeads();
-  recordAnalyticsEvent(ANALYTICS_EVENT_TYPES.PRODUCT_REQUEST, {
-    username: currentUser.username,
-    role: currentUser.role,
-    meta: { ...buildTariffMeta(tariff), origin: lead.origin }
-  });
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
@@ -11269,11 +10093,6 @@ function handleRequestFormSubmit(event) {
   };
   leads.push(lead);
   saveLeads();
-  recordAnalyticsEvent(ANALYTICS_EVENT_TYPES.PRODUCT_REQUEST, {
-    username: userRecord.username,
-    role: CLIENT_ROLE,
-    meta: { ...buildTariffMeta(tariff), origin: CLIENT_ROLE }
-  });
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
@@ -11310,23 +10129,9 @@ function handleLoginSubmit(event) {
 }
 
 function setCurrentUser(user, { persist = true } = {}) {
-  const previousUser = currentUser;
   currentUser = user;
   if (persist) {
     persistSessionUser(user);
-  }
-  if (previousUser?.username && (!user || previousUser.username !== user.username)) {
-    recordLogoutEvent(previousUser);
-  }
-  if (user?.username && (!previousUser || previousUser.username !== user.username)) {
-    recordLoginEvent(user, { restored: !persist });
-    sessionProductViews.clear();
-    if (persist) {
-      recordPageVisit();
-    }
-  }
-  if (!user) {
-    sessionProductViews.clear();
   }
   updateUIForRole();
   prefillProfileForm();
@@ -11882,13 +10687,6 @@ async function initRemoteSync() {
         tariffs: BASE_DATA,
         leads: [],
         rewards: [],
-        notifications: [],
-        callRequests: [],
-        customBudgets: [],
-        messageThreads: [],
-        messageOffers: [],
-        analyticsEvents: [],
-        banner: DEFAULT_BANNER_CONFIG,
         updatedAt: serverTimestamp()
       });
     }
@@ -11979,20 +10777,7 @@ document.addEventListener('DOMContentLoaded', () => {
   adminClientsTab = $('#adminClientsTab');
   adminRewardsTab = $('#adminRewardsTab');
   adminBannerTab = $('#adminBannerTab');
-  adminAnalyticsTab = $('#adminAnalyticsTab');
-  adminBackupsTab = $('#adminBackupsTab');
   adminUsersTab = $('#adminUsersTab');
-  analyticsOverviewContainer = $('#analyticsOverview');
-  analyticsRangeControls = $('#analyticsRangeControls');
-  analyticsUserTable = $('#analyticsUserTable');
-  analyticsUserRangeLabel = $('#analyticsUserRange');
-  analyticsSessionTable = $('#analyticsSessionTable');
-  analyticsSessionRangeLabel = $('#analyticsSessionRange');
-  analyticsProductRangeLabel = $('#analyticsProductRange');
-  clientProductChart = $('#clientProductChart');
-  backupStatusMessage = $('#backupStatus');
-  backupDataButton = $('#backupDataButton');
-  backupFullButton = $('#backupFullButton');
   adminTabButtons = adminTabs ? Array.from(adminTabs.querySelectorAll('button[data-tab]')) : [];
   adminTabPanels = {
     sales: adminSalesTab,
@@ -12000,8 +10785,6 @@ document.addEventListener('DOMContentLoaded', () => {
     clients: adminClientsTab,
     rewards: adminRewardsTab,
     banner: adminBannerTab,
-    analytics: adminAnalyticsTab,
-    backups: adminBackupsTab,
     users: adminUsersTab
   };
   activateAdminTab(adminActiveTab);
@@ -12046,8 +10829,6 @@ document.addEventListener('DOMContentLoaded', () => {
   rewardIdInput = $('#rewardId');
   rewardTitleInput = $('#rewardTitle');
   rewardPointsInput = $('#rewardPoints');
-  rewardDiscountPercentInput = $('#rewardDiscountPercent');
-  rewardDiscountUntilInput = $('#rewardDiscountUntil');
   rewardUnitsInput = $('#rewardUnits');
   rewardValidFromInput = $('#rewardValidFrom');
   rewardValidUntilInput = $('#rewardValidUntil');
@@ -12202,7 +10983,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupRewardImageUploader();
 
   users = loadUsersFromStorage();
-  ensureDefaultAdminUser();
   tariffs = loadTariffsFromStorage();
   leads = loadLeadsFromStorage();
   rewards = loadRewardsFromStorage();
@@ -12211,7 +10991,6 @@ document.addEventListener('DOMContentLoaded', () => {
   customBudgets = loadCustomBudgetsFromStorage();
   messageThreads = loadMessageThreadsFromStorage();
   messageOffers = loadOffersFromStorage();
-  analyticsEvents = loadAnalyticsEventsFromStorage();
 
   resetUserForm();
 
@@ -12219,8 +10998,6 @@ document.addEventListener('DOMContentLoaded', () => {
   populateAiLinesOptions();
   renderEverythingAfterDataChange({ refreshAi: Boolean(aiLastQuery) });
   renderBannerForm();
-  ensureDiscountCountdownTicker();
-  updateDiscountCountdowns();
   $('#imprimir')?.addEventListener('click', () => window.print());
 
   loginForm?.addEventListener('submit', handleLoginSubmit);
@@ -12301,9 +11078,6 @@ document.addEventListener('DOMContentLoaded', () => {
     activateAdminTab(button.dataset.tab);
   });
 
-  backupDataButton?.addEventListener('click', handleBackupDataExport);
-  backupFullButton?.addEventListener('click', handleFullExport);
-
   adminSalesRangeControls?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-range]');
     if (!button) return;
@@ -12312,16 +11086,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (targetRange === adminSalesRange) return;
     adminSalesRange = targetRange;
     renderAdminSalesStats();
-  });
-
-  analyticsRangeControls?.addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-range]');
-    if (!button) return;
-    event.preventDefault();
-    const targetRange = ensureAnalyticsRange(button.dataset.range || ANALYTICS_DEFAULT_RANGE);
-    if (targetRange === analyticsRange) return;
-    analyticsRange = targetRange;
-    renderAnalyticsTab();
   });
 
   aiForm?.addEventListener('submit', handleAiSearchSubmit);
@@ -12420,8 +11184,6 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     updateUIForRole();
   }
-
-  recordPageVisit();
 
   resetAiSearch();
 });
