@@ -2103,11 +2103,20 @@ async function commitRemoteSync() {
   remoteState.writing = true;
   setSyncStatus('syncing', 'Guardando…');
   try {
+    const analyticsToSync = Array.isArray(analyticsEvents)
+      ? analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
+      : [];
     await setDoc(remoteDocRef, {
       users,
       tariffs,
       leads,
       rewards,
+      notifications,
+      callRequests,
+      customBudgets,
+      messageThreads,
+      messageOffers,
+      analyticsEvents: analyticsToSync,
       banner: bannerConfig,
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -2178,6 +2187,57 @@ function applyRemoteData(data) {
       localStorage.setItem(STORAGE_KEYS.rewards, JSON.stringify(rewards));
     } catch (error) {
       console.warn('No se pudieron sincronizar recompensas en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.notifications)) {
+    notifications = remoteState.data.notifications.map(normaliseNotification).filter(Boolean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.notifications, JSON.stringify(notifications));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar notificaciones en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.callRequests)) {
+    callRequests = remoteState.data.callRequests.map(normaliseCallRequest).filter(Boolean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.callRequests, JSON.stringify(callRequests));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar solicitudes de llamada en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.customBudgets)) {
+    customBudgets = remoteState.data.customBudgets.map(normaliseCustomBudget).filter(Boolean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.customBudgets, JSON.stringify(customBudgets));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar presupuestos a medida en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.messageThreads)) {
+    messageThreads = remoteState.data.messageThreads.map(normaliseMessageThread).filter(Boolean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(messageThreads));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar los mensajes internos en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.messageOffers)) {
+    messageOffers = remoteState.data.messageOffers.map(normaliseOffer).filter(Boolean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.offers, JSON.stringify(messageOffers));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar las ofertas internas en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.analyticsEvents)) {
+    analyticsEvents = remoteState.data.analyticsEvents.map(normaliseAnalyticsEvent).filter(Boolean);
+    if (analyticsEvents.length > MAX_ANALYTICS_EVENTS) {
+      analyticsEvents = analyticsEvents.slice(-MAX_ANALYTICS_EVENTS);
+    }
+    try {
+      localStorage.setItem(STORAGE_KEYS.analytics, JSON.stringify(analyticsEvents));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar los eventos analíticos en localStorage', error);
     }
   }
   if (remoteState.data.banner) {
@@ -11822,6 +11882,13 @@ async function initRemoteSync() {
         tariffs: BASE_DATA,
         leads: [],
         rewards: [],
+        notifications: [],
+        callRequests: [],
+        customBudgets: [],
+        messageThreads: [],
+        messageOffers: [],
+        analyticsEvents: [],
+        banner: DEFAULT_BANNER_CONFIG,
         updatedAt: serverTimestamp()
       });
     }
