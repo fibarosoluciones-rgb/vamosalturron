@@ -92,6 +92,13 @@ async function findLatestBackupPrefix() {
   return `gs://${BUCKET_NAME}/firestore/${latest}/`;
 }
 
+// The Cloud Scheduler job region is derived from the function's manifest.
+// Explicitly pinning the region to europe-west1 keeps the scheduler in a
+// supported location even if europe-southwest1 lacks the service.
+const scheduledBackup = onSchedule(
+  {
+    schedule: "every 60 minutes",
+    region: ["europe-west1"],
 // The Cloud Scheduler job must live in a region where the product is available.
 // Keeping the function's manifest region aligned with the scheduler region
 // ensures the deployment succeeds even if europe-southwest1 lacks Scheduler.
