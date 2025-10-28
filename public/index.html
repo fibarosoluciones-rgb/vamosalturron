@@ -3429,17 +3429,49 @@ async function loadBackupXlsxLibrary() {
   return XLSX;
 }
 
-function serialiseValueForSheet(value) {
-  if (value === undefined || value === null) return '';
-  if (Array.isArray(value) || (typeof value === 'object' && !(value instanceof Date))) {
-    try {
-      return JSON.stringify(value);
-    } catch (error) {
-      console.warn('No se pudo serializar un valor para Excel', error);
-      return String(value);
-    }
+const IMAGE_DATA_URL_PATTERN = /^data:image\/[a-z0-9.+-]+;base64,/i;
+
+function sanitiseValueForExcel(value) {
+  if (value === null || value === undefined) {
+    return value;
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (typeof File !== 'undefined' && value instanceof File) {
+    return '';
+  }
+  if (typeof Blob !== 'undefined' && value instanceof Blob) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return IMAGE_DATA_URL_PATTERN.test(value.trim()) ? '' : value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitiseValueForExcel(item));
+  }
+  if (typeof value === 'object') {
+    const cleaned = {};
+    Object.keys(value).forEach((key) => {
+      cleaned[key] = sanitiseValueForExcel(value[key]);
+    });
+    return cleaned;
   }
   return value;
+}
+
+function serialiseValueForSheet(value) {
+  const cleanedValue = sanitiseValueForExcel(value);
+  if (cleanedValue === undefined || cleanedValue === null) return '';
+  if (Array.isArray(cleanedValue) || (typeof cleanedValue === 'object' && !(cleanedValue instanceof Date))) {
+    try {
+      return JSON.stringify(cleanedValue);
+    } catch (error) {
+      console.warn('No se pudo serializar un valor para Excel', error);
+      return String(cleanedValue);
+    }
+  }
+  return cleanedValue;
 }
 
 function gatherSheetColumns(records, fallbackColumns = []) {
