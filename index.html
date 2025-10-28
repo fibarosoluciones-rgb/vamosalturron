@@ -1636,6 +1636,9 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <div style="display:flex; flex-wrap:wrap; gap:12px;">
         <button type="button" class="utility-button" id="backupDataButton">Crear copia de datos dinámica</button>
         <button type="button" class="utility-button" id="backupFullButton">Exportación completa del proyecto</button>
+        <button type="button" class="utility-button" id="backupExcelExportButton">Descargar datos en Excel</button>
+        <button type="button" class="utility-button" id="backupExcelImportButton">Cargar datos desde Excel</button>
+        <input type="file" id="backupExcelFileInput" accept=".xlsx,.xlsm,.xlsb,.ods" hidden />
       </div>
       <p id="backupStatus" class="backup-status" aria-live="polite"></p>
       <div class="small-hint" style="margin-top:12px;">Las copias incluyen usuarios, tarifas, leads, recompensas, mensajes, solicitudes y toda la configuración almacenada en el navegador.</div>
@@ -2032,6 +2035,201 @@ const BACKUP_STATIC_ASSETS = Object.freeze([
 ]);
 
 const BACKUP_JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
+const BACKUP_XLSX_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm';
+const BACKUP_EXCEL_ATTACHMENTS_SHEET_TITLE = 'Adjuntos';
+const EXCEL_ATTACHMENT_PLACEHOLDER_PREFIX = '@@excel-blob:';
+const EXCEL_ATTACHMENT_PLACEHOLDER_SUFFIX = '@@';
+const EXCEL_ATTACHMENT_MAX_CELL_LENGTH = 32000;
+const EXCEL_ATTACHMENT_CHUNK_SIZE = 30000;
+const BACKUP_EXCEL_SHEETS = Object.freeze([
+  {
+    key: 'users',
+    title: 'Usuarios',
+    type: 'array',
+    fallbackColumns: [
+      'username',
+      'password',
+      'role',
+      'firstName',
+      'lastName',
+      'email',
+      'companyPhone',
+      'personalPhone',
+      'address',
+      'photo',
+      'selfRegistered',
+      'managedUsers',
+      'pointsBalance',
+      'pointsHistory',
+      'referrals',
+      'referredBy'
+    ]
+  },
+  {
+    key: 'tariffs',
+    title: 'Tarifas',
+    type: 'array',
+    fallbackColumns: [
+      'id',
+      'codigo',
+      'nombre',
+      'compania',
+      'tipo',
+      'lineas',
+      'precio',
+      'moneda',
+      'permanencia',
+      'plataformas',
+      'destacada',
+      'descripcion',
+      'detalles',
+      'tags'
+    ]
+  },
+  {
+    key: 'leads',
+    title: 'Leads',
+    type: 'array',
+    fallbackColumns: [
+      'id',
+      'status',
+      'createdAt',
+      'updatedAt',
+      'soldAt',
+      'notified',
+      'origin',
+      'installed',
+      'commercial',
+      'commercialName',
+      'clientName',
+      'contact',
+      'notes',
+      'cancelReason',
+      'cancelledAt',
+      'cancelledBy',
+      'cancelledByName',
+      'clientUsername',
+      'referredBy',
+      'comments',
+      'pointsLedger'
+    ]
+  },
+  {
+    key: 'rewards',
+    title: 'Recompensas',
+    type: 'array',
+    fallbackColumns: [
+      'id',
+      'title',
+      'pointsCost',
+      'description',
+      'imageUrl',
+      'totalUnits',
+      'validFrom',
+      'validUntil',
+      'createdAt',
+      'updatedAt',
+      'archived',
+      'discountPercent',
+      'discountUntil',
+      'requests'
+    ]
+  },
+  {
+    key: 'notifications',
+    title: 'Notificaciones',
+    type: 'array',
+    fallbackColumns: ['id', 'user', 'message', 'createdAt', 'read', 'type', 'meta']
+  },
+  {
+    key: 'callRequests',
+    title: 'Solicitudes de llamada',
+    type: 'array',
+    fallbackColumns: [
+      'id',
+      'name',
+      'phone',
+      'time',
+      'notes',
+      'status',
+      'createdAt',
+      'updatedAt',
+      'handledBy',
+      'handledByName',
+      'resolvedAt',
+      'originUser',
+      'originName',
+      'contactChannel',
+      'followUpAt',
+      'followUpNote',
+      'secondCall',
+      'saleTariffId',
+      'saleTariffCodigo',
+      'saleTariffName',
+      'saleAssignedTo',
+      'saleAssignedName',
+      'saleLeadId'
+    ]
+  },
+  {
+    key: 'customBudgets',
+    title: 'Presupuestos a medida',
+    type: 'array',
+    fallbackColumns: [
+      'id',
+      'summary',
+      'contact',
+      'status',
+      'createdAt',
+      'updatedAt',
+      'createdBy',
+      'createdByName',
+      'createdByRole',
+      'resolvedBy',
+      'resolvedByName',
+      'resolvedAt',
+      'clientType',
+      'budgetRange',
+      'dueDate',
+      'proposalTariffId',
+      'proposalTariffCodigo',
+      'proposalTariffName',
+      'proposalTariffCompany',
+      'proposalMessage',
+      'proposalCreatedAt',
+      'proposalCreatedBy',
+      'proposalCreatedByName',
+      'proposalLeadId',
+      'acceptedAt',
+      'acceptedBy',
+      'acceptedByName'
+    ]
+  },
+  {
+    key: 'messageThreads',
+    title: 'Mensajes internos',
+    type: 'array',
+    fallbackColumns: ['id', 'user', 'createdAt', 'updatedAt', 'messages']
+  },
+  {
+    key: 'messageOffers',
+    title: 'Ofertas internas',
+    type: 'array',
+    fallbackColumns: ['id', 'title', 'description', 'audience', 'targetUser', 'createdAt', 'createdBy', 'readBy']
+  },
+  {
+    key: 'analyticsEvents',
+    title: 'Eventos analíticos',
+    type: 'array',
+    fallbackColumns: ['id', 'type', 'timestamp', 'username', 'role', 'meta']
+  },
+  {
+    key: 'banner',
+    title: 'Banner',
+    type: 'object',
+    fallbackColumns: ['version', 'updatedAt', 'items']
+  }
+]);
 
 const STORAGE_LOCAL_KEY_NAMES = Object.freeze(Object.keys(STORAGE_KEYS).filter((name) => name !== 'session'));
 const STORAGE_SESSION_KEY_NAMES = Object.freeze(['session']);
@@ -2389,6 +2587,377 @@ async function collectStaticFilesForExport() {
   return { files, missingOptional: missing.filter((item) => item.optional) };
 }
 
+async function loadBackupXlsxLibrary() {
+  if (window.XLSX) {
+    return window.XLSX;
+  }
+  const module = await import(BACKUP_XLSX_URL);
+  const XLSX = module?.default || module;
+  if (!XLSX?.utils) {
+    throw new Error('No se pudo cargar la librería de hojas de cálculo.');
+  }
+  window.XLSX = XLSX;
+  return XLSX;
+}
+
+function maybeStoreExcelAttachment(content, attachmentContext) {
+  if (!attachmentContext || typeof content !== 'string') {
+    return content;
+  }
+  if (content.length <= EXCEL_ATTACHMENT_MAX_CELL_LENGTH) {
+    return content;
+  }
+  const id = `blob-${attachmentContext.nextId++}`;
+  const chunks = [];
+  for (let offset = 0; offset < content.length; offset += EXCEL_ATTACHMENT_CHUNK_SIZE) {
+    chunks.push(content.slice(offset, offset + EXCEL_ATTACHMENT_CHUNK_SIZE));
+  }
+  attachmentContext.attachments.push({ id, chunks });
+  return `${EXCEL_ATTACHMENT_PLACEHOLDER_PREFIX}${id}${EXCEL_ATTACHMENT_PLACEHOLDER_SUFFIX}`;
+}
+
+function serialiseValueForSheet(value, attachmentContext) {
+  if (value === undefined || value === null) return '';
+  if (value instanceof Date) {
+    return maybeStoreExcelAttachment(value.toISOString(), attachmentContext);
+  }
+  if (typeof value === 'string') {
+    return maybeStoreExcelAttachment(value, attachmentContext);
+  }
+  if (Array.isArray(value) || (typeof value === 'object' && !(value instanceof Date))) {
+    try {
+      const serialised = JSON.stringify(value);
+      return maybeStoreExcelAttachment(serialised, attachmentContext);
+    } catch (error) {
+      console.warn('No se pudo serializar un valor para Excel', error);
+      return maybeStoreExcelAttachment(String(value), attachmentContext);
+    }
+  }
+  return value;
+}
+
+function gatherSheetColumns(records, fallbackColumns = []) {
+  const columnSet = new Set(Array.isArray(fallbackColumns) ? fallbackColumns : []);
+  records.forEach((record) => {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return;
+    Object.keys(record).forEach((key) => columnSet.add(key));
+  });
+  return Array.from(columnSet);
+}
+
+function buildSheetFromArray(records, config, XLSX, attachmentContext) {
+  const columns = gatherSheetColumns(records, config.fallbackColumns || []);
+  if (!columns.length) {
+    columns.push('campo');
+  }
+  if (!records.length) {
+    return XLSX.utils.aoa_to_sheet([columns]);
+  }
+  const prepared = records.map((record) => {
+    const row = {};
+    columns.forEach((column) => {
+      row[column] = serialiseValueForSheet(record?.[column], attachmentContext);
+    });
+    return row;
+  });
+  return XLSX.utils.json_to_sheet(prepared, { header: columns });
+}
+
+function buildSheetFromObject(record, config, XLSX, attachmentContext) {
+  const source = record && typeof record === 'object' && !Array.isArray(record) ? record : {};
+  const columns = gatherSheetColumns([source], config.fallbackColumns || []);
+  if (!columns.length) {
+    columns.push('campo');
+  }
+  const row = {};
+  columns.forEach((column) => {
+    row[column] = serialiseValueForSheet(source[column], attachmentContext);
+  });
+  return XLSX.utils.json_to_sheet([row], { header: columns });
+}
+
+function createExcelWorkbookFromSnapshot(snapshot, XLSX) {
+  const workbook = XLSX.utils.book_new();
+  const attachmentContext = { attachments: [], nextId: 1 };
+  const summaryRows = [
+    ['Generado', snapshot.generatedAt],
+    ['Zona horaria (minutos)', snapshot.timezoneOffsetMinutes],
+    ['Origen', snapshot.origin],
+    ['Ruta', snapshot.pathname],
+    ['Navegador', snapshot.userAgent]
+  ];
+  Object.entries(snapshot.totals || {}).forEach(([key, value]) => {
+    const label = `Total ${key}`;
+    summaryRows.push([label, value]);
+  });
+  const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows);
+  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen');
+
+  BACKUP_EXCEL_SHEETS.forEach((config) => {
+    const data = snapshot.data?.[config.key];
+    let sheet;
+    if (config.type === 'array') {
+      const records = Array.isArray(data) ? data : [];
+      sheet = buildSheetFromArray(records, config, XLSX, attachmentContext);
+    } else {
+      sheet = buildSheetFromObject(data, config, XLSX, attachmentContext);
+    }
+    XLSX.utils.book_append_sheet(workbook, sheet, config.title);
+  });
+
+  if (attachmentContext.attachments.length) {
+    const attachmentRows = attachmentContext.attachments.flatMap((attachment) => {
+      return attachment.chunks.map((chunk, index) => ({
+        id: attachment.id,
+        index,
+        chunk
+      }));
+    });
+    const attachmentSheet = XLSX.utils.json_to_sheet(attachmentRows, { header: ['id', 'index', 'chunk'] });
+    XLSX.utils.book_append_sheet(workbook, attachmentSheet, BACKUP_EXCEL_ATTACHMENTS_SHEET_TITLE);
+  }
+
+  return workbook;
+}
+
+function collectWorkbookAttachments(workbook, XLSX) {
+  const sheet = workbook.Sheets[BACKUP_EXCEL_ATTACHMENTS_SHEET_TITLE];
+  if (!sheet) return {};
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  const attachments = {};
+  rows.forEach((row) => {
+    const idRaw = row.id;
+    if (idRaw === undefined || idRaw === null) return;
+    const id = String(idRaw).trim();
+    if (!id) return;
+    const indexRaw = row.index;
+    const index = Number.parseInt(indexRaw, 10);
+    const chunk = typeof row.chunk === 'string' ? row.chunk : String(row.chunk ?? '');
+    if (!attachments[id]) {
+      attachments[id] = [];
+    }
+    const position = Number.isFinite(index) && index >= 0 ? index : attachments[id].length;
+    attachments[id][position] = chunk;
+  });
+  Object.keys(attachments).forEach((id) => {
+    const parts = attachments[id]
+      .filter((part) => typeof part === 'string')
+      .join('');
+    attachments[id] = parts;
+  });
+  return attachments;
+}
+
+function resolveExcelAttachmentValue(value, attachments) {
+  if (typeof value !== 'string' || !attachments) {
+    return value;
+  }
+  if (!value.startsWith(EXCEL_ATTACHMENT_PLACEHOLDER_PREFIX) || !value.endsWith(EXCEL_ATTACHMENT_PLACEHOLDER_SUFFIX)) {
+    return value;
+  }
+  const id = value.slice(
+    EXCEL_ATTACHMENT_PLACEHOLDER_PREFIX.length,
+    value.length - EXCEL_ATTACHMENT_PLACEHOLDER_SUFFIX.length
+  );
+  if (!id) {
+    return value;
+  }
+  return attachments[id] ?? '';
+}
+
+function parseSheetCellValue(value, attachments) {
+  if (typeof value === 'string') {
+    const resolved = resolveExcelAttachmentValue(value, attachments);
+    if (resolved !== value) {
+      return parseSheetCellValue(resolved, attachments);
+    }
+    const trimmed = resolved.trim();
+    if (!trimmed) return '';
+    if (trimmed === 'null') return null;
+    if (trimmed === 'undefined') return undefined;
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        return JSON.parse(trimmed);
+      } catch (error) {
+        console.warn('No se pudo interpretar un valor del Excel como JSON', error);
+      }
+    }
+    return resolved;
+  }
+  return value;
+}
+
+function normaliseRowFromSheet(row, attachments) {
+  const normalised = {};
+  Object.entries(row || {}).forEach(([key, value]) => {
+    normalised[key] = parseSheetCellValue(value, attachments);
+  });
+  return normalised;
+}
+
+function sheetRowIsEmpty(row) {
+  return Object.values(row).every((value) => value === '' || value === null || value === undefined);
+}
+
+function applyExcelDataForKey(key, value) {
+  switch (key) {
+    case 'users': {
+      const list = Array.isArray(value) ? value.map(normaliseUser).filter(Boolean) : [];
+      cleanManagedUsers(list);
+      users = list;
+      saveUsers();
+      ensureDefaultAdminUser();
+      return `usuarios (${users.length})`;
+    }
+    case 'tariffs': {
+      const list = Array.isArray(value) ? value.map(normaliseTariff) : [];
+      tariffs = list;
+      saveTariffs();
+      return `tarifas (${tariffs.length})`;
+    }
+    case 'leads': {
+      const list = Array.isArray(value) ? value.map(normaliseLead).filter(Boolean) : [];
+      leads = list;
+      saveLeads();
+      return `leads (${leads.length})`;
+    }
+    case 'rewards': {
+      const list = Array.isArray(value) ? value.map(normaliseReward).filter(Boolean) : [];
+      rewards = list;
+      saveRewards();
+      return `recompensas (${rewards.length})`;
+    }
+    case 'notifications': {
+      const list = Array.isArray(value) ? value.map(normaliseNotification).filter(Boolean) : [];
+      notifications = list;
+      saveNotifications();
+      return `notificaciones (${notifications.length})`;
+    }
+    case 'callRequests': {
+      const list = Array.isArray(value) ? value.map(normaliseCallRequest).filter(Boolean) : [];
+      callRequests = list;
+      saveCallRequests();
+      return `solicitudes de llamada (${callRequests.length})`;
+    }
+    case 'customBudgets': {
+      const list = Array.isArray(value) ? value.map(normaliseCustomBudget).filter(Boolean) : [];
+      customBudgets = list;
+      saveCustomBudgets();
+      return `presupuestos (${customBudgets.length})`;
+    }
+    case 'messageThreads': {
+      const list = Array.isArray(value) ? value.map(normaliseMessageThread).filter(Boolean) : [];
+      messageThreads = list;
+      saveMessageThreads();
+      return `mensajes internos (${messageThreads.length})`;
+    }
+    case 'messageOffers': {
+      const list = Array.isArray(value) ? value.map(normaliseOffer).filter(Boolean) : [];
+      messageOffers = list;
+      saveOffers();
+      return `ofertas internas (${messageOffers.length})`;
+    }
+    case 'analyticsEvents': {
+      const list = Array.isArray(value) ? value.map(normaliseAnalyticsEvent).filter(Boolean) : [];
+      analyticsEvents = list.length > MAX_ANALYTICS_EVENTS ? list.slice(-MAX_ANALYTICS_EVENTS) : list;
+      saveAnalyticsEvents();
+      return `eventos analíticos (${analyticsEvents.length})`;
+    }
+    case 'banner': {
+      const config = normaliseBanner(value && typeof value === 'object' ? value : {});
+      setBannerConfig(config, { persistLocal: true, syncRemote: false });
+      const itemsCount = Array.isArray(config.items) ? config.items.length : 0;
+      return `banner (${itemsCount} elementos)`;
+    }
+    default:
+      return null;
+  }
+}
+
+function applyExcelBackupFromWorkbook(workbook, XLSX) {
+  const summaries = [];
+  const attachments = collectWorkbookAttachments(workbook, XLSX);
+  let processed = 0;
+  BACKUP_EXCEL_SHEETS.forEach((config) => {
+    const sheet = workbook.Sheets[config.title];
+    if (!sheet) return;
+    processed += 1;
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (config.type === 'array') {
+      const prepared = rows
+        .map((row) => normaliseRowFromSheet(row, attachments))
+        .filter((row) => !sheetRowIsEmpty(row));
+      const summary = applyExcelDataForKey(config.key, prepared);
+      if (summary) summaries.push(summary);
+    } else {
+      const row = rows.length ? normaliseRowFromSheet(rows[0], attachments) : {};
+      const summary = applyExcelDataForKey(config.key, row);
+      if (summary) summaries.push(summary);
+    }
+  });
+  if (!processed) {
+    throw new Error('El archivo no contiene las hojas de datos esperadas.');
+  }
+  renderEverythingAfterDataChange({ refreshAi: Boolean(aiLastQuery) });
+  return summaries;
+}
+
+async function handleBackupExcelExport(event) {
+  event?.preventDefault?.();
+  if (!backupExcelExportButton) return;
+  if (backupExcelExportButton.disabled) return;
+  backupExcelExportButton.disabled = true;
+  setBackupStatusMessage('working', 'Generando archivo Excel con los datos…');
+  try {
+    const XLSX = await loadBackupXlsxLibrary();
+    const snapshot = collectDynamicDataSnapshot();
+    const workbook = createExcelWorkbookFromSnapshot(snapshot, XLSX);
+    const arrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([arrayBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    downloadBlob(formatBackupFilename('backup-datos', 'xlsx'), blob);
+    setBackupStatusMessage('success', 'Archivo Excel generado correctamente.');
+  } catch (error) {
+    console.error('No se pudo generar el archivo Excel', error);
+    setBackupStatusMessage('error', 'Ocurrió un error al generar el archivo Excel. Revisa la consola para más detalles.');
+  } finally {
+    backupExcelExportButton.disabled = false;
+  }
+}
+
+function handleBackupExcelImportClick(event) {
+  event?.preventDefault?.();
+  if (!backupExcelImportButton || !backupExcelFileInput) return;
+  if (backupExcelImportButton.disabled) return;
+  backupExcelFileInput.click();
+}
+
+async function handleBackupExcelFileChange(event) {
+  const input = event?.target;
+  const file = input?.files?.[0];
+  if (!file || !backupExcelImportButton) {
+    if (input) input.value = '';
+    return;
+  }
+  backupExcelImportButton.disabled = true;
+  setBackupStatusMessage('working', `Importando datos desde "${file.name}"…`);
+  try {
+    const XLSX = await loadBackupXlsxLibrary();
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const summaries = applyExcelBackupFromWorkbook(workbook, XLSX);
+    const summaryText = summaries.length ? `Datos actualizados: ${summaries.join(', ')}.` : 'Los datos se actualizaron correctamente.';
+    setBackupStatusMessage('success', summaryText);
+  } catch (error) {
+    console.error('No se pudo importar el archivo Excel', error);
+    setBackupStatusMessage('error', 'No se pudieron importar los datos desde el Excel. Verifica el archivo e inténtalo de nuevo.');
+  } finally {
+    backupExcelImportButton.disabled = false;
+    if (input) input.value = '';
+  }
+}
+
 async function handleBackupDataExport(event) {
   event?.preventDefault?.();
   if (!backupDataButton) return;
@@ -2588,6 +3157,9 @@ let grid,
   backupStatusMessage,
   backupDataButton,
   backupFullButton,
+  backupExcelExportButton,
+  backupExcelImportButton,
+  backupExcelFileInput,
   tarifaList,
   tarifaForm,
   tarifaFormInfo,
@@ -11993,6 +12565,9 @@ document.addEventListener('DOMContentLoaded', () => {
   backupStatusMessage = $('#backupStatus');
   backupDataButton = $('#backupDataButton');
   backupFullButton = $('#backupFullButton');
+  backupExcelExportButton = $('#backupExcelExportButton');
+  backupExcelImportButton = $('#backupExcelImportButton');
+  backupExcelFileInput = $('#backupExcelFileInput');
   adminTabButtons = adminTabs ? Array.from(adminTabs.querySelectorAll('button[data-tab]')) : [];
   adminTabPanels = {
     sales: adminSalesTab,
@@ -12303,6 +12878,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   backupDataButton?.addEventListener('click', handleBackupDataExport);
   backupFullButton?.addEventListener('click', handleFullExport);
+  backupExcelExportButton?.addEventListener('click', handleBackupExcelExport);
+  backupExcelImportButton?.addEventListener('click', handleBackupExcelImportClick);
+  backupExcelFileInput?.addEventListener('change', handleBackupExcelFileChange);
 
   adminSalesRangeControls?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-range]');
