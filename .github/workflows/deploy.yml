@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,23 +19,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Install function dependencies
-  shell: bash
-  working-directory: functions
-  run: |
-    if [ -f package-lock.json ]; then
-      echo "package-lock.json found → running npm ci"
-      npm ci
-    else
-      echo "package-lock.json not found → generating lockfile then npm ci"
-      npm i --package-lock-only
-      npm ci
-    fi
+      # (Opcional) Para ver que estamos en la carpeta correcta
+      - name: List functions folder (debug)
+        run: ls -la
+        working-directory: functions
 
+      - name: Install function dependencies
+        shell: bash
+        working-directory: functions
+        run: |
+          # Si hay lockfile: npm ci. Si no, lo generamos y volvemos a npm ci
+          npm ci || (npm i --package-lock-only && npm ci)
 
       - name: Update ADMIN_TOKEN secret
         env:
