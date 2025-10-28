@@ -23,8 +23,18 @@ jobs:
         run: npm install -g firebase-tools
 
       - name: Install function dependencies
-        working-directory: functions
-        run: npm ci
+  shell: bash
+  working-directory: functions
+  run: |
+    if [ -f package-lock.json ]; then
+      echo "package-lock.json found → running npm ci"
+      npm ci
+    else
+      echo "package-lock.json not found → generating lockfile then npm ci"
+      npm i --package-lock-only
+      npm ci
+    fi
+
 
       - name: Update ADMIN_TOKEN secret
         env:
