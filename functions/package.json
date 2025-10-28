@@ -2,7 +2,7 @@
   "name": "functions",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": "18" },
+  "engines": { "node": "22" },
   "scripts": {
     "deploy": "firebase deploy --only functions",
     "lint": "echo 'No linting configured'"
