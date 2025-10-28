@@ -14,7 +14,7 @@
     "source": "functions",
     "runtime": "nodejs22",
     "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" ci"
+      "node tools/install-functions-deps.js"
     ]
   }
 }
