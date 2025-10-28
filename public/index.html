@@ -3014,7 +3014,18 @@ function applyRemoteData(data) {
     }
   }
   if (Array.isArray(payload.analyticsEvents)) {
-    analyticsEvents = payload.analyticsEvents.map(normaliseAnalyticsEvent).filter(Boolean);
+    const remoteList = payload.analyticsEvents.map(normaliseAnalyticsEvent).filter(Boolean);
+    const remoteIds = new Set(remoteList.map(event => event.id).filter(Boolean));
+    const pendingLocal = analyticsEvents.filter(event => event && event.id && !remoteIds.has(event.id));
+    analyticsEvents = [...remoteList, ...pendingLocal];
+    analyticsEvents.sort((a, b) => {
+      const timeA = new Date(a?.timestamp || a?.createdAt || 0).getTime();
+      const timeB = new Date(b?.timestamp || b?.createdAt || 0).getTime();
+      return timeA - timeB;
+    });
+    if (analyticsEvents.length > MAX_ANALYTICS_EVENTS) {
+      analyticsEvents = analyticsEvents.slice(-MAX_ANALYTICS_EVENTS);
+    }
     try {
       localStorage.setItem(STORAGE_KEYS.analytics, JSON.stringify(analyticsEvents));
     } catch (error) {
