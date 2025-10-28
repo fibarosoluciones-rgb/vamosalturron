@@ -99,6 +99,13 @@ const scheduledBackup = onSchedule(
   {
     schedule: "every 60 minutes",
     region: ["europe-west1"],
+// The Cloud Scheduler job must live in a region where the product is available.
+// Keeping the function's manifest region aligned with the scheduler region
+// ensures the deployment succeeds even if europe-southwest1 lacks Scheduler.
+const scheduledBackup = onSchedule(
+  {
+    schedule: "every 60 minutes",
+    region: "europe-west1",
   },
   async () => {
     const { folder, time } = formatTimestampPath();
