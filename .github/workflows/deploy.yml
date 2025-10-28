@@ -24,7 +24,7 @@ jobs:
 
       - name: Install function dependencies
         working-directory: functions
-        run: npm ci
+        run: npm install
 
       - name: Update ADMIN_TOKEN secret
         env:
