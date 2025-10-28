@@ -1,0 +1,45 @@
+name: Deploy to Firebase
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Install function dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Update ADMIN_TOKEN secret
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          echo "Refreshing ADMIN_TOKEN secret"
+          printf "%s" "$ADMIN_TOKEN" > admin_token.txt
+          firebase functions:secrets:set ADMIN_TOKEN --project vamosalturron-3242c --force --data-file=admin_token.txt
+          rm admin_token.txt
+
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          echo "Starting Firebase deployment"
+          firebase deploy --only functions,hosting --project vamosalturron-3242c
+          echo "Firebase deployment completed"
