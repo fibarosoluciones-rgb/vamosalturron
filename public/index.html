@@ -3016,7 +3016,7 @@ function applyRemoteData(data) {
   if (Array.isArray(payload.messageThreads)) {
     messageThreads = payload.messageThreads.map(normaliseMessageThread).filter(Boolean);
     try {
-      localStorage.setItem(STORAGE_KEYS.threads, JSON.stringify(messageThreads));
+      localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(messageThreads));
     } catch (error) {
       console.warn('No se pudieron sincronizar los hilos de mensajes en localStorage', error);
     }
@@ -3027,6 +3027,17 @@ function applyRemoteData(data) {
       localStorage.setItem(STORAGE_KEYS.offers, JSON.stringify(messageOffers));
     } catch (error) {
       console.warn('No se pudieron sincronizar las ofertas internas en localStorage', error);
+    }
+  }
+  if (Array.isArray(payload.analyticsEvents)) {
+    analyticsEvents = payload.analyticsEvents.map(normaliseAnalyticsEvent).filter(Boolean);
+    if (analyticsEvents.length > MAX_ANALYTICS_EVENTS) {
+      analyticsEvents = analyticsEvents.slice(-MAX_ANALYTICS_EVENTS);
+    }
+    try {
+      localStorage.setItem(STORAGE_KEYS.analytics, JSON.stringify(analyticsEvents));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar los eventos analíticos en localStorage', error);
     }
   }
   if (payload.banner) {
