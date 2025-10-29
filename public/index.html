@@ -1636,9 +1636,11 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       <p class="dim" style="margin:0 0 18px;">Genera archivos de respaldo con toda la información dinámica creada por los usuarios y descarga un paquete completo del proyecto para restaurarlo en minutos.</p>
       <div style="display:flex; flex-wrap:wrap; gap:12px;">
         <button type="button" class="utility-button" id="backupDataButton">Crear copia de datos dinámica</button>
+        <button type="button" class="utility-button" id="backupDataRestoreButton">Cargar copia de datos dinámica</button>
         <button type="button" class="utility-button" id="backupFullButton">Exportación completa del proyecto</button>
         <button type="button" class="utility-button" id="backupExcelExportButton">Descargar datos en Excel</button>
         <button type="button" class="utility-button" id="backupExcelImportButton">Cargar datos desde Excel</button>
+        <input type="file" id="backupDataFileInput" accept=".json" hidden />
         <input type="file" id="backupExcelFileInput" accept=".xlsx,.xlsm,.xlsb,.ods" hidden />
       </div>
       <p id="backupStatus" class="backup-status" aria-live="polite"></p>
@@ -3772,6 +3774,96 @@ async function handleBackupDataExport(event) {
   }
 }
 
+function restoreStorageSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== 'object') {
+    return;
+  }
+  const restoreEntries = (entries, storage, allowedNames) => {
+    if (!storage || !allowedNames) return;
+    allowedNames.forEach((name) => {
+      const key = STORAGE_KEYS[name];
+      if (!key) return;
+      const entry = entries && typeof entries === 'object' ? entries[name] : undefined;
+      if (!entry) return;
+      try {
+        if (entry.raw === null || entry.raw === undefined) {
+          storage.removeItem(key);
+        } else {
+          storage.setItem(key, String(entry.raw));
+        }
+      } catch (error) {
+        console.warn(`No se pudo restaurar la clave ${key}`, error);
+      }
+    });
+  };
+  try {
+    restoreEntries(snapshot.localStorage, localStorage, STORAGE_LOCAL_KEY_NAMES);
+  } catch (error) {
+    console.warn('No se pudieron restaurar los datos de localStorage', error);
+  }
+  try {
+    restoreEntries(snapshot.sessionStorage, sessionStorage, STORAGE_SESSION_KEY_NAMES);
+  } catch (error) {
+    console.warn('No se pudieron restaurar los datos de sessionStorage', error);
+  }
+}
+
+function applyDynamicBackupSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== 'object') {
+    throw new Error('El archivo no contiene una copia de seguridad válida.');
+  }
+  const data = snapshot.data && typeof snapshot.data === 'object' ? snapshot.data : null;
+  if (!data) {
+    throw new Error('La copia de seguridad no incluye datos dinámicos para restaurar.');
+  }
+  const summaries = [];
+  Object.entries(data).forEach(([key, value]) => {
+    const summary = applyExcelDataForKey(key, value);
+    if (summary) summaries.push(summary);
+  });
+  if (snapshot.storage && typeof snapshot.storage === 'object') {
+    restoreStorageSnapshot(snapshot.storage);
+  }
+  renderEverythingAfterDataChange({ refreshAi: Boolean(aiLastQuery) });
+  return summaries;
+}
+
+function handleBackupDataImportClick(event) {
+  event?.preventDefault?.();
+  if (!backupDataRestoreButton || !backupDataFileInput) return;
+  if (backupDataRestoreButton.disabled) return;
+  backupDataFileInput.click();
+}
+
+async function handleBackupDataFileChange(event) {
+  const input = event?.target;
+  const file = input?.files?.[0];
+  if (!file || !backupDataRestoreButton) {
+    if (input) input.value = '';
+    return;
+  }
+  backupDataRestoreButton.disabled = true;
+  setBackupStatusMessage('working', `Restaurando datos desde "${file.name}"…`);
+  try {
+    const content = await file.text();
+    const parsed = JSON.parse(content);
+    const summaries = applyDynamicBackupSnapshot(parsed);
+    const summaryText = summaries.length
+      ? `Datos restaurados correctamente: ${summaries.join(', ')}.`
+      : 'La copia se cargó correctamente.';
+    setBackupStatusMessage('success', summaryText);
+  } catch (error) {
+    console.error('No se pudo restaurar la copia de seguridad', error);
+    const message = error?.message
+      ? `No se pudo restaurar la copia de seguridad: ${error.message}`
+      : 'No se pudo restaurar la copia de seguridad. Revisa el archivo e inténtalo de nuevo.';
+    setBackupStatusMessage('error', message);
+  } finally {
+    backupDataRestoreButton.disabled = false;
+    if (input) input.value = '';
+  }
+}
+
 async function handleFullExport(event) {
   event?.preventDefault?.();
   if (!backupFullButton) return;
@@ -3951,9 +4043,11 @@ let grid,
   clientProductChart,
   backupStatusMessage,
   backupDataButton,
+  backupDataRestoreButton,
   backupFullButton,
   backupExcelExportButton,
   backupExcelImportButton,
+  backupDataFileInput,
   backupExcelFileInput,
   tarifaList,
   tarifaForm,
@@ -13702,9 +13796,11 @@ document.addEventListener('DOMContentLoaded', () => {
   clientProductChart = $('#clientProductChart');
   backupStatusMessage = $('#backupStatus');
   backupDataButton = $('#backupDataButton');
+  backupDataRestoreButton = $('#backupDataRestoreButton');
   backupFullButton = $('#backupFullButton');
   backupExcelExportButton = $('#backupExcelExportButton');
   backupExcelImportButton = $('#backupExcelImportButton');
+  backupDataFileInput = $('#backupDataFileInput');
   backupExcelFileInput = $('#backupExcelFileInput');
   adminTabButtons = adminTabs ? Array.from(adminTabs.querySelectorAll('button[data-tab]')) : [];
   adminTabPanels = {
@@ -14015,9 +14111,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   backupDataButton?.addEventListener('click', handleBackupDataExport);
+  backupDataRestoreButton?.addEventListener('click', handleBackupDataImportClick);
   backupFullButton?.addEventListener('click', handleFullExport);
   backupExcelExportButton?.addEventListener('click', handleBackupExcelExport);
   backupExcelImportButton?.addEventListener('click', handleBackupExcelImportClick);
+  backupDataFileInput?.addEventListener('change', handleBackupDataFileChange);
   backupExcelFileInput?.addEventListener('change', handleBackupExcelFileChange);
 
   adminSalesRangeControls?.addEventListener('click', (event) => {
