@@ -1834,7 +1834,8 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 <script src="./firebase-config.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
 
 const BASE_DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 12.5, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "FIBRA 300 Y 2 LINEAS CON LLAMADAS ILIMITADAS Y 50 GI COMPARTIDOS", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0002", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 99.9, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "qwe", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0003", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "zxc", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0004", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 258.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "rty", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0005", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 46.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "fgh", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0006", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 21.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "cvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0007", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 12.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "tyu", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0008", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 45.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0009", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 14.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "fvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0010", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 13.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "uik", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0011", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0012", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 57.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "pñl", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0013", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 912.5, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "R45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0014", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 999.9, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "RF43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0015", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 978.0, "compañia": "simyo", "familia": "MEDIA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "F34F", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0016", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 958.0, "compañia": "jazztel", "familia": "MEDIA", "moneda": "EUR", "permanencia": "no", "descripción": "34F45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0017", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 946.0, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "34F43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0018", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 921.0, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F3RF", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0019", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 997.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "656H", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0020", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 5745.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "9 meses", "descripción": "H768", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0021", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 6745.0, "compañia": "mm", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "no", "descripción": "5G34G", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0022", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 5868.0, "compañia": "pp", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "12 meses", "descripción": "F3RT", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0023", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 9999.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F324TG6", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0024", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 3858.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "EF5655", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}];
 
@@ -2241,8 +2242,295 @@ const remoteState = {
   data: null
 };
 
+const REMOTE_STATE_VERSION = 2;
+const REMOTE_SEGMENTS = Object.freeze([
+  { key: 'users', type: 'array', chunkSize: 200 },
+  { key: 'tariffs', type: 'array', chunkSize: 25 },
+  { key: 'leads', type: 'array', chunkSize: 50 },
+  { key: 'rewards', type: 'array', chunkSize: 50 },
+  { key: 'notifications', type: 'array', chunkSize: 50 },
+  { key: 'callRequests', type: 'array', chunkSize: 50 },
+  { key: 'customBudgets', type: 'array', chunkSize: 20 },
+  { key: 'messageThreads', type: 'array', chunkSize: 10 },
+  { key: 'messageOffers', type: 'array', chunkSize: 10 },
+  { key: 'analyticsEvents', type: 'array', chunkSize: 100 },
+  { key: 'banner', type: 'object', chunkSize: 1 }
+]);
+
+function normaliseLegacyRemoteState(raw) {
+  const source = raw || {};
+  return {
+    users: Array.isArray(source.users) ? source.users : [],
+    tariffs: Array.isArray(source.tariffs) ? source.tariffs : [],
+    leads: Array.isArray(source.leads) ? source.leads : [],
+    rewards: Array.isArray(source.rewards) ? source.rewards : [],
+    notifications: Array.isArray(source.notifications) ? source.notifications : [],
+    callRequests: Array.isArray(source.callRequests) ? source.callRequests : [],
+    customBudgets: Array.isArray(source.customBudgets) ? source.customBudgets : [],
+    messageThreads: Array.isArray(source.messageThreads) ? source.messageThreads : [],
+    messageOffers: Array.isArray(source.messageOffers) ? source.messageOffers : [],
+    analyticsEvents: Array.isArray(source.analyticsEvents)
+      ? source.analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
+      : [],
+    banner: source.banner ? normaliseBanner(source.banner) : normaliseBanner(DEFAULT_BANNER_CONFIG),
+    updatedAt: source.updatedAt || ''
+  };
+}
+
+function chunkArray(array, size) {
+  const list = Array.isArray(array) ? array : [];
+  const chunkSize = Math.max(1, size || list.length || 1);
+  const chunks = [];
+  for (let index = 0; index < list.length; index += chunkSize) {
+    chunks.push(list.slice(index, index + chunkSize));
+  }
+  if (!chunks.length) {
+    chunks.push([]);
+  }
+  return chunks;
+}
+
+function buildSegmentDocId(index) {
+  return `chunk_${String(index).padStart(4, '0')}`;
+}
+
+function sanitiseStorageFileName(value, fallbackPrefix = 'asset') {
+  const base = String(value || '').trim();
+  const slug = slugify(base);
+  if (slug && slug !== 'general') {
+    return slug;
+  }
+  return `${slugify(fallbackPrefix)}-${createId('asset')}`;
+}
+
+function parseDataUrlMeta(dataUrl) {
+  const match = /^data:(image\/[^;]+);/i.exec(String(dataUrl || ''));
+  const mime = (match ? match[1] : 'image/png').toLowerCase();
+  const extensionSource = mime.split('/')[1] || 'png';
+  const extension = extensionSource.split('+')[0];
+  return { mime, extension };
+}
+
+function ensureStorageInstance() {
+  if (!firebaseAppInstance) {
+    throw new Error('Firebase App no inicializada');
+  }
+  if (!firebaseStorage) {
+    firebaseStorage = getStorage(firebaseAppInstance);
+  }
+  return firebaseStorage;
+}
+
+async function uploadDataUrlToStorage(dataUrl, folder, objectName) {
+  if (!dataUrl || typeof dataUrl !== 'string') {
+    throw new Error('Contenido de imagen inválido');
+  }
+  const storageInstance = ensureStorageInstance();
+  const cleanFolder = String(folder || 'app/assets').replace(/\\/g, '/').replace(/\/+$/g, '');
+  const safeName = objectName || sanitiseStorageFileName('', 'asset');
+  const { mime, extension } = parseDataUrlMeta(dataUrl);
+  const filePath = `${cleanFolder}/${safeName}.${extension}`;
+  const refInstance = storageRef(storageInstance, filePath);
+  await uploadString(refInstance, dataUrl, 'data_url', {
+    contentType: mime,
+    cacheControl: 'public,max-age=604800'
+  });
+  return getDownloadURL(refInstance);
+}
+
+async function ensureRemoteAssetsForState(state) {
+  if (!state) {
+    return state;
+  }
+  const uploads = [];
+  const cache = new Map();
+  const enqueueUpload = (dataUrl, folder, identifier, fallbackPrefix) => {
+    if (cache.has(dataUrl)) {
+      return cache.get(dataUrl);
+    }
+    const objectName = sanitiseStorageFileName(`${identifier}-${Date.now()}`, fallbackPrefix);
+    const promise = uploadDataUrlToStorage(dataUrl, folder, objectName).then((url) => {
+      cache.set(dataUrl, url);
+      return url;
+    });
+    cache.set(dataUrl, promise);
+    return promise;
+  };
+
+  if (Array.isArray(state.tariffs)) {
+    state.tariffs.forEach((tariff, index) => {
+      const image = typeof tariff?.image === 'string' ? tariff.image.trim() : '';
+      if (image.startsWith('data:image/')) {
+        uploads.push(
+          enqueueUpload(image, 'app/tariffs', tariff?.codigo || tariff?.id || tariff?.nombre || `tarifa-${index}`, 'tarifa')
+            .then((url) => {
+              tariff.image = url;
+            })
+        );
+      }
+    });
+  }
+
+  if (state.banner && Array.isArray(state.banner.items)) {
+    state.banner.items.forEach((item, index) => {
+      const image = typeof item?.image === 'string' ? item.image.trim() : '';
+      if (image.startsWith('data:image/')) {
+        uploads.push(
+          enqueueUpload(image, 'app/banners', item?.id || `banner-${index}-${item?.version || Date.now()}`, 'banner')
+            .then((url) => {
+              item.image = url;
+            })
+        );
+      }
+    });
+  }
+
+  if (!uploads.length) {
+    return state;
+  }
+
+  // Ensure storage initialization before awaiting the uploads to surface configuration errors early.
+  ensureStorageInstance();
+  await Promise.all(uploads);
+  return state;
+}
+
+async function saveState(state) {
+  if (!remoteState.enabled || !remoteDocRef || !firestoreDb) {
+    return;
+  }
+  const prepared = {};
+  REMOTE_SEGMENTS.forEach((segment) => {
+    if (segment.type === 'array') {
+      prepared[segment.key] = Array.isArray(state?.[segment.key]) ? state[segment.key] : [];
+    } else {
+      const value = state?.[segment.key];
+      prepared[segment.key] = value && typeof value === 'object' ? value : {};
+    }
+  });
+  if (!Array.isArray(prepared.analyticsEvents)) {
+    prepared.analyticsEvents = [];
+  }
+  if (prepared.analyticsEvents.length > MAX_ANALYTICS_EVENTS) {
+    prepared.analyticsEvents = prepared.analyticsEvents.slice(-MAX_ANALYTICS_EVENTS);
+  }
+  if (!prepared.banner || typeof prepared.banner !== 'object') {
+    prepared.banner = normaliseBanner(DEFAULT_BANNER_CONFIG);
+  }
+
+  const batch = writeBatch(firestoreDb);
+  const segmentsMeta = {};
+
+  for (const segment of REMOTE_SEGMENTS) {
+    const value = prepared[segment.key];
+    const isArray = segment.type === 'array';
+    const chunkSize = Math.max(1, segment.chunkSize || (isArray && Array.isArray(value) && value.length ? value.length : 1));
+    const chunks = isArray ? chunkArray(value, chunkSize) : [value];
+    const segmentCollection = collection(remoteDocRef, segment.key);
+    const existingSnapshot = await getDocs(segmentCollection);
+    const existingIds = new Set();
+    existingSnapshot.forEach((docSnap) => existingIds.add(docSnap.id));
+    const idsToKeep = new Set();
+
+    chunks.forEach((chunk, index) => {
+      const chunkId = buildSegmentDocId(index);
+      idsToKeep.add(chunkId);
+      const chunkRef = doc(segmentCollection, chunkId);
+      batch.set(chunkRef, {
+        index,
+        type: segment.type,
+        data: chunk,
+        count: Array.isArray(chunk) ? chunk.length : Object.keys(chunk || {}).length,
+        updatedAt: serverTimestamp()
+      });
+    });
+
+    existingIds.forEach((id) => {
+      if (!idsToKeep.has(id)) {
+        batch.delete(doc(segmentCollection, id));
+      }
+    });
+
+    segmentsMeta[segment.key] = {
+      chunks: chunks.length,
+      type: segment.type,
+      chunkSize,
+      count: isArray ? (Array.isArray(value) ? value.length : 0) : Object.keys(value || {}).length,
+      updatedAt: serverTimestamp()
+    };
+  }
+
+  batch.set(remoteDocRef, {
+    version: REMOTE_STATE_VERSION,
+    updatedAt: serverTimestamp(),
+    segments: segmentsMeta
+  });
+
+  await batch.commit();
+}
+
+async function loadState({ snapshot } = {}) {
+  if (!remoteDocRef || !firestoreDb) {
+    return null;
+  }
+  const docSnapshot = snapshot || await getDoc(remoteDocRef);
+  if (!docSnapshot.exists()) {
+    return null;
+  }
+  const baseData = docSnapshot.data() || {};
+  const version = Number(baseData.version) || 1;
+  if (version >= REMOTE_STATE_VERSION && baseData.segments && typeof baseData.segments === 'object') {
+    const baseState = normaliseLegacyRemoteState({});
+    baseState.updatedAt = baseData.updatedAt || '';
+    const results = await Promise.all(REMOTE_SEGMENTS.map(async (segment) => {
+      const segmentCollection = collection(remoteDocRef, segment.key);
+      const querySnapshot = await getDocs(segmentCollection);
+      const entries = [];
+      querySnapshot.forEach((docSnap) => {
+        const payload = docSnap.data() || {};
+        const index = Number.isFinite(payload.index)
+          ? payload.index
+          : Number.parseInt(String(docSnap.id || '').split('_')[1], 10) || 0;
+        entries.push({ index, data: payload.data });
+      });
+      entries.sort((a, b) => a.index - b.index);
+      let combined;
+      if (segment.type === 'array') {
+        combined = entries.reduce((acc, entry) => {
+          if (Array.isArray(entry.data)) {
+            acc.push(...entry.data);
+          }
+          return acc;
+        }, []);
+      } else {
+        combined = entries.length ? entries[entries.length - 1].data || {} : {};
+      }
+      return [segment.key, combined];
+    }));
+
+    results.forEach(([key, value]) => {
+      if (key === 'analyticsEvents' && Array.isArray(value)) {
+        baseState[key] = value.length > MAX_ANALYTICS_EVENTS ? value.slice(-MAX_ANALYTICS_EVENTS) : value;
+      } else if (Array.isArray(value)) {
+        baseState[key] = value;
+      } else if (value && typeof value === 'object') {
+        baseState[key] = value;
+      }
+    });
+
+    if (!baseState.banner || typeof baseState.banner !== 'object') {
+      baseState.banner = normaliseBanner(DEFAULT_BANNER_CONFIG);
+    }
+
+    return baseState;
+  }
+
+  return normaliseLegacyRemoteState(baseData);
+}
+
 let firebaseAppInstance = null;
 let firestoreDb = null;
+let firebaseStorage = null;
 let remoteDocRef = null;
 let remoteSyncTimer = null;
 let remoteDataArrived = false;
@@ -2301,7 +2589,7 @@ async function commitRemoteSync() {
     const analyticsToSync = Array.isArray(analyticsEvents)
       ? analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
       : [];
-    await setDoc(remoteDocRef, {
+    const stateToPersist = {
       users,
       tariffs,
       leads,
@@ -2312,9 +2600,11 @@ async function commitRemoteSync() {
       messageThreads,
       messageOffers,
       analyticsEvents: analyticsToSync,
-      banner: bannerConfig,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+      banner: bannerConfig
+    };
+    analyticsEvents = analyticsToSync;
+    await ensureRemoteAssetsForState(stateToPersist);
+    await saveState(stateToPersist);
     remoteState.lastError = null;
   } catch (error) {
     remoteState.lastError = error;
@@ -12459,6 +12749,13 @@ async function initRemoteSync() {
     if (!firestoreDb) {
       firestoreDb = getFirestore(firebaseAppInstance);
     }
+    if (!firebaseStorage) {
+      try {
+        firebaseStorage = getStorage(firebaseAppInstance);
+      } catch (error) {
+        console.warn('No se pudo inicializar Firebase Storage en el arranque', error);
+      }
+    }
     if (!REMOTE_TARGET || !REMOTE_TARGET.collection || !REMOTE_TARGET.document) {
       console.warn('REMOTE_TARGET no definido correctamente, usando valores por defecto.');
     }
@@ -12470,10 +12767,20 @@ async function initRemoteSync() {
       remoteState.unsub = onSnapshot(remoteDocRef, (snapshot) => {
         remoteState.ready = true;
         remoteState.lastError = null;
-        applyRemoteData(snapshot.data());
-        if (!remoteState.writing && !remoteState.pending) {
-          setSyncStatus('online', 'Sincronizado');
-        }
+        loadState({ snapshot })
+          .then((payload) => {
+            if (payload) {
+              applyRemoteData(payload);
+              if (!remoteState.writing && !remoteState.pending) {
+                setSyncStatus('online', 'Sincronizado');
+              }
+            }
+          })
+          .catch((error) => {
+            remoteState.lastError = error;
+            console.error('Error en la suscripción a Firestore', error);
+            setSyncStatus('error', 'Error de sincronización');
+          });
       }, (error) => {
         remoteState.lastError = error;
         console.error('Error en la suscripción a Firestore', error);
@@ -12482,7 +12789,7 @@ async function initRemoteSync() {
     }
     const existing = await getDoc(remoteDocRef);
     if (!existing.exists()) {
-      await setDoc(remoteDocRef, {
+      const defaultState = {
         users: DEFAULT_USERS,
         tariffs: BASE_DATA,
         leads: [],
@@ -12493,9 +12800,19 @@ async function initRemoteSync() {
         messageThreads: [],
         messageOffers: [],
         analyticsEvents: [],
-        banner: DEFAULT_BANNER_CONFIG,
-        updatedAt: serverTimestamp()
-      });
+        banner: DEFAULT_BANNER_CONFIG
+      };
+      await ensureRemoteAssetsForState(defaultState);
+      await saveState(defaultState);
+    } else {
+      const existingData = existing.data() || {};
+      const version = Number(existingData.version) || 1;
+      const hasSegments = existingData.segments && typeof existingData.segments === 'object';
+      if (version < REMOTE_STATE_VERSION || !hasSegments) {
+        const legacyState = normaliseLegacyRemoteState(existingData);
+        await ensureRemoteAssetsForState(legacyState);
+        await saveState(legacyState);
+      }
     }
     flushRemoteQueue();
   } catch (error) {
