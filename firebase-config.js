@@ -31,3 +31,8 @@ const isLocalhost =
 
 export const firebaseConfig = isLocalhost ? devConfig : prodConfig;
 export const app = initializeApp(firebaseConfig);
+
+if (typeof window !== "undefined") {
+  window.FIREBASE_CONFIG = firebaseConfig;
+  window.firebaseApp = app;
+}
