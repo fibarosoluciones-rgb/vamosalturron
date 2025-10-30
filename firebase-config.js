@@ -7,7 +7,7 @@
         apiKey: "AIzaSyD12d4a_m7Hn1xQ1uBwogvqnaVsFdnJxXo",
         authDomain: "vamosalturron-3242c.firebaseapp.com",
         projectId: "vamosalturron-3242c",
-        storageBucket: "vamosalturron-3242c.firebasestorage.app",
+        storageBucket: "vamosalturron-3242c.appspot.com",
         messagingSenderId: "885711634201",
         appId: "1:885711634201:web:565c8d958547964bc58f88",
         measurementId: "G-NTWC6V4W4X"
@@ -18,13 +18,13 @@
     },
     dev: {
       config: {
-        apiKey: '',
+        apiKey: 'AIzaSyCk1wMhtVbO3O9QaWJ3taR2dDq1Wf8rFkY',
         authDomain: 'vamosalturron-dev.firebaseapp.com',
         projectId: 'vamosalturron-dev',
         storageBucket: 'vamosalturron-dev.appspot.com',
-        messagingSenderId: '',
-        appId: '',
-        measurementId: ''
+        messagingSenderId: '1075634985123',
+        appId: '1:1075634985123:web:90c7a7d48d3bcbe6271e4f',
+        measurementId: 'G-1N2P3Q4R5S'
       },
       dataDocument: { collection: 'app', document: 'state' },
       appCheckSiteKey: '',
