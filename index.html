@@ -5862,34 +5862,15 @@ function resolveCallRequestStatus(value) {
   }
 }
 
-function toTrimmedString(value, fallback = '') {
-  const source = value ?? fallback;
-  if (source === undefined || source === null) {
-    return '';
-  }
-  return typeof source === 'string' ? source.trim() : String(source).trim();
-}
-
-function coalesceTrimmed(...values) {
-  for (const value of values) {
-    const trimmed = toTrimmedString(value);
-    if (trimmed) {
-      return trimmed;
-    }
-  }
-  return '';
-}
-
 function normaliseCallRequest(raw) {
   if (!raw) return null;
   const status = resolveCallRequestStatus(raw.status);
-  const name = coalesceTrimmed(raw.name, raw.clientName);
   const entry = {
     id: raw.id || createId('call'),
-    name: name || 'Contacto pendiente',
-    phone: coalesceTrimmed(raw.phone, raw.telefono, raw.contact),
-    time: coalesceTrimmed(raw.time, raw.timePreference),
-    notes: coalesceTrimmed(raw.notes, raw.observaciones),
+    name: (raw.name || raw.clientName || '').trim() || 'Contacto pendiente',
+    phone: (raw.phone || raw.telefono || raw.contact || '').trim(),
+    time: (raw.time || raw.timePreference || '').trim(),
+    notes: (raw.notes || raw.observaciones || '').trim(),
     status,
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.updated_at || new Date().toISOString(),
@@ -5897,10 +5878,10 @@ function normaliseCallRequest(raw) {
     handledByName: raw.handledByName || '',
     resolvedAt: raw.resolvedAt || raw.resolved_at || null,
     originUser: raw.originUser || '',
-    originName: coalesceTrimmed(raw.originName, raw.name) || name,
-    contactChannel: coalesceTrimmed(raw.contactChannel, raw.contact),
-    followUpAt: coalesceTrimmed(raw.followUpAt, raw.followUp, raw.follow_up, raw.followUpDate),
-    followUpNote: coalesceTrimmed(raw.followUpNote, raw.follow_up_note),
+    originName: raw.originName || (raw.name || '').trim(),
+    contactChannel: (raw.contactChannel || raw.contact || '').trim(),
+    followUpAt: (raw.followUpAt || raw.followUp || raw.follow_up || raw.followUpDate || '').toString().trim(),
+    followUpNote: (raw.followUpNote || raw.follow_up_note || '').toString().trim(),
     secondCall: Boolean(raw.secondCall),
     saleTariffId: raw.saleTariffId || '',
     saleTariffCodigo: raw.saleTariffCodigo || '',
