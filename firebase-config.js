@@ -1,43 +1,27 @@
-// Configuración multi-entorno de Firebase.
-// Ajusta los valores `prod` y `dev` con las credenciales reales de cada proyecto.
-(function configureFirebaseEnv() {
-  const PROJECTS = window.FIREBASE_PROJECTS || {
-    prod: {
-      config: {
-        apiKey: "AIzaSyD12d4a_m7Hn1xQ1uBwogvqnaVsFdnJxXo",
-        authDomain: "vamosalturron-3242c.firebaseapp.com",
-        projectId: "vamosalturron-3242c",
-        storageBucket: "vamosalturron-3242c.appspot.com",
-        messagingSenderId: "885711634201",
-        appId: "1:885711634201:web:565c8d958547964bc58f88",
-        measurementId: "G-NTWC6V4W4X"
-      },
-      dataDocument: { collection: 'app', document: 'state' },
-      appCheckSiteKey: '',
-      functionsRegion: 'europe-west1'
-    },
-    dev: {
-      config: {
-        apiKey: 'AIzaSyCk1wMhtVbO3O9QaWJ3taR2dDq1Wf8rFkY',
-        authDomain: 'vamosalturron-dev.firebaseapp.com',
-        projectId: 'vamosalturron-dev',
-        storageBucket: 'vamosalturron-dev.appspot.com',
-        messagingSenderId: '1075634985123',
-        appId: '1:1075634985123:web:90c7a7d48d3bcbe6271e4f',
-        measurementId: 'G-1N2P3Q4R5S'
-      },
-      dataDocument: { collection: 'app', document: 'state' },
-      appCheckSiteKey: '',
-      functionsRegion: 'europe-west1'
-    }
-  };
+import { initializeApp } from "firebase/app";
 
-  const inferredEnv = window.FIREBASE_ENV || (window.location.hostname.includes('localhost') ? 'dev' : 'prod');
-  const active = PROJECTS[inferredEnv] || PROJECTS.prod;
+// DESARROLLO
+const devConfig = {
+  apiKey: "AIzaSyCk1wMhtVbO3O9QaWJ3taR2dDq1Wf8rFkY",
+  authDomain: "vamosalturron-dev.firebaseapp.com",
+  projectId: "vamosalturron-dev",
+  storageBucket: "vamosalturron-dev.appspot.com",
+  messagingSenderId: "1075634985123",
+  appId: "1:1075634985123:web:90c7a7d48d3bcbe6271e4f",
+  measurementId: "G-1N2P3Q4R5S"
+};
 
-  window.FIREBASE_ENV = inferredEnv;
-  window.FIREBASE_CONFIG = active.config;
-  window.FIREBASE_DATA_DOCUMENT = active.dataDocument;
-  window.APP_CHECK_SITE_KEY = active.appCheckSiteKey || '';
-  window.FIREBASE_FUNCTIONS_REGION = active.functionsRegion || 'europe-west1';
-})();
+// PRODUCCIÓN
+const prodConfig = {
+  // <-- PEGAR AQUÍ EL BLOQUE PROD (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId, measurementId si aplica)
+};
+
+const isLocalhost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+   window.location.hostname === "127.0.0.1" ||
+   window.location.hostname === "[::1]" ||
+   window.location.hostname.startsWith("192.168."));
+
+export const firebaseConfig = isLocalhost ? devConfig : prodConfig;
+export const app = initializeApp(firebaseConfig);
