@@ -13,7 +13,13 @@ const devConfig = {
 
 // PRODUCCIÓN
 const prodConfig = {
-  // <-- PEGAR AQUÍ EL BLOQUE PROD (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId, measurementId si aplica)
+  apiKey: "AIzaSyDNvCUWoSppn7EKlUdc8CnADlBzT_nLzaE",
+  authDomain: "vamosalturron-prod.firebaseapp.com",
+  projectId: "vamosalturron-prod",
+  storageBucket: "vamosalturron-prod.appspot.com",
+  messagingSenderId: "878159706683",
+  appId: "1:878159706683:web:1adc78e6ac7a1a7e0e7a1e",
+  measurementId: "G-MGQ5TEBYD1"
 };
 
 const isLocalhost =
