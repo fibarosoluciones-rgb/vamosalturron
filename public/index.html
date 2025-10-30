@@ -2402,10 +2402,14 @@ function sanitizeUserForRemote(user) {
   if (!user || !user.username) return null;
   const snapshot = buildUserSnapshot(user);
   if (!snapshot) return null;
+  const email = (snapshot.email || '').toString().trim();
+  const ownerEmail = email ? email.toLowerCase() : '';
   const payload = {
     ...snapshot,
     id: snapshot.username,
-    username: snapshot.username
+    username: snapshot.username,
+    ownerEmail,
+    userEmail: ownerEmail
   };
   return serialiseForRemote(payload);
 }
@@ -2454,21 +2458,30 @@ function sanitizeRewardForRemote(reward) {
 function sanitizeNotificationForRemote(notification) {
   const normalised = normaliseNotification({ ...notification });
   if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
+  const targetEmail = normalised.user
+    ? (getUserByUsername(normalised.user)?.email || normalised.userEmail || '').toString().trim().toLowerCase()
+    : (normalised.userEmail || '').toString().trim().toLowerCase();
+  const payload = { ...normalised, id: normalised.id, userEmail: targetEmail };
   return serialiseForRemote(payload);
 }
 
 function sanitizeCallRequestForRemote(request) {
   const normalised = normaliseCallRequest({ ...request });
   if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
+  const ownerEmail = normalised.originUser
+    ? (getUserByUsername(normalised.originUser)?.email || normalised.ownerEmail || '').toString().trim().toLowerCase()
+    : (normalised.ownerEmail || normalised.originEmail || '').toString().trim().toLowerCase();
+  const payload = { ...normalised, id: normalised.id, ownerEmail };
   return serialiseForRemote(payload);
 }
 
 function sanitizeCustomBudgetForRemote(budget) {
   const normalised = normaliseCustomBudget({ ...budget });
   if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
+  const ownerEmail = normalised.createdBy
+    ? (getUserByUsername(normalised.createdBy)?.email || normalised.ownerEmail || '').toString().trim().toLowerCase()
+    : (normalised.ownerEmail || '').toString().trim().toLowerCase();
+  const payload = { ...normalised, id: normalised.id, ownerEmail };
   return serialiseForRemote(payload);
 }
 
@@ -2489,12 +2502,16 @@ function sanitizeMessageThreadForRemote(thread) {
     if (entry.sender) participants.add(entry.sender);
     if (entry.recipient) participants.add(entry.recipient);
   });
+  const ownerEmail = participant
+    ? (getUserByUsername(participant)?.email || normalised.ownerEmail || '').toString().trim().toLowerCase()
+    : (normalised.ownerEmail || '').toString().trim().toLowerCase();
   const payload = {
     ...normalised,
     id: normalised.id,
     user: participant,
     participants: Array.from(participants).filter(Boolean),
-    messages
+    messages,
+    ownerEmail
   };
   return serialiseForRemote(payload);
 }
@@ -5154,6 +5171,7 @@ function normaliseUser(raw) {
   if (!raw) return null;
   const username = (raw.username || '').trim().toLowerCase();
   if (!username) return null;
+  const uid = (raw.uid || raw.userId || '').toString().trim();
   let firstName = (raw.firstName || '').trim();
   let lastName = (raw.lastName || '').trim();
   if (!firstName && !lastName && raw.name) {
@@ -5193,7 +5211,10 @@ function normaliseUser(raw) {
     pointsBalance,
     pointsHistory,
     referrals,
-    referredBy
+    referredBy,
+    ownerEmail: (raw.ownerEmail || raw.email || '').toString().trim().toLowerCase(),
+    userEmail: (raw.userEmail || raw.email || '').toString().trim().toLowerCase(),
+    uid
   };
 }
 
@@ -5314,7 +5335,10 @@ function buildUserSnapshot(user) {
     pointsHistory: Array.isArray(user.pointsHistory) ? [...user.pointsHistory] : [],
     referrals: Array.isArray(user.referrals) ? [...user.referrals] : [],
     referredBy: user.referredBy || '',
-    selfRegistered: Boolean(user.selfRegistered)
+    selfRegistered: Boolean(user.selfRegistered),
+    ownerEmail: user.ownerEmail || '',
+    userEmail: user.userEmail || '',
+    uid: user.uid || ''
   };
 }
 
@@ -6658,7 +6682,8 @@ function normaliseNotification(raw) {
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     read: Boolean(raw.read),
     type: raw.type || 'info',
-    meta: raw.meta && typeof raw.meta === 'object' ? { ...raw.meta } : {}
+    meta: raw.meta && typeof raw.meta === 'object' ? { ...raw.meta } : {},
+    userEmail: (raw.userEmail || raw.targetEmail || '').toString().trim().toLowerCase()
   };
 }
 
@@ -6747,7 +6772,9 @@ function normaliseCallRequest(raw) {
     saleTariffName: raw.saleTariffName || '',
     saleAssignedTo: raw.saleAssignedTo || '',
     saleAssignedName: raw.saleAssignedName || '',
-    saleLeadId: raw.saleLeadId || ''
+    saleLeadId: raw.saleLeadId || '',
+    originEmail: (raw.originEmail || '').toString().trim().toLowerCase(),
+    ownerEmail: (raw.ownerEmail || raw.originEmail || '').toString().trim().toLowerCase()
   };
   if (entry.status !== 'seguimiento') {
     entry.followUpAt = entry.status === 'pendiente' ? '' : entry.followUpAt && entry.followUpAt.length < 80 ? entry.followUpAt : '';
@@ -6822,7 +6849,8 @@ function normaliseCustomBudget(raw) {
     proposalLeadId: raw.proposalLeadId || '',
     acceptedAt: raw.acceptedAt || null,
     acceptedBy: raw.acceptedBy || '',
-    acceptedByName: raw.acceptedByName || ''
+    acceptedByName: raw.acceptedByName || '',
+    ownerEmail: (raw.ownerEmail || raw.createdByEmail || '').toString().trim().toLowerCase()
   };
   return entry;
 }
@@ -6878,7 +6906,8 @@ function normaliseMessageThread(raw) {
   messages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
   const createdAt = raw.createdAt || raw.created_at || (messages[0]?.createdAt || new Date().toISOString());
   const updatedAt = raw.updatedAt || raw.updated_at || (messages[messages.length - 1]?.createdAt || createdAt);
-  return { id, user: participant, createdAt, updatedAt, messages };
+  const ownerEmail = (raw.ownerEmail || raw.userEmail || '').toString().trim().toLowerCase();
+  return { id, user: participant, createdAt, updatedAt, messages, ownerEmail };
 }
 
 function loadMessageThreadsFromStorage() {
@@ -7334,12 +7363,14 @@ function getAdminUsernames() {
 
 function pushNotification(payload) {
   if (!payload || !payload.user || !payload.message) return null;
+  const targetEmail = getUserByUsername(payload.user)?.email || payload.userEmail || '';
   const entry = normaliseNotification({
     ...payload,
     id: payload.id || createId('notif'),
     createdAt: payload.createdAt || new Date().toISOString(),
     read: false,
-    type: payload.type || 'info'
+    type: payload.type || 'info',
+    userEmail: targetEmail
   });
   if (!entry) return null;
   notifications.unshift(entry);
@@ -7484,7 +7515,8 @@ function handleCustomBudgetSubmit(event) {
     updatedAt: now,
     createdBy: currentUser.username,
     createdByName: userDisplayName(currentUser),
-    createdByRole: currentUser.role
+    createdByRole: currentUser.role,
+    ownerEmail: currentUser.email ? currentUser.email.trim().toLowerCase() : ''
   });
   customBudgets.unshift(entry);
   saveCustomBudgets();
@@ -7953,7 +7985,14 @@ function ensureMessageThreadForUser(username) {
   const participant = getUserByUsername(username);
   if (!participant || !MESSAGE_RECIPIENT_ROLES.includes(participant.role)) return null;
   const now = new Date().toISOString();
-  thread = { id: threadId, user: username, createdAt: now, updatedAt: now, messages: [] };
+  thread = {
+    id: threadId,
+    user: username,
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+    ownerEmail: (participant.email || '').toString().trim().toLowerCase()
+  };
   messageThreads.push(thread);
   saveMessageThreads();
   return thread;
@@ -8546,6 +8585,7 @@ function handleCallRequestSubmit(event) {
     createdAt: now,
     updatedAt: now,
     originUser,
+    originEmail: currentUser?.email || '',
     originName: currentUser ? userDisplayName(currentUser) : name,
     contactChannel: originUser ? currentUser.role : 'externo'
   });
@@ -12596,8 +12636,18 @@ async function handleRegisterSubmit(event) {
   });
   try {
     await ensureFirebaseCore();
-    await createUserWithEmailAndPassword(firebaseAuth, email, password);
+    const credential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
     await refreshFirebaseClaims(true);
+    const firebaseUid = credential?.user?.uid || firebaseAuth?.currentUser?.uid || '';
+    if (firebaseUid) {
+      newRecord.uid = firebaseUid;
+    }
+    if (firebaseAuth?.currentUser?.email) {
+      const normalisedEmail = firebaseAuth.currentUser.email.trim();
+      newRecord.email = normalisedEmail;
+      newRecord.ownerEmail = normalisedEmail.toLowerCase();
+      newRecord.userEmail = normalisedEmail.toLowerCase();
+    }
     users.push(newRecord);
     saveUsers();
     updateAvailableUsersHint();
@@ -12797,8 +12847,22 @@ async function handleLoginSubmit(event) {
   }
   try {
     await ensureFirebaseCore();
-    await signInWithEmailAndPassword(firebaseAuth, user.email, password);
+    const credential = await signInWithEmailAndPassword(firebaseAuth, user.email, password);
     await refreshFirebaseClaims(true);
+    const firebaseUid = credential?.user?.uid || firebaseAuth?.currentUser?.uid || '';
+    if (firebaseUid && user.uid !== firebaseUid) {
+      user.uid = firebaseUid;
+      saveUsers();
+    }
+    if (firebaseAuth?.currentUser?.email) {
+      const normalisedEmail = firebaseAuth.currentUser.email.trim();
+      if (user.email !== normalisedEmail) {
+        user.email = normalisedEmail;
+        user.ownerEmail = normalisedEmail.toLowerCase();
+        user.userEmail = normalisedEmail.toLowerCase();
+        saveUsers();
+      }
+    }
     setCurrentUser(buildUserSnapshot(user));
     hideLoginModal();
   } catch (error) {
