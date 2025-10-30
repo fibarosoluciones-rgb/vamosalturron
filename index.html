@@ -495,7 +495,7 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 .label { font-size: 12px; color: #a8b3c7; margin-bottom: 6px; display:block; }
-input[type="number"], input[type="text"], input[type="month"], select {
+input[type="number"], input[type="text"], select {
   width:100%; padding: 10px 12px;
   border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
   background: #0b1120; color: var(--light);
@@ -504,7 +504,7 @@ input[type="number"], input[type="text"], input[type="month"], select {
 .toggle-field { display:flex; align-items:center; gap:10px; font-size:13px; color:#e2e8f0; }
 .toggle-field label { cursor:pointer; }
 .toggle-field input[type="checkbox"] { width:18px; height:18px; accent-color:var(--primary); }
-input[type="date"], input[type="time"]{
+input[type="date"]{
   width:100%; padding: 10px 12px;
   border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
   background: #0b1120; color: var(--light);
@@ -726,11 +726,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
   background: linear-gradient(135deg, rgba(34,197,94,0.18) 0%, rgba(22,163,74,0.12) 100%);
   box-shadow:0 12px 30px rgba(15,118,110,0.25);
 }
-.payout-actions { display:flex; flex-direction:column; gap:8px; align-items:flex-start; max-width:420px; }
-.payout-actions .smallbtn { margin-top:0; }
-.payout-note { font-size:12px; color:#94a3b8; line-height:1.5; }
-.payout-note strong { color:#e2e8f0; }
-.payout-deadline { font-size:12px; color:#facc15; display:flex; gap:6px; align-items:center; }
 .total-benefit-value { font-size:28px; font-weight:800; color:#bbf7d0; }
 .metrics-history { border-top:1px dashed rgba(255,255,255,0.12); padding-top:12px; }
 .metrics-history h4 { margin:0 0 8px; font-size:14px; color:#a8b3c7; text-transform:uppercase; letter-spacing:.4px; }
@@ -777,24 +772,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 .admin-total-card .total-number { font-size:32px; font-weight:800; line-height:1; color:#fff; }
 .admin-total-card .total-breakdown { font-size:13px; color:#cbd5f5; }
 .admin-stats-group { margin-top:18px; display:flex; flex-direction:column; gap:12px; }
-.admin-payments-toolbar { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; justify-content:space-between; margin:12px 0 18px; }
-.admin-payments-toolbar .field { display:flex; flex-direction:column; gap:4px; }
-.admin-payments-summary { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); margin-bottom:18px; }
-.summary-card { background:#0b1120; border:1px solid rgba(59,130,246,0.35); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:6px; box-shadow:0 12px 28px rgba(15,23,42,0.35); }
-.summary-card strong { font-size:26px; font-weight:700; color:#fff; }
-.summary-card span { font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; }
-.admin-payments-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); margin-bottom:18px; }
-.payment-card { background:#0b1120; border:1px solid rgba(234,179,8,0.35); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px; box-shadow:0 12px 28px rgba(15,23,42,0.35); }
-.payment-card[data-status="paid"] { border-color:rgba(34,197,94,0.45); }
-.payment-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-.payment-amount { font-size:24px; font-weight:700; color:#fff; }
-.payment-meta { font-size:12px; color:#94a3b8; display:flex; flex-direction:column; gap:4px; }
-.payment-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.payment-status { font-size:12px; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; }
-.bonus-card { background:rgba(250,204,21,0.12); border:1px solid rgba(250,204,21,0.45); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; box-shadow:0 12px 28px rgba(120,73,0,0.25); }
-.bonus-card[data-paid="true"] { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.45); box-shadow:0 12px 30px rgba(22,163,74,0.3); }
-.bonus-card .bonus-amount { font-size:22px; font-weight:700; color:#fff; }
-.bonus-card .bonus-meta { font-size:12px; color:#94a3b8; display:flex; flex-direction:column; gap:4px; }
 
 @media (max-width: 768px) {
   #commercialMetrics { padding: 16px; }
@@ -1395,7 +1372,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
     <p class="dim">Organiza tus tareas por apartados para controlar las ventas, las tarifas disponibles y la base de usuarios.</p>
     <div id="adminTabs" class="admin-tabs">
       <button type="button" class="tab active" data-tab="sales">Ventas</button>
-      <button type="button" class="tab" data-tab="payments">Pagos</button>
       <button type="button" class="tab" data-tab="tariffs">Tarifas</button>
       <button type="button" class="tab" data-tab="clients">Clientes directos</button>
       <button type="button" class="tab" data-tab="rewards">Recompensas</button>
@@ -1454,39 +1430,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
         <div class="section-subtitle" style="margin:0;">Ranking de clientes por puntos</div>
         <div id="adminClientStats" class="stats-grid"></div>
       </div>
-    </div>
-
-    <div id="adminPaymentsTab" class="admin-tab hidden">
-      <div class="section-subtitle" style="margin:0 0 12px;">Pagos a comerciales</div>
-      <div class="admin-payments-toolbar">
-        <div class="field">
-          <label class="label" for="adminPaymentsMonth">Mes de referencia</label>
-          <input type="month" id="adminPaymentsMonth" />
-        </div>
-        <p class="payout-note" style="margin:0; max-width:420px;">
-          Las comisiones y bonos se calculan del día 1 al último día del mes seleccionado. Registra cada solicitud para dejar constancia de los pagos realizados.
-        </p>
-      </div>
-      <div id="adminPaymentsSummary" class="admin-payments-summary"></div>
-      <div class="admin-payments-grid">
-        <section>
-          <h3 class="section-subtitle" style="margin:0 0 10px;">Solicitudes pendientes</h3>
-          <div id="adminPaymentsPending"></div>
-        </section>
-        <section>
-          <h3 class="section-subtitle" style="margin:0 0 10px;">Histórico de cobros</h3>
-          <div id="adminPaymentsHistory"></div>
-        </section>
-      </div>
-      <section class="admin-stats-group">
-        <div class="section-subtitle" style="margin:0;">Resumen por comercial</div>
-        <div id="adminPaymentsStats" class="stats-grid"></div>
-      </section>
-      <section class="admin-stats-group">
-        <div class="section-subtitle" style="margin:0;">Bonos del mes</div>
-        <p class="payout-note" style="margin:0;">El bono se abona el día 5 del mes siguiente. Marca cada bono como pagado cuando se entregue.</p>
-        <div id="adminBonusList"></div>
-      </section>
     </div>
 
     <div id="adminTariffsTab" class="admin-tab hidden">
@@ -1908,9 +1851,7 @@ const STORAGE_KEYS = {
   users: 'panel.usuarios.v1',
   banner: 'panel.banner.v1',
   bannerDismissed: 'panel.banner.dismissed.v1',
-  analytics: 'panel.analytics.v1',
-  commissionRequests: 'panel.pagos.comisiones.v1',
-  bonusPayments: 'panel.pagos.bonos.v1'
+  analytics: 'panel.analytics.v1'
 };
 
 const MAX_BANNERS_PER_TARGET = 5;
@@ -2280,42 +2221,6 @@ const BACKUP_EXCEL_SHEETS = Object.freeze([
     fallbackColumns: ['id', 'type', 'timestamp', 'username', 'role', 'meta']
   },
   {
-    key: 'commissionRequests',
-    title: 'Pagos comisiones',
-    type: 'array',
-    fallbackColumns: [
-      'id',
-      'username',
-      'name',
-      'month',
-      'amount',
-      'status',
-      'requestedAt',
-      'processedAt',
-      'processedBy',
-      'processedByName',
-      'deadline',
-      'payoutDate',
-      'notes'
-    ]
-  },
-  {
-    key: 'bonusPayments',
-    title: 'Pagos bonos',
-    type: 'array',
-    fallbackColumns: [
-      'id',
-      'username',
-      'name',
-      'month',
-      'amount',
-      'status',
-      'updatedAt',
-      'updatedBy',
-      'updatedByName'
-    ]
-  },
-  {
     key: 'banner',
     title: 'Banner',
     type: 'object',
@@ -2407,8 +2312,6 @@ async function commitRemoteSync() {
       messageThreads,
       messageOffers,
       analyticsEvents: analyticsToSync,
-      commissionRequests,
-      bonusPayments,
       banner: bannerConfig,
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -2532,22 +2435,6 @@ function applyRemoteData(data) {
       console.warn('No se pudieron sincronizar los eventos analíticos en localStorage', error);
     }
   }
-  if (Array.isArray(remoteState.data.commissionRequests)) {
-    commissionRequests = remoteState.data.commissionRequests.map(normaliseCommissionRequest).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.commissionRequests, JSON.stringify(commissionRequests));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar las solicitudes de comisión en localStorage', error);
-    }
-  }
-  if (Array.isArray(remoteState.data.bonusPayments)) {
-    bonusPayments = remoteState.data.bonusPayments.map(normaliseBonusPayment).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.bonusPayments, JSON.stringify(bonusPayments));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar los pagos de bonos en localStorage', error);
-    }
-  }
   if (remoteState.data.banner) {
     setBannerConfig(remoteState.data.banner, { persistLocal: true, syncRemote: false });
   } else if (remoteState.data.banner === null) {
@@ -2605,9 +2492,7 @@ function collectDynamicDataSnapshot() {
       customBudgets: customBudgets.length,
       messageThreads: messageThreads.length,
       messageOffers: messageOffers.length,
-      analyticsEvents: analyticsEvents.length,
-      commissionRequests: commissionRequests.length,
-      bonusPayments: bonusPayments.length
+      analyticsEvents: analyticsEvents.length
     },
     data: {
       users,
@@ -2620,8 +2505,6 @@ function collectDynamicDataSnapshot() {
       messageThreads,
       messageOffers,
       analyticsEvents,
-      commissionRequests,
-      bonusPayments,
       banner: bannerConfig
     },
     storage: storageSnapshot,
@@ -3294,13 +3177,6 @@ let grid,
   adminAnalyticsTab,
   adminBackupsTab,
   adminUsersTab,
-  adminPaymentsTab,
-  adminPaymentsPending,
-  adminPaymentsHistory,
-  adminPaymentsStats,
-  adminPaymentsSummary,
-  adminBonusList,
-  adminPaymentsMonthInput,
   analyticsOverviewContainer,
   analyticsRangeControls,
   analyticsUserTable,
@@ -3501,8 +3377,6 @@ let customBudgets = [];
 let messageThreads = [];
 let messageOffers = [];
 let analyticsEvents = [];
-let commissionRequests = [];
-let bonusPayments = [];
 let discountCountdownTimer = null;
 let messageTabButtons = [];
 let messageTabPanels = {};
@@ -3516,7 +3390,6 @@ let aiWizardState = null;
 let aiWizardHistory = [];
 let adminActiveTab = 'sales';
 let adminSalesRange = 'month';
-let adminPaymentsMonth = normaliseMonthKey(startOfMonth(new Date()));
 let analyticsRange = ANALYTICS_DEFAULT_RANGE;
 let adminTabButtons = [];
 let adminTabPanels = {};
@@ -3544,7 +3417,6 @@ function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   renderLeadSummary();
   renderAdminLeadList();
   renderAdminRewards();
-  renderAdminPaymentsPanel();
   renderCustomBudgetInbox();
   renderCallRequestInbox();
   renderCommercialPanel();
@@ -4213,196 +4085,6 @@ function saveAnalyticsEvents() {
   }
 }
 
-function normaliseCommissionRequest(raw) {
-  if (!raw) return null;
-  const username = (raw.username || raw.user || '').trim().toLowerCase();
-  const month = normaliseMonthKey(raw.month || raw.period || raw.mes);
-  if (!username || !month) return null;
-  const name = (raw.name || raw.displayName || raw.usuario || '').trim() || username;
-  let amount = Number(raw.amount ?? raw.importe ?? raw.total ?? 0);
-  if (!Number.isFinite(amount) || amount < 0) amount = 0;
-  const status = raw.status === 'paid' ? 'paid' : 'pending';
-  const requestedAt = parseDate(raw.requestedAt || raw.createdAt || raw.fechaSolicitud || new Date())?.toISOString()
-    || new Date().toISOString();
-  const processedAtValue = parseDate(raw.processedAt || raw.paidAt || raw.fechaPago || null);
-  const processedAt = processedAtValue ? processedAtValue.toISOString() : '';
-  const processedBy = (raw.processedBy || raw.paidBy || '').trim().toLowerCase();
-  const processedByName = (raw.processedByName || raw.paidByName || '').trim();
-  const notes = raw.notes ? String(raw.notes) : '';
-  const deadlineValue = parseDate(raw.deadline || raw.cierre || null);
-  const payoutDateValue = parseDate(raw.payoutDate || raw.fechaCobro || null);
-  const record = {
-    id: raw.id || createId('pay'),
-    username,
-    name,
-    month,
-    amount,
-    status,
-    requestedAt,
-    processedAt,
-    processedBy,
-    processedByName,
-    notes,
-    deadline: deadlineValue ? deadlineValue.toISOString() : '',
-    payoutDate: payoutDateValue ? payoutDateValue.toISOString() : ''
-  };
-  return record;
-}
-
-function loadCommissionRequestsFromStorage() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.commissionRequests);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normaliseCommissionRequest).filter(Boolean);
-  } catch (error) {
-    console.warn('No se pudieron cargar las solicitudes de comisión', error);
-    return [];
-  }
-}
-
-function saveCommissionRequests({ syncRemote = true } = {}) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.commissionRequests, JSON.stringify(commissionRequests));
-  } catch (error) {
-    console.warn('No se pudieron guardar las solicitudes de comisión', error);
-  }
-  if (syncRemote && remoteState.enabled) {
-    scheduleRemoteSync();
-  }
-}
-
-function normaliseBonusPayment(raw) {
-  if (!raw) return null;
-  const username = (raw.username || raw.user || '').trim().toLowerCase();
-  const month = normaliseMonthKey(raw.month || raw.period || raw.mes);
-  if (!username || !month) return null;
-  const name = (raw.name || raw.displayName || raw.usuario || '').trim() || username;
-  let amount = Number(raw.amount ?? raw.importe ?? raw.total ?? 0);
-  if (!Number.isFinite(amount) || amount < 0) amount = 0;
-  const status = raw.status === 'paid' ? 'paid' : 'pending';
-  const updatedAtValue = parseDate(raw.updatedAt || raw.markedAt || raw.fechaActualizacion || null);
-  const updatedBy = (raw.updatedBy || raw.markedBy || '').trim().toLowerCase();
-  const updatedByName = (raw.updatedByName || raw.markedByName || '').trim();
-  return {
-    id: raw.id || createId('bonus'),
-    username,
-    name,
-    month,
-    amount,
-    status,
-    updatedAt: updatedAtValue ? updatedAtValue.toISOString() : '',
-    updatedBy,
-    updatedByName
-  };
-}
-
-function loadBonusPaymentsFromStorage() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.bonusPayments);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normaliseBonusPayment).filter(Boolean);
-  } catch (error) {
-    console.warn('No se pudieron cargar los pagos de bonos', error);
-    return [];
-  }
-}
-
-function saveBonusPayments({ syncRemote = true } = {}) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.bonusPayments, JSON.stringify(bonusPayments));
-  } catch (error) {
-    console.warn('No se pudieron guardar los pagos de bonos', error);
-  }
-  if (syncRemote && remoteState.enabled) {
-    scheduleRemoteSync();
-  }
-}
-
-function getCommissionRequest(username, monthKey) {
-  const key = normaliseMonthKey(monthKey);
-  if (!username || !key) return null;
-  const matches = commissionRequests.filter((entry) => entry.username === username && entry.month === key);
-  if (!matches.length) return null;
-  return matches.find((entry) => entry.status === 'pending') || matches[0];
-}
-
-function getCommissionRequestsForMonth(monthKey) {
-  const key = normaliseMonthKey(monthKey);
-  if (!key) return [];
-  return commissionRequests
-    .filter(entry => entry.month === key)
-    .sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
-}
-
-function upsertCommissionRequest(record, { sync = true } = {}) {
-  const normalised = normaliseCommissionRequest(record);
-  if (!normalised) return null;
-  const index = commissionRequests.findIndex((entry) => entry.id === normalised.id);
-  if (index === -1) {
-    commissionRequests.push(normalised);
-  } else {
-    commissionRequests[index] = { ...commissionRequests[index], ...normalised };
-  }
-  if (sync) saveCommissionRequests();
-  return normalised;
-}
-
-function markCommissionRequestStatus(id, status, actor = null) {
-  const entry = commissionRequests.find(request => request.id === id);
-  if (!entry) return null;
-  const targetStatus = status === 'paid' ? 'paid' : 'pending';
-  entry.status = targetStatus;
-  if (targetStatus === 'paid') {
-    entry.processedAt = new Date().toISOString();
-    if (actor) {
-      entry.processedBy = actor.username || '';
-      entry.processedByName = userDisplayName(actor) || actor.username || '';
-    }
-  } else {
-    entry.processedAt = '';
-    entry.processedBy = '';
-    entry.processedByName = '';
-  }
-  saveCommissionRequests();
-  return entry;
-}
-
-function getBonusPayment(username, monthKey) {
-  const key = normaliseMonthKey(monthKey);
-  if (!username || !key) return null;
-  return bonusPayments.find(entry => entry.username === username && entry.month === key) || null;
-}
-
-function setBonusPaymentStatus(username, monthKey, status, amount, actor = null) {
-  const key = normaliseMonthKey(monthKey);
-  if (!username || !key) return null;
-  const existing = getBonusPayment(username, key);
-  const payload = normaliseBonusPayment({
-    id: existing?.id || createId('bonus'),
-    username,
-    name: existing?.name || username,
-    month: key,
-    amount,
-    status,
-    updatedAt: new Date().toISOString(),
-    updatedBy: actor?.username || existing?.updatedBy || '',
-    updatedByName: actor ? (userDisplayName(actor) || actor.username || '') : (existing?.updatedByName || '')
-  });
-  if (!payload) return null;
-  const index = existing ? bonusPayments.findIndex(entry => entry.id === existing.id) : -1;
-  if (index === -1) {
-    bonusPayments.push(payload);
-  } else {
-    bonusPayments[index] = { ...bonusPayments[index], ...payload };
-  }
-  saveBonusPayments();
-  return payload;
-}
-
 function analyticsEventDate(event) {
   if (!event) return null;
   const timestamp = event.timestamp || event.createdAt;
@@ -4550,52 +4232,6 @@ function startOfYear(date) {
 
 function monthKeyFromDate(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function normaliseMonthKey(value) {
-  if (!value) return '';
-  if (value instanceof Date) {
-    return monthKeyFromDate(startOfMonth(value));
-  }
-  const match = String(value).trim().match(/^(\d{4})[-/](\d{1,2})/);
-  if (!match) return '';
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  if (!Number.isFinite(year) || !Number.isFinite(month)) return '';
-  const safeMonth = Math.min(12, Math.max(1, month));
-  return `${year}-${String(safeMonth).padStart(2, '0')}`;
-}
-
-function monthDateFromKey(key) {
-  const normalised = normaliseMonthKey(key);
-  if (!normalised) return null;
-  const [year, month] = normalised.split('-').map(Number);
-  if (!Number.isFinite(year) || !Number.isFinite(month)) return null;
-  return new Date(year, month - 1, 1);
-}
-
-function computePayoutWindow(reference = new Date()) {
-  const now = new Date(reference);
-  const base = startOfWeek(now);
-  const deadline = new Date(base);
-  deadline.setDate(base.getDate() + 3);
-  deadline.setHours(10, 0, 0, 0);
-  let payoutDate = new Date(base);
-  payoutDate.setDate(base.getDate() + 4);
-  payoutDate.setHours(17, 30, 0, 0);
-  let window = 'current';
-  if (now > deadline) {
-    const nextBase = new Date(base);
-    nextBase.setDate(base.getDate() + 7);
-    const nextDeadline = new Date(nextBase);
-    nextDeadline.setDate(nextBase.getDate() + 3);
-    nextDeadline.setHours(10, 0, 0, 0);
-    const nextPayout = new Date(nextBase);
-    nextPayout.setDate(nextBase.getDate() + 4);
-    nextPayout.setHours(17, 30, 0, 0);
-    return { deadline: nextDeadline, payoutDate: nextPayout, window: 'next' };
-  }
-  return { deadline, payoutDate, window };
 }
 
 function monthLabel(date) {
@@ -9915,15 +9551,6 @@ function handleStorageEvent(event) {
       renderAnalyticsOverview();
     }
   }
-  if (event.key === STORAGE_KEYS.commissionRequests) {
-    commissionRequests = loadCommissionRequestsFromStorage();
-    renderCommercialMetrics();
-    renderAdminPaymentsPanel();
-  }
-  if (event.key === STORAGE_KEYS.bonusPayments) {
-    bonusPayments = loadBonusPaymentsFromStorage();
-    renderAdminPaymentsPanel();
-  }
   if (event.key === STORAGE_KEYS.users) {
     users = loadUsersFromStorage();
     ensureDefaultAdminUser();
@@ -10928,34 +10555,6 @@ function renderCommercialMetrics() {
     : [0];
   const markers = markerValues.map(value => `<span>${value}</span>`).join('');
   const installReminder = 'Recuerda que solo cuentan las instalaciones confirmadas.';
-  const monthKey = monthKeyFromDate(currentMonth);
-  const schedule = computePayoutWindow();
-  const requestsForMonth = getCommissionRequestsForMonth(monthKey).filter(entry => entry.username === currentUser.username);
-  const paidAmount = requestsForMonth
-    .filter(entry => entry.status === 'paid')
-    .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
-  const activeRequest = requestsForMonth.find(entry => entry.status === 'pending') || null;
-  const pendingAmount = Math.max(0, stats.commission - paidAmount);
-  const requestAmount = activeRequest
-    ? (Number(activeRequest.amount) || pendingAmount || stats.commission)
-    : (pendingAmount > 0 ? pendingAmount : Math.max(0, stats.commission - paidAmount));
-  const payoutLabel = schedule.payoutDate ? formatDateTime(schedule.payoutDate.toISOString()) : 'viernes · 17:30 en tienda';
-  const deadlineLabel = schedule.deadline ? formatDateTime(schedule.deadline.toISOString()) : 'jueves · 10:00';
-  const requestDisabled = !requestAmount || requestAmount <= 0 || Boolean(activeRequest);
-  const buttonLabel = activeRequest ? 'Solicitud enviada' : 'Solicitar cobro de comisión';
-  const paymentNote = pendingAmount > 0
-    ? `Puedes solicitar <strong>${euro(requestAmount)}</strong> de comisiones confirmadas.`
-    : (stats.commission <= 0 && paidAmount <= 0
-      ? 'Aún no tienes comisiones confirmadas este mes.'
-      : `Ya has cobrado ${euro(paidAmount)} en comisiones este mes.`);
-  const lastPaid = requestsForMonth
-    .filter(entry => entry.status === 'paid' && entry.processedAt)
-    .sort((a, b) => new Date(b.processedAt) - new Date(a.processedAt))[0];
-  const statusNote = activeRequest
-    ? `Solicitud enviada el ${formatDateTime(activeRequest.requestedAt)}.`
-    : lastPaid
-      ? `Último pago registrado el ${formatDateTime(lastPaid.processedAt)}${lastPaid.processedByName ? ` · ${escapeHtml(lastPaid.processedByName)}` : ''}.`
-      : '';
   commercialMetrics.innerHTML = `
     <div class="commercial-kpi">
       <div class="kpi-header">
@@ -10998,13 +10597,6 @@ function renderCommercialMetrics() {
         <div class="dim">Beneficio total (comisiones + bono)</div>
         <div class="total-benefit-value">${euro(totalBenefit)}</div>
       </div>
-      <div class="payout-actions">
-        <button type="button" class="smallbtn" id="commissionPayoutRequestButton" ${requestDisabled ? 'disabled' : ''}>${buttonLabel}</button>
-        <div class="payout-deadline">Solicita antes del jueves a las 10:00 para cobrarlo el viernes. Próxima ventana: ${deadlineLabel} → ${payoutLabel}.</div>
-        <p class="payout-note">${paymentNote}</p>
-        <p class="payout-note">El bono mensual (${euro(bonusValue)}) se abona automáticamente el día 5 del mes siguiente.</p>
-        ${statusNote ? `<p class="payout-note">${statusNote}</p>` : ''}
-      </div>
     </div>
     <div class="metrics-history">
       <h4>Histórico reciente</h4>
@@ -11012,54 +10604,6 @@ function renderCommercialMetrics() {
     </div>
   `;
   commercialMetrics.classList.remove('hidden');
-  const requestButton = $('#commissionPayoutRequestButton', commercialMetrics);
-  if (requestButton && !requestDisabled) {
-    requestButton.addEventListener('click', () => {
-      requestCommissionPayoutForCurrentUser(requestAmount, schedule, paidAmount);
-    });
-  }
-}
-
-function requestCommissionPayoutForCurrentUser(amount, schedule, paidAmount = 0) {
-  if (!currentUser || currentUser.role !== 'comercial') return;
-  const safeAmount = Math.max(0, Number(amount) || 0);
-  if (safeAmount <= 0) {
-    showCommercialFlash('No hay comisiones pendientes de cobro este mes.');
-    return;
-  }
-  const monthDate = startOfMonth(new Date());
-  const monthKey = monthKeyFromDate(monthDate);
-  const existingPending = getCommissionRequestsForMonth(monthKey)
-    .find(entry => entry.username === currentUser.username && entry.status === 'pending');
-  if (existingPending) {
-    showCommercialFlash('Ya has solicitado el cobro de tus comisiones. Estamos revisándolo.');
-    return;
-  }
-  const actor = getUserByUsername(currentUser.username) || currentUser;
-  const name = userDisplayName(actor) || currentUser.username;
-  const payload = {
-    id: createId('pay'),
-    username: currentUser.username,
-    name,
-    month: monthKey,
-    amount: safeAmount,
-    status: 'pending',
-    requestedAt: new Date().toISOString(),
-    deadline: schedule?.deadline ? schedule.deadline.toISOString() : '',
-    payoutDate: schedule?.payoutDate ? schedule.payoutDate.toISOString() : '',
-    processedAt: '',
-    processedBy: '',
-    processedByName: '',
-    notes: paidAmount > 0 ? `Importe restante tras ${euro(paidAmount)} ya abonados.` : ''
-  };
-  commissionRequests.push(normaliseCommissionRequest(payload));
-  saveCommissionRequests();
-  const payoutMessage = schedule?.payoutDate
-    ? formatDateTime(schedule.payoutDate.toISOString())
-    : 'viernes a partir de las 17:30 en tienda';
-  showCommercialFlash(`Hemos avisado al administrador para cobrar ${euro(safeAmount)}. Cobro estimado: ${payoutMessage}.`);
-  renderAdminPaymentsPanel();
-  renderCommercialMetrics();
 }
 
 function statInitials(name = '') {
@@ -11702,287 +11246,6 @@ function renderAdminSalesStats() {
     : '<p class="dim">No hay actividad de clientes en este periodo.</p>';
 }
 
-function renderCommissionRequestCard(request) {
-  const status = request.status === 'paid' ? 'paid' : 'pending';
-  const statusLabel = status === 'paid' ? 'Pagado' : 'Pendiente';
-  const statusClass = status === 'paid' ? 'tag tag-success' : 'tag tag-warning';
-  const amount = euro(request.amount || 0);
-  const requestedAt = formatDateTime(request.requestedAt);
-  const deadline = request.deadline ? formatDateTime(request.deadline) : '';
-  const payout = request.payoutDate ? formatDateTime(request.payoutDate) : '';
-  const processedAt = request.processedAt ? formatDateTime(request.processedAt) : '';
-  const processedBy = request.processedByName || request.processedBy || '';
-  const notes = (request.notes || '').trim();
-  const targetStatus = status === 'paid' ? 'pending' : 'paid';
-  const buttonLabel = status === 'paid' ? 'Marcar como pendiente' : 'Marcar como pagado';
-  const metaLines = [];
-  metaLines.push(`Solicitado: ${requestedAt}`);
-  if (status !== 'paid') {
-    if (deadline) metaLines.push(`Ventana: antes del ${deadline}`);
-    if (payout) {
-      metaLines.push(`Cobro previsto: ${payout}`);
-    } else {
-      metaLines.push('Cobro previsto: viernes · 17:30 en tienda');
-    }
-  }
-  if (status === 'paid') {
-    if (processedAt) {
-      const processedLine = processedBy
-        ? `Pago confirmado el ${processedAt} · ${escapeHtml(processedBy)}`
-        : `Pago confirmado el ${processedAt}`;
-      metaLines.push(processedLine);
-    }
-  }
-  metaLines.push('Importe calculado solo con comisiones confirmadas.');
-  if (notes) metaLines.push(escapeHtml(notes));
-  const meta = metaLines.map(line => `<span>${line}</span>`).join('');
-  return `
-    <div class="payment-card" data-status="${status}">
-      <div class="payment-header">
-        <div>
-          <div class="payment-amount">${amount}</div>
-          <span class="${statusClass}">${statusLabel}</span>
-        </div>
-        <div class="payment-meta">
-          <span><strong>${escapeHtml(request.name || request.username)}</strong></span>
-          ${meta}
-        </div>
-      </div>
-      <div class="payment-actions">
-        <button class="smallbtn" data-action="toggle-payment" data-id="${request.id}" data-target-status="${targetStatus}">${buttonLabel}</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderPaymentStatCard(info, monthText) {
-  const avatar = renderStatAvatarMarkup(info.name, info.photo);
-  const bonusState = info.bonusAmount > 0
-    ? (info.bonusPaid ? 'active' : 'pending')
-    : 'inactive';
-  const bonusLabel = info.bonusAmount > 0
-    ? (info.bonusPaid ? 'Bono pagado' : 'Bono pendiente')
-    : 'Sin bono';
-  return `
-    <div class="stat-card">
-      <div class="stat-header">
-        ${avatar}
-        <div>
-          <div class="stat-name">${escapeHtml(info.name)}</div>
-          <div class="stat-rank">${escapeHtml(monthText)}</div>
-        </div>
-        <span class="kpi-badge" data-state="${bonusState}">${escapeHtml(bonusLabel)}</span>
-      </div>
-      <div class="stat-figure">${euro(info.commission)}<span>Comisión generada</span></div>
-      <div class="stat-metrics">
-        <div class="stat-metric"><span>Pagado</span><strong>${euro(info.paid)}</strong></div>
-        <div class="stat-metric"><span>Pendiente</span><strong>${euro(info.pending)}</strong></div>
-        <div class="stat-metric"><span>Ventas instaladas</span><strong>${formatInteger(info.totalSales)}</strong></div>
-      </div>
-      <div class="stat-footnote">Fibra: <strong>${formatInteger(info.fiberSales)}</strong> · Líneas móviles: <strong>${formatInteger(info.mobileLines)}</strong></div>
-    </div>
-  `;
-}
-
-function renderBonusCard(info, monthKey) {
-  const status = info.bonusPaid ? 'paid' : 'pending';
-  const statusLabel = info.bonusPaid ? 'Pagado' : 'Pendiente';
-  const statusClass = info.bonusPaid ? 'tag tag-success' : 'tag tag-warning';
-  const updatedAt = info.bonusUpdatedAt ? formatDateTime(info.bonusUpdatedAt) : '';
-  const updatedBy = info.bonusUpdatedByName || '';
-  const buttonLabel = info.bonusPaid ? 'Marcar como pendiente' : 'Marcar como pagado';
-  const metaLines = [
-    `Objetivo mensual: ${formatInteger(info.packSales)} packs`,
-    'Bono programado para el día 5 del mes siguiente.'
-  ];
-  if (updatedAt) {
-    metaLines.push(updatedBy
-      ? `Última actualización: ${updatedAt} · ${escapeHtml(updatedBy)}`
-      : `Última actualización: ${updatedAt}`);
-  }
-  return `
-    <div class="bonus-card" data-paid="${info.bonusPaid ? 'true' : 'false'}">
-      <div class="payment-header">
-        <div>
-          <div class="bonus-amount">${euro(info.bonusAmount)}</div>
-          <span class="${statusClass}">${statusLabel}</span>
-        </div>
-        <div class="bonus-meta">
-          <span><strong>${escapeHtml(info.name)}</strong></span>
-          ${metaLines.map(line => `<span>${line}</span>`).join('')}
-        </div>
-      </div>
-      <div class="payment-actions">
-        <button class="smallbtn" data-action="toggle-bonus" data-username="${info.username}" data-month="${monthKey}" data-amount="${info.bonusAmount}">${buttonLabel}</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderAdminPaymentsPanel() {
-  if (!adminPaymentsSummary || !adminPaymentsPending || !adminPaymentsHistory || !adminPaymentsStats || !adminBonusList) return;
-  const selectedMonth = adminPaymentsMonth || normaliseMonthKey(startOfMonth(new Date()));
-  const monthDate = monthDateFromKey(selectedMonth) || startOfMonth(new Date());
-  const monthText = monthLabel(monthDate);
-  if (adminPaymentsMonthInput && adminPaymentsMonthInput.value !== selectedMonth) {
-    adminPaymentsMonthInput.value = selectedMonth;
-  }
-  const metricsMap = buildMonthlyMetrics();
-  const monthEntry = metricsMap.get(selectedMonth);
-  const statsByUser = new Map();
-  if (monthEntry) {
-    monthEntry.perUser.forEach((value, username) => {
-      const record = getUserByUsername(username);
-      statsByUser.set(username, {
-        username,
-        name: value.name,
-        commission: value.commission || 0,
-        totalSales: value.totalSales || 0,
-        packSales: value.packSales || 0,
-        fiberSales: value.fiberSales || 0,
-        mobileLines: value.mobileLines || 0,
-        bonusAmount: value.kpi?.bonus || 0,
-        bonusPaid: false,
-        bonusUpdatedAt: '',
-        bonusUpdatedByName: '',
-        paid: 0,
-        pending: value.commission || 0,
-        photo: record?.photo || ''
-      });
-    });
-  }
-  const requests = getCommissionRequestsForMonth(selectedMonth);
-  requests.forEach((request) => {
-    if (!statsByUser.has(request.username)) {
-      const record = getUserByUsername(request.username);
-      statsByUser.set(request.username, {
-        username: request.username,
-        name: request.name || userDisplayName(record) || request.username,
-        commission: 0,
-        totalSales: 0,
-        packSales: 0,
-        fiberSales: 0,
-        mobileLines: 0,
-        bonusAmount: 0,
-        bonusPaid: false,
-        bonusUpdatedAt: '',
-        bonusUpdatedByName: '',
-        paid: 0,
-        pending: 0,
-        photo: record?.photo || ''
-      });
-    }
-    const info = statsByUser.get(request.username);
-    if (request.status === 'paid') {
-      info.paid += Number(request.amount) || 0;
-    }
-  });
-  statsByUser.forEach((info, username) => {
-    info.pending = Math.max(0, (info.commission || 0) - (info.paid || 0));
-    const bonusRecord = getBonusPayment(username, selectedMonth);
-    if (bonusRecord) {
-      info.bonusPaid = bonusRecord.status === 'paid';
-      info.bonusAmount = bonusRecord.amount || info.bonusAmount || 0;
-      info.bonusUpdatedAt = bonusRecord.updatedAt || '';
-      info.bonusUpdatedByName = bonusRecord.updatedByName || '';
-      if (!info.name && bonusRecord.name) {
-        info.name = bonusRecord.name;
-      }
-    }
-  });
-  const statsList = Array.from(statsByUser.values());
-  const totals = statsList.reduce((acc, entry) => {
-    acc.commission += entry.commission || 0;
-    acc.sales += entry.totalSales || 0;
-    acc.paid += entry.paid || 0;
-    acc.pending += entry.pending || 0;
-    acc.bonus += entry.bonusAmount || 0;
-    return acc;
-  }, { commission: 0, sales: 0, paid: 0, pending: 0, bonus: 0 });
-  const totalCommission = totals.commission;
-  const totalSales = totals.sales;
-  const totalPaid = totals.paid;
-  const totalPending = totals.pending;
-  const totalBonus = totals.bonus;
-
-  adminPaymentsSummary.innerHTML = `
-    <div class="summary-card"><span>Ventas instaladas</span><strong>${formatInteger(totalSales)}</strong><span>${escapeHtml(monthText)}</span></div>
-    <div class="summary-card"><span>Comisiones generadas</span><strong>${euro(totalCommission)}</strong><span>${escapeHtml(monthText)}</span></div>
-    <div class="summary-card"><span>Pagado</span><strong>${euro(totalPaid)}</strong><span>${escapeHtml(monthText)}</span></div>
-    <div class="summary-card"><span>Pendiente</span><strong>${euro(totalPending)}</strong><span>${escapeHtml(monthText)}</span></div>
-    <div class="summary-card"><span>Bonos del mes</span><strong>${euro(totalBonus)}</strong><span>${escapeHtml(monthText)}</span></div>
-  `;
-
-  const pendingRequests = [];
-  const paidRequests = [];
-  requests.forEach(request => {
-    if (request.status === 'paid') {
-      paidRequests.push(request);
-    } else {
-      pendingRequests.push(request);
-    }
-  });
-  adminPaymentsPending.innerHTML = pendingRequests.length
-    ? pendingRequests.map(renderCommissionRequestCard).join('')
-    : '<p class="dim">No hay solicitudes pendientes de pago.</p>';
-
-  adminPaymentsHistory.innerHTML = paidRequests.length
-    ? paidRequests.map(renderCommissionRequestCard).join('')
-    : '<p class="dim">Aún no se han registrado cobros para este mes.</p>';
-
-  const sortedStats = statsList
-    .sort((a, b) => {
-      if (b.commission !== a.commission) return b.commission - a.commission;
-      if (b.paid !== a.paid) return b.paid - a.paid;
-      return a.name.localeCompare(b.name, 'es');
-    });
-  adminPaymentsStats.innerHTML = sortedStats.length
-    ? sortedStats.map(info => renderPaymentStatCard(info, monthText)).join('')
-    : '<p class="dim">No hay comisiones registradas en este mes.</p>';
-
-  const bonusEntries = sortedStats.filter(info => info.bonusAmount > 0);
-  adminBonusList.innerHTML = bonusEntries.length
-    ? bonusEntries.map(info => renderBonusCard(info, selectedMonth)).join('')
-    : '<p class="dim">Ningún comercial ha alcanzado un bono en este mes.</p>';
-}
-
-function handleAdminPaymentsMonthChange(event) {
-  const value = normaliseMonthKey(event?.target?.value);
-  if (!value) {
-    if (adminPaymentsMonthInput) {
-      adminPaymentsMonthInput.value = adminPaymentsMonth;
-    }
-    return;
-  }
-  adminPaymentsMonth = value;
-  renderAdminPaymentsPanel();
-}
-
-function handleAdminPaymentsAction(event) {
-  const button = event.target.closest('button[data-action]');
-  if (!button) return;
-  const action = button.dataset.action;
-  if (action === 'toggle-payment') {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    const id = button.dataset.id;
-    const targetStatus = button.dataset.targetStatus === 'pending' ? 'pending' : 'paid';
-    markCommissionRequestStatus(id, targetStatus, currentUser);
-    renderAdminPaymentsPanel();
-    renderCommercialMetrics();
-    return;
-  }
-  if (action === 'toggle-bonus') {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    const username = button.dataset.username;
-    const month = button.dataset.month || adminPaymentsMonth;
-    const amount = Number(button.dataset.amount || 0);
-    const record = getBonusPayment(username, month);
-    const nextStatus = record && record.status === 'paid' ? 'pending' : 'paid';
-    setBonusPaymentStatus(username, month, nextStatus, amount, currentUser);
-    renderAdminPaymentsPanel();
-  }
-}
-
 function activateAdminTab(tab) {
   if (!adminTabPanels) return;
   const availableKeys = Object.keys(adminTabPanels).filter(key => adminTabPanels[key]);
@@ -12003,9 +11266,6 @@ function activateAdminTab(tab) {
   });
   if (target === 'sales') {
     renderAdminSalesStats();
-  }
-  if (target === 'payments') {
-    renderAdminPaymentsPanel();
   }
   if (target === 'analytics') {
     renderAnalyticsTab();
@@ -13233,8 +12493,6 @@ async function initRemoteSync() {
         messageThreads: [],
         messageOffers: [],
         analyticsEvents: [],
-        commissionRequests: [],
-        bonusPayments: [],
         banner: DEFAULT_BANNER_CONFIG,
         updatedAt: serverTimestamp()
       });
@@ -13329,13 +12587,6 @@ document.addEventListener('DOMContentLoaded', () => {
   adminAnalyticsTab = $('#adminAnalyticsTab');
   adminBackupsTab = $('#adminBackupsTab');
   adminUsersTab = $('#adminUsersTab');
-  adminPaymentsTab = $('#adminPaymentsTab');
-  adminPaymentsPending = $('#adminPaymentsPending');
-  adminPaymentsHistory = $('#adminPaymentsHistory');
-  adminPaymentsStats = $('#adminPaymentsStats');
-  adminPaymentsSummary = $('#adminPaymentsSummary');
-  adminBonusList = $('#adminBonusList');
-  adminPaymentsMonthInput = $('#adminPaymentsMonth');
   analyticsOverviewContainer = $('#analyticsOverview');
   analyticsRangeControls = $('#analyticsRangeControls');
   analyticsUserTable = $('#analyticsUserTable');
@@ -13361,12 +12612,8 @@ document.addEventListener('DOMContentLoaded', () => {
     banner: adminBannerTab,
     analytics: adminAnalyticsTab,
     backups: adminBackupsTab,
-    users: adminUsersTab,
-    payments: adminPaymentsTab
+    users: adminUsersTab
   };
-  if (adminPaymentsMonthInput) {
-    adminPaymentsMonthInput.value = adminPaymentsMonth;
-  }
   activateAdminTab(adminActiveTab);
   tarifaList = $('#tarifaList');
   tarifaForm = $('#tarifaForm');
@@ -13574,8 +12821,6 @@ document.addEventListener('DOMContentLoaded', () => {
   customBudgets = loadCustomBudgetsFromStorage();
   messageThreads = loadMessageThreadsFromStorage();
   messageOffers = loadOffersFromStorage();
-  commissionRequests = loadCommissionRequestsFromStorage();
-  bonusPayments = loadBonusPaymentsFromStorage();
   analyticsEvents = loadAnalyticsEventsFromStorage();
 
   resetUserForm();
@@ -13683,9 +12928,6 @@ document.addEventListener('DOMContentLoaded', () => {
     adminSalesRange = targetRange;
     renderAdminSalesStats();
   });
-
-  adminPaymentsMonthInput?.addEventListener('change', handleAdminPaymentsMonthChange);
-  adminPaymentsTab?.addEventListener('click', handleAdminPaymentsAction);
 
   analyticsRangeControls?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-range]');
