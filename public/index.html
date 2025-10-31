@@ -477,7 +477,6 @@ textarea { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(2
 .backup-status[data-state="working"] { color:#fbbf24; }
 .backup-status[data-state="success"] { color:#34d399; }
 .backup-status[data-state="error"] { color:#f87171; }
-.backup-status[data-state="warning"] { color:#fbbf24; }
 .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.3); font-size:11px; letter-spacing:.4px; text-transform:uppercase; }
 .tag.tag-success { background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.45); color:#86efac; }
 .tag.tag-warning { background: rgba(234,179,8,0.18); border-color: rgba(234,179,8,0.45); color:#facc15; }
@@ -1834,29 +1833,9 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 
 <script type="module" src="./firebase-config.js"></script>
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js';
-import {
-  getAuth,
-  setPersistence,
-  browserLocalPersistence,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  getIdTokenResult
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import {
-  getFirestore,
-  doc,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-  collection,
-  writeBatch,
-  deleteDoc
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc, addDoc, collection } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { app } from './firebase-config.js';
 
 const BASE_DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 12.5, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "FIBRA 300 Y 2 LINEAS CON LLAMADAS ILIMITADAS Y 50 GI COMPARTIDOS", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0002", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 99.9, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "qwe", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0003", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "zxc", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0004", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 258.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "rty", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0005", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 46.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "fgh", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0006", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 21.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "cvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0007", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 12.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "tyu", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0008", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 45.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0009", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 14.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "fvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0010", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 13.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "uik", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0011", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0012", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 57.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "pñl", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0013", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 912.5, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "R45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0014", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 999.9, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "RF43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0015", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 978.0, "compañia": "simyo", "familia": "MEDIA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "F34F", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0016", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 958.0, "compañia": "jazztel", "familia": "MEDIA", "moneda": "EUR", "permanencia": "no", "descripción": "34F45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0017", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 946.0, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "34F43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0018", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 921.0, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F3RF", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0019", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 997.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "656H", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0020", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 5745.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "9 meses", "descripción": "H768", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0021", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 6745.0, "compañia": "mm", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "no", "descripción": "5G34G", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0022", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 5868.0, "compañia": "pp", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "12 meses", "descripción": "F3RT", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0023", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 9999.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F324TG6", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0024", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 3858.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "EF5655", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}];
 
@@ -1990,7 +1969,6 @@ const ANALYTICS_EVENT_TYPES = Object.freeze({
   PRODUCT_REQUEST: 'product-request'
 });
 const MAX_ANALYTICS_EVENTS = 2000;
-const MAX_REMOTE_ANALYTICS_EVENTS = 500;
 const ANALYTICS_DEFAULT_RANGE = 'month';
 const ANONYMOUS_USERNAME = '__anon__';
 const TARIFF_TYPE_LABELS = {
@@ -2049,56 +2027,6 @@ const COMMISSION_RATES = {
 const KPI_HISTORY_MONTHS = 3;
 
 const REMOTE_TARGET = window.FIREBASE_DATA_DOCUMENT || { collection: 'app', document: 'state' };
-const FIRESTORE_COLLECTIONS = Object.freeze({
-  tariffs: 'tariffs',
-  banner: 'banner',
-  leads: 'leads',
-  users: 'users',
-  rewards: 'rewards',
-  notifications: 'notifications',
-  callRequests: 'callRequests',
-  customBudgets: 'customBudgets',
-  messageThreads: 'messageThreads',
-  messageOffers: 'messageOffers',
-  analytics: 'analyticsEvents'
-});
-const REMOTE_COLLECTION_KEYS = Object.freeze([
-  'app',
-  'tariffs',
-  'leads',
-  'banner',
-  'users',
-  'rewards',
-  'notifications',
-  'callRequests',
-  'customBudgets',
-  'messageThreads',
-  'messageOffers',
-  'analytics'
-]);
-const NON_ADMIN_REMOTE_KEYS = Object.freeze([
-  'tariffs',
-  'banner',
-  'users',
-  'notifications',
-  'messageThreads'
-]);
-const ADMIN_REMOTE_KEYS = Object.freeze([
-  'app',
-  'tariffs',
-  'leads',
-  'banner',
-  'users',
-  'rewards',
-  'notifications',
-  'callRequests',
-  'customBudgets',
-  'messageThreads',
-  'messageOffers',
-  'analytics'
-]);
-const FUNCTIONS_REGION = window.FIREBASE_FUNCTIONS_REGION || 'europe-west1';
-const APP_CHECK_SITE_KEY = window.APP_CHECK_SITE_KEY || '';
 
 const BACKUP_STATIC_ASSETS = Object.freeze([
   { path: 'index.html' },
@@ -2306,317 +2234,30 @@ const STORAGE_SESSION_KEY_NAMES = Object.freeze(['session']);
 
 const remoteState = {
   enabled: Boolean(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId),
-  authReady: false,
-  authPromise: null,
-  authError: null,
   ready: false,
   writing: false,
   pending: false,
+  unsub: null,
   lastError: null,
-  data: {},
-  listeners: [],
-  readyCollections: REMOTE_COLLECTION_KEYS.reduce((acc, key) => {
-    acc[key] = false;
-    return acc;
-  }, {}),
-  requiredKeys: new Set()
+  data: null,
+  currentUid: null,
+  initPromise: null
 };
 
-let firebaseAppInstance = null;
-let firebaseAuth = null;
+let firebaseAppInstance = app || (typeof window !== 'undefined' ? window.firebaseApp : null);
+let firebaseAuthInstance = null;
+let firebaseUser = null;
 let firestoreDb = null;
-let firebaseFunctions = null;
-let manualBackupCallable = null;
-let listBackupsCallable = null;
-let appStateDocRef = null;
-let tariffsCollectionRef = null;
-let bannerCollectionRef = null;
-let leadsCollectionRef = null;
-let usersCollectionRef = null;
-let rewardsCollectionRef = null;
-let notificationsCollectionRef = null;
-let callRequestsCollectionRef = null;
-let customBudgetsCollectionRef = null;
-let messageThreadsCollectionRef = null;
-let messageOffersCollectionRef = null;
-let analyticsCollectionRef = null;
+let remoteDocRef = null;
 let remoteSyncTimer = null;
 let remoteDataArrived = false;
-let firebaseAuthInitPromise = null;
-let appCheckInitialised = false;
-
-const BANNER_DOCUMENT_ID = 'config';
-
-function markRemoteCollectionReady(key) {
-  if (!key) return;
-  remoteState.readyCollections[key] = true;
-  if (!(remoteState.requiredKeys instanceof Set) || remoteState.requiredKeys.size === 0) {
-    remoteState.requiredKeys = new Set(hasAdminPrivileges() ? ADMIN_REMOTE_KEYS : NON_ADMIN_REMOTE_KEYS);
-  }
-  remoteState.ready = Array.from(remoteState.requiredKeys).every((name) => remoteState.readyCollections[name]);
-}
-
-function resetRemoteCollectionFlags() {
-  const requiredKeys = hasAdminPrivileges() ? ADMIN_REMOTE_KEYS : NON_ADMIN_REMOTE_KEYS;
-  remoteState.requiredKeys = new Set(requiredKeys);
-  REMOTE_COLLECTION_KEYS.forEach((key) => {
-    remoteState.readyCollections[key] = remoteState.requiredKeys.has(key) ? false : true;
-  });
-  remoteState.ready = remoteState.requiredKeys.size === 0;
-}
-
-function isPlainObject(value) {
-  return Object.prototype.toString.call(value) === '[object Object]';
-}
-
-function deepEqual(a, b) {
-  if (a === b) return true;
-  if (typeof a !== typeof b) return false;
-  if (a === null || b === null) return a === b;
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i += 1) {
-      if (!deepEqual(a[i], b[i])) return false;
-    }
-    return true;
-  }
-  if (isPlainObject(a) && isPlainObject(b)) {
-    const keysA = Object.keys(a).sort();
-    const keysB = Object.keys(b).sort();
-    if (keysA.length !== keysB.length) return false;
-    for (let i = 0; i < keysA.length; i += 1) {
-      if (keysA[i] !== keysB[i]) return false;
-      if (!deepEqual(a[keysA[i]], b[keysA[i]])) return false;
-    }
-    return true;
-  }
-  return false;
-}
-
-function serialiseForRemote(input) {
-  return JSON.parse(JSON.stringify(input));
-}
-
-function sanitizeUserForRemote(user) {
-  if (!user || !user.username) return null;
-  const snapshot = buildUserSnapshot(user);
-  if (!snapshot) return null;
-  const payload = {
-    ...snapshot,
-    id: snapshot.username,
-    username: snapshot.username
-  };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeTariffForRemote(tariff) {
-  if (!tariff) return null;
-  const normalised = normaliseTariff({ ...tariff });
-  if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeLeadForRemote(lead) {
-  if (!lead) return null;
-  const normalised = normaliseLead({ ...lead });
-  if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeBannerForRemote(config) {
-  const normalised = normaliseBanner(config || bannerConfig || DEFAULT_BANNER_CONFIG);
-  if (!normalised) return null;
-  const hasContent = Array.isArray(normalised.items) && normalised.items.length > 0;
-  const versionValue = Number(normalised.version || 0);
-  if (!hasContent && versionValue <= 0) {
-    return null;
-  }
-  const payload = { ...normalised, id: BANNER_DOCUMENT_ID };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeRewardForRemote(reward) {
-  const normalised = normaliseReward({ ...reward });
-  if (!normalised || !normalised.id) return null;
-  const requests = Array.isArray(normalised.requests)
-    ? normalised.requests
-        .map((request) => normaliseRewardRequest(request))
-        .filter(Boolean)
-        .map((request) => ({ ...request, id: request.id }))
-    : [];
-  const payload = { ...normalised, id: normalised.id, requests };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeNotificationForRemote(notification) {
-  const normalised = normaliseNotification({ ...notification });
-  if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeCallRequestForRemote(request) {
-  const normalised = normaliseCallRequest({ ...request });
-  if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeCustomBudgetForRemote(budget) {
-  const normalised = normaliseCustomBudget({ ...budget });
-  if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeMessageThreadForRemote(thread) {
-  const normalised = normaliseMessageThread({ ...thread });
-  if (!normalised || !normalised.id) return null;
-  const participant = normalised.user || '';
-  const messages = Array.isArray(normalised.messages)
-    ? normalised.messages
-        .map((entry) => normaliseMessageEntry(entry, participant))
-        .filter(Boolean)
-        .map((entry) => ({ ...entry, id: entry.id }))
-    : [];
-  const participants = new Set();
-  if (participant) participants.add(participant);
-  participants.add(ADMIN_GROUP_ID);
-  messages.forEach((entry) => {
-    if (entry.sender) participants.add(entry.sender);
-    if (entry.recipient) participants.add(entry.recipient);
-  });
-  const payload = {
-    ...normalised,
-    id: normalised.id,
-    user: participant,
-    participants: Array.from(participants).filter(Boolean),
-    messages
-  };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeOfferForRemote(offer) {
-  const normalised = normaliseOffer({ ...offer });
-  if (!normalised || !normalised.id) return null;
-  const readBy = Array.isArray(normalised.readBy)
-    ? Array.from(new Set(normalised.readBy.filter(Boolean)))
-    : [];
-  const payload = { ...normalised, id: normalised.id, readBy };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeAnalyticsEventForRemote(event) {
-  const normalised = normaliseAnalyticsEvent({ ...event });
-  if (!normalised || !normalised.id) return null;
-  const payload = { ...normalised, id: normalised.id };
-  return serialiseForRemote(payload);
-}
-
-function sanitizeAppState(raw) {
-  if (!isPlainObject(raw)) return {};
-  const output = {};
-  if (raw.uiVersion) output.uiVersion = String(raw.uiVersion);
-  if (isPlainObject(raw.featureFlags)) {
-    output.featureFlags = serialiseForRemote(raw.featureFlags);
-  }
-  if (raw.bannerVersion !== undefined) output.bannerVersion = raw.bannerVersion;
-  if (raw.tariffVersion !== undefined) output.tariffVersion = raw.tariffVersion;
-  if (raw.leadVersion !== undefined) output.leadVersion = raw.leadVersion;
-  if (raw.updatedAt && typeof raw.updatedAt.toDate === 'function') {
-    output.updatedAt = raw.updatedAt.toDate().toISOString();
-  } else if (typeof raw.updatedAt === 'string') {
-    output.updatedAt = raw.updatedAt;
-  }
-  if (raw.clientUpdatedAt) {
-    output.clientUpdatedAt = raw.clientUpdatedAt;
-  }
-  return output;
-}
-
-function diffRemoteCollection(localList, remoteList, getId, buildPayload) {
-  const remoteMap = new Map();
-  (remoteList || []).forEach((item) => {
-    const id = getId(item);
-    if (id) remoteMap.set(id, item);
-  });
-  const upserts = [];
-  const deletes = [];
-  (localList || []).forEach((item) => {
-    const payload = buildPayload(item);
-    if (!payload) return;
-    const id = getId(payload);
-    if (!id) return;
-    const remote = remoteMap.get(id);
-    if (!remote || !deepEqual(remote, payload)) {
-      upserts.push(payload);
-    }
-    remoteMap.delete(id);
-  });
-  remoteMap.forEach((_, id) => {
-    deletes.push(id);
-  });
-  return { upserts, deletes };
-}
-
-function applyRemoteCacheUpdates(currentList, { upserts, deletes }, getId) {
-  const cache = new Map();
-  (currentList || []).forEach((item) => {
-    const id = getId(item);
-    if (id) cache.set(id, item);
-  });
-  deletes.forEach((id) => {
-    cache.delete(id);
-  });
-  upserts.forEach((item) => {
-    const id = getId(item);
-    if (id) cache.set(id, item);
-  });
-  return Array.from(cache.values());
-}
-
-function computeDatasetVersion(list) {
-  if (!Array.isArray(list) || !list.length) return 0;
-  return list.reduce((max, entry) => {
-    const version = Number(entry?.version || 0);
-    const updated = Number.isFinite(Date.parse(entry?.updatedAt)) ? Date.parse(entry.updatedAt) : 0;
-    return Math.max(max, version, updated);
-  }, 0);
-}
-
-function buildAppStatePayload() {
-  const payload = {
-    uiVersion: document.documentElement?.dataset?.build || 'web',
-    featureFlags: {
-      aiAssistant: Boolean(aiPanel),
-      callRequests: Boolean(callRequestSection)
-    },
-    bannerVersion: Number(bannerConfig?.version || 0) || undefined,
-    tariffVersion: computeDatasetVersion(tariffs) || undefined,
-    leadVersion: computeDatasetVersion(leads) || undefined,
-    clientUpdatedAt: new Date().toISOString()
-  };
-  Object.keys(payload).forEach((key) => {
-    const value = payload[key];
-    if (value === undefined || (isPlainObject(value) && !Object.keys(value).length)) {
-      delete payload[key];
-    }
-  });
-  return payload;
-}
-
-const firebaseSession = {
-  claims: {},
-  user: null,
-};
+let anonymousSignInAttempted = false;
 
 let domReady = false;
 let syncStatusEl = null;
 let syncStatus = {
-  state: remoteState.enabled ? 'connecting' : 'offline',
-  message: remoteState.enabled ? 'Sincronizando…' : 'Modo offline'
+  state: 'offline',
+  message: remoteState.enabled ? 'Sin sesión' : 'Modo offline'
 };
 
 function setSyncStatus(state, message) {
@@ -2624,12 +2265,72 @@ function setSyncStatus(state, message) {
   if (domReady) renderSyncStatus();
 }
 
+if (typeof window !== 'undefined') {
+  window.updateStatus = (state, message) => setSyncStatus(state, message);
+}
+
+function ensureFirebaseApp() {
+  if (!firebaseAppInstance) {
+    if (app) {
+      firebaseAppInstance = app;
+    } else if (typeof window !== 'undefined' && window.firebaseApp) {
+      firebaseAppInstance = window.firebaseApp;
+    }
+  }
+  return firebaseAppInstance;
+}
+
+function ensureFirestoreDb() {
+  const instance = ensureFirebaseApp();
+  if (!instance) {
+    throw new Error('Firebase no está configurado correctamente.');
+  }
+  if (!firestoreDb) {
+    firestoreDb = getFirestore(instance);
+  }
+  return firestoreDb;
+}
+
+function ensureFirebaseAuth() {
+  const instance = ensureFirebaseApp();
+  if (!instance) {
+    return null;
+  }
+  if (!firebaseAuthInstance) {
+    firebaseAuthInstance = getAuth(instance);
+  }
+  return firebaseAuthInstance;
+}
+
+function resetRemoteSyncState({ resetStatus = true } = {}) {
+  if (remoteSyncTimer) {
+    clearTimeout(remoteSyncTimer);
+    remoteSyncTimer = null;
+  }
+  if (remoteState.unsub) {
+    remoteState.unsub();
+    remoteState.unsub = null;
+  }
+  remoteState.ready = false;
+  remoteState.pending = false;
+  remoteState.writing = false;
+  remoteState.lastError = null;
+  remoteState.data = null;
+  remoteState.currentUid = null;
+  remoteState.initPromise = null;
+  remoteDocRef = null;
+  remoteDataArrived = false;
+  if (resetStatus) {
+    setSyncStatus('offline', remoteState.enabled ? 'Sin sesión' : 'Modo offline');
+  }
+}
+
 function renderSyncStatus() {
   if (!domReady) return;
   if (!syncStatusEl) syncStatusEl = document.querySelector('#syncStatus');
   if (!syncStatusEl) return;
   const mapping = {
-    offline: { className: 'status-indicator--offline', label: 'Modo offline' },
+    offline: { className: 'status-indicator--offline', label: remoteState.enabled ? 'Sin sesión' : 'Modo offline' },
     connecting: { className: 'status-indicator--warning', label: 'Conectando…' },
     syncing: { className: 'status-indicator--warning', label: 'Guardando…' },
     online: { className: 'status-indicator--online', label: 'Sincronizado' },
@@ -2645,137 +2346,10 @@ function renderSyncStatus() {
   syncStatusEl.dataset.state = syncStatus.state;
 }
 
-async function ensureFirebaseCore() {
-  if (!remoteState.enabled) return null;
-  if (!firebaseAppInstance) {
-    firebaseAppInstance = initializeApp(window.FIREBASE_CONFIG);
-  }
-  if (APP_CHECK_SITE_KEY && !appCheckInitialised) {
-    try {
-      initializeAppCheck(firebaseAppInstance, {
-        provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
-        isTokenAutoRefreshEnabled: true
-      });
-      appCheckInitialised = true;
-    } catch (error) {
-      console.warn('App Check no disponible', error);
-    }
-  }
-  if (!firebaseAuth) {
-    firebaseAuth = getAuth(firebaseAppInstance);
-    if (typeof firebaseAuth.useDeviceLanguage === 'function') {
-      firebaseAuth.useDeviceLanguage();
-    }
-  }
-  if (!firebaseFunctions) {
-    firebaseFunctions = getFunctions(firebaseAppInstance, FUNCTIONS_REGION);
-    manualBackupCallable = httpsCallable(firebaseFunctions, 'triggerManualBackup');
-    listBackupsCallable = httpsCallable(firebaseFunctions, 'listBackups');
-  }
-  if (!firebaseAuthInitPromise) {
-    firebaseAuthInitPromise = setPersistence(firebaseAuth, browserLocalPersistence)
-      .catch((error) => {
-        console.warn('No se pudo establecer la persistencia de Firebase Auth', error);
-      })
-      .then(() => {
-        onAuthStateChanged(firebaseAuth, handleFirebaseAuthChange);
-      });
-  }
-  await firebaseAuthInitPromise;
-  return firebaseAuth;
-}
-
-async function refreshFirebaseClaims(force = false) {
-  if (!firebaseAuth?.currentUser) {
-    firebaseSession.claims = {};
-    return firebaseSession.claims;
-  }
-  try {
-    const result = await getIdTokenResult(firebaseAuth.currentUser, force);
-    firebaseSession.claims = result?.claims || {};
-    return firebaseSession.claims;
-  } catch (error) {
-    console.error('No se pudieron obtener los claims personalizados', error);
-    firebaseSession.claims = {};
-    return firebaseSession.claims;
-  }
-}
-
-function hasAdminPrivileges() {
-  return Boolean(firebaseSession.claims?.admin);
-}
-
-function teardownRemoteSync() {
-  while (remoteState.listeners.length) {
-    const unsubscribe = remoteState.listeners.pop();
-    try { unsubscribe(); } catch (_) { /* noop */ }
-  }
-  appStateDocRef = null;
-  tariffsCollectionRef = null;
-  bannerCollectionRef = null;
-  leadsCollectionRef = null;
-  usersCollectionRef = null;
-  rewardsCollectionRef = null;
-  notificationsCollectionRef = null;
-  callRequestsCollectionRef = null;
-  customBudgetsCollectionRef = null;
-  messageThreadsCollectionRef = null;
-  messageOffersCollectionRef = null;
-  analyticsCollectionRef = null;
-  remoteState.data = {};
-  remoteState.lastError = null;
-  resetRemoteCollectionFlags();
-}
-
-async function handleFirebaseAuthChange(user) {
-  firebaseSession.user = user;
-  if (!user) {
-    firebaseSession.claims = {};
-    remoteState.authReady = false;
-    remoteState.authError = null;
-    teardownRemoteSync();
-    setSyncStatus('offline', 'Inicia sesión para sincronizar');
-    if (currentUser) {
-      setCurrentUser(null);
-    }
-    return;
-  }
-
-  await refreshFirebaseClaims(true);
-  remoteState.authReady = true;
-  remoteState.authError = null;
-  if (currentUser) {
-    currentUser.firebaseAdmin = hasAdminPrivileges();
-    currentUser.firebaseClaims = { ...firebaseSession.claims };
-    updateUserInfo();
-  }
-
-  if (hasAdminPrivileges()) {
-    setSyncStatus('connecting', 'Autenticado como administrador');
-  } else {
-    setSyncStatus('connecting', 'Sincronizando datos personales');
-  }
-  initRemoteSync();
-}
-
-async function ensureRemoteAuth() {
-  if (!remoteState.enabled) return null;
-  await ensureFirebaseCore();
-  if (firebaseAuth.currentUser) {
-    remoteState.authReady = true;
-    remoteState.authError = null;
-    return firebaseAuth.currentUser;
-  }
-  const error = new Error('Se requiere autenticación');
-  error.code = 'auth/required';
-  remoteState.authError = error;
-  throw error;
-}
-
 function scheduleRemoteSync() {
-  if (!remoteState.enabled || !firestoreDb) return;
+  if (!remoteState.enabled) return;
   remoteState.pending = true;
-  if (!remoteState.ready) {
+  if (!remoteDocRef) {
     return;
   }
   if (remoteSyncTimer) clearTimeout(remoteSyncTimer);
@@ -2784,345 +2358,44 @@ function scheduleRemoteSync() {
 }
 
 async function commitRemoteSync() {
-  if (!remoteState.enabled || !firestoreDb || !remoteState.ready) return;
+  if (!remoteState.enabled || !remoteDocRef) return;
   remoteSyncTimer = null;
   remoteState.pending = false;
   remoteState.writing = true;
   setSyncStatus('syncing', 'Guardando…');
   try {
-    await ensureRemoteAuth();
-    await syncAppState();
-    await syncUsersCollection();
-    await syncTariffsCollection();
-    await syncLeadsCollection();
-    await syncBannerConfig();
-    await syncRewardsCollection();
-    await syncNotificationsCollection();
-    await syncCallRequestsCollection();
-    await syncCustomBudgetsCollection();
-    await syncMessageThreadsCollection();
-    await syncMessageOffersCollection();
-    await syncAnalyticsEventsCollection();
+    const analyticsToSync = Array.isArray(analyticsEvents)
+      ? analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
+      : [];
+    await setDoc(remoteDocRef, {
+      users,
+      tariffs,
+      leads,
+      rewards,
+      notifications,
+      callRequests,
+      customBudgets,
+      messageThreads,
+      messageOffers,
+      analyticsEvents: analyticsToSync,
+      banner: bannerConfig,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
     remoteState.lastError = null;
-    setSyncStatus('online', 'Sincronizado');
   } catch (error) {
     remoteState.lastError = error;
     console.error('No se pudo sincronizar con Firestore', error);
-    const statusMessage = error?.code === 'permission-denied'
-      ? 'Permisos insuficientes'
-      : 'Error al guardar';
-    setSyncStatus('error', statusMessage);
+    setSyncStatus('error', 'Error al guardar');
   } finally {
     remoteState.writing = false;
-  }
-}
-
-async function syncAppState() {
-  if (!appStateDocRef || !remoteState.readyCollections.app) return;
-  if (!hasAdminPrivileges()) return;
-  const payload = buildAppStatePayload();
-  const localComparable = { ...payload };
-  delete localComparable.clientUpdatedAt;
-  const remoteComparable = { ...(remoteState.data.app || {}) };
-  delete remoteComparable.updatedAt;
-  delete remoteComparable.clientUpdatedAt;
-  if (deepEqual(remoteComparable, localComparable)) {
-    return;
-  }
-  await setDoc(appStateDocRef, {
-    ...payload,
-    updatedAt: serverTimestamp()
-  }, { merge: true });
-  remoteState.data.app = sanitizeAppState({ ...payload });
-}
-
-async function syncUsersCollection() {
-  if (!usersCollectionRef || !remoteState.readyCollections.users) return;
-  const remoteList = Array.isArray(remoteState.data.users) ? remoteState.data.users : [];
-  const { upserts, deletes } = diffRemoteCollection(users, remoteList, (item) => item?.id || item?.username, sanitizeUserForRemote);
-  const allowedUpserts = upserts.filter((entry) => {
-    if (hasAdminPrivileges()) return true;
-    return Boolean(currentUser && currentUser.username === entry.username);
-  });
-  const allowedDeletes = hasAdminPrivileges() ? deletes : [];
-  if (!allowedUpserts.length && !allowedDeletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  allowedUpserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.users, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  allowedDeletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.users, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.users = applyRemoteCacheUpdates(remoteList, { upserts: allowedUpserts, deletes: allowedDeletes }, (item) => item?.id || item?.username);
-}
-
-async function syncTariffsCollection() {
-  if (!tariffsCollectionRef || !remoteState.readyCollections.tariffs) return;
-  if (!hasAdminPrivileges()) return;
-  const remoteList = Array.isArray(remoteState.data.tariffs) ? remoteState.data.tariffs : [];
-  const changes = diffRemoteCollection(tariffs, remoteList, (item) => item?.id, sanitizeTariffForRemote);
-  if (!changes.upserts.length && !changes.deletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  changes.upserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.tariffs, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  changes.deletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.tariffs, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.tariffs = applyRemoteCacheUpdates(remoteList, changes, (item) => item?.id);
-}
-
-function canManageLead(entry) {
-  if (hasAdminPrivileges()) return true;
-  if (!currentUser?.username) return false;
-  const username = currentUser.username;
-  return entry.commercial === username || entry.clientUsername === username || entry.referredBy === username;
-}
-
-async function syncLeadsCollection() {
-  if (!leadsCollectionRef || !remoteState.readyCollections.leads) return;
-  const remoteList = Array.isArray(remoteState.data.leads) ? remoteState.data.leads : [];
-  const changes = diffRemoteCollection(leads, remoteList, (item) => item?.id, sanitizeLeadForRemote);
-  const allowedUpserts = changes.upserts.filter((entry) => {
-    const remoteEntry = remoteList.find((item) => item?.id === entry.id);
-    if (remoteEntry) {
-      return hasAdminPrivileges();
+    if (!remoteState.lastError) {
+      setSyncStatus('online', 'Sincronizado');
     }
-    return canManageLead(entry);
-  });
-  const allowedDeletes = hasAdminPrivileges() ? changes.deletes : [];
-  if (!allowedUpserts.length && !allowedDeletes.length) {
-    return;
   }
-  const batch = writeBatch(firestoreDb);
-  allowedUpserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.leads, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  allowedDeletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.leads, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.leads = applyRemoteCacheUpdates(remoteList, { upserts: allowedUpserts, deletes: allowedDeletes }, (item) => item?.id);
-}
-
-async function syncBannerConfig() {
-  if (!bannerCollectionRef || !remoteState.readyCollections.banner) return;
-  if (!hasAdminPrivileges()) return;
-  const localConfig = sanitizeBannerForRemote(bannerConfig);
-  const remoteConfig = remoteState.data.banner || null;
-  const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.banner, BANNER_DOCUMENT_ID);
-  if (!localConfig) {
-    if (remoteConfig) {
-      await deleteDoc(docRef).catch(() => {});
-      remoteState.data.banner = null;
-    }
-    return;
-  }
-  const { id, ...data } = localConfig;
-  if (remoteConfig && deepEqual(remoteConfig, localConfig)) {
-    return;
-  }
-  await setDoc(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  remoteState.data.banner = localConfig;
-}
-
-async function syncRewardsCollection() {
-  if (!rewardsCollectionRef || !remoteState.readyCollections.rewards) return;
-  if (!hasAdminPrivileges()) return;
-  const remoteList = Array.isArray(remoteState.data.rewards) ? remoteState.data.rewards : [];
-  const changes = diffRemoteCollection(rewards, remoteList, (item) => item?.id, sanitizeRewardForRemote);
-  if (!changes.upserts.length && !changes.deletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  changes.upserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.rewards, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  changes.deletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.rewards, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.rewards = applyRemoteCacheUpdates(remoteList, changes, (item) => item?.id);
-}
-
-async function syncNotificationsCollection() {
-  if (!notificationsCollectionRef || !remoteState.readyCollections.notifications) return;
-  const remoteList = Array.isArray(remoteState.data.notifications) ? remoteState.data.notifications : [];
-  const changes = diffRemoteCollection(notifications, remoteList, (item) => item?.id, sanitizeNotificationForRemote);
-  const allowedUpserts = changes.upserts.filter((entry) => {
-    if (hasAdminPrivileges()) return true;
-    return currentUser ? notificationAppliesToUser(entry, currentUser) : false;
-  });
-  const allowedDeletes = hasAdminPrivileges() ? changes.deletes : [];
-  if (!allowedUpserts.length && !allowedDeletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  allowedUpserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.notifications, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  allowedDeletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.notifications, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.notifications = applyRemoteCacheUpdates(remoteList, { upserts: allowedUpserts, deletes: allowedDeletes }, (item) => item?.id);
-}
-
-async function syncCallRequestsCollection() {
-  if (!callRequestsCollectionRef || !remoteState.readyCollections.callRequests) return;
-  const remoteList = Array.isArray(remoteState.data.callRequests) ? remoteState.data.callRequests : [];
-  const changes = diffRemoteCollection(callRequests, remoteList, (item) => item?.id, sanitizeCallRequestForRemote);
-  const allowedUpserts = changes.upserts.filter((entry) => {
-    if (hasAdminPrivileges()) return true;
-    const originUser = (entry.originUser || '').toString().trim().toLowerCase();
-    return Boolean(currentUser?.username) && originUser === currentUser.username;
-  });
-  const allowedDeletes = hasAdminPrivileges() ? changes.deletes : [];
-  if (!allowedUpserts.length && !allowedDeletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  allowedUpserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.callRequests, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  allowedDeletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.callRequests, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.callRequests = applyRemoteCacheUpdates(remoteList, { upserts: allowedUpserts, deletes: allowedDeletes }, (item) => item?.id);
-}
-
-async function syncCustomBudgetsCollection() {
-  if (!customBudgetsCollectionRef || !remoteState.readyCollections.customBudgets) return;
-  const remoteList = Array.isArray(remoteState.data.customBudgets) ? remoteState.data.customBudgets : [];
-  const changes = diffRemoteCollection(customBudgets, remoteList, (item) => item?.id, sanitizeCustomBudgetForRemote);
-  const allowedUpserts = changes.upserts.filter((entry) => {
-    if (hasAdminPrivileges()) return true;
-    return Boolean(currentUser?.username) && entry.createdBy === currentUser.username;
-  });
-  const allowedDeletes = hasAdminPrivileges() ? changes.deletes : [];
-  if (!allowedUpserts.length && !allowedDeletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  allowedUpserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.customBudgets, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  allowedDeletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.customBudgets, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.customBudgets = applyRemoteCacheUpdates(remoteList, { upserts: allowedUpserts, deletes: allowedDeletes }, (item) => item?.id);
-}
-
-async function syncMessageThreadsCollection() {
-  if (!messageThreadsCollectionRef || !remoteState.readyCollections.messageThreads) return;
-  const remoteList = Array.isArray(remoteState.data.messageThreads) ? remoteState.data.messageThreads : [];
-  const changes = diffRemoteCollection(messageThreads, remoteList, (item) => item?.id, sanitizeMessageThreadForRemote);
-  const allowedUpserts = changes.upserts.filter((entry) => {
-    if (hasAdminPrivileges()) return true;
-    const owner = (entry.user || '').toString().trim().toLowerCase();
-    if (!currentUser?.username || owner !== currentUser.username) {
-      return false;
-    }
-    const remoteEntry = remoteList.find((item) => item?.id === entry.id);
-    if (remoteEntry && (remoteEntry.user || '').toLowerCase() !== currentUser.username) {
-      return false;
-    }
-    return true;
-  });
-  const allowedDeletes = hasAdminPrivileges() ? changes.deletes : [];
-  if (!allowedUpserts.length && !allowedDeletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  allowedUpserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.messageThreads, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  allowedDeletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.messageThreads, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.messageThreads = applyRemoteCacheUpdates(remoteList, { upserts: allowedUpserts, deletes: allowedDeletes }, (item) => item?.id);
-}
-
-async function syncMessageOffersCollection() {
-  if (!messageOffersCollectionRef || !remoteState.readyCollections.messageOffers) return;
-  if (!hasAdminPrivileges()) return;
-  const remoteList = Array.isArray(remoteState.data.messageOffers) ? remoteState.data.messageOffers : [];
-  const changes = diffRemoteCollection(messageOffers, remoteList, (item) => item?.id, sanitizeOfferForRemote);
-  if (!changes.upserts.length && !changes.deletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  changes.upserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.messageOffers, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  changes.deletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.messageOffers, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.messageOffers = applyRemoteCacheUpdates(remoteList, changes, (item) => item?.id);
-}
-
-async function syncAnalyticsEventsCollection() {
-  if (!analyticsCollectionRef || !remoteState.readyCollections.analytics) return;
-  if (!hasAdminPrivileges()) return;
-  const remoteList = Array.isArray(remoteState.data.analytics) ? remoteState.data.analytics : [];
-  const localSlice = analyticsEvents.slice(-MAX_REMOTE_ANALYTICS_EVENTS);
-  const changes = diffRemoteCollection(localSlice, remoteList, (item) => item?.id, sanitizeAnalyticsEventForRemote);
-  if (!changes.upserts.length && !changes.deletes.length) {
-    return;
-  }
-  const batch = writeBatch(firestoreDb);
-  changes.upserts.forEach((entry) => {
-    const { id, ...data } = entry;
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.analytics, id);
-    batch.set(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-  });
-  changes.deletes.forEach((id) => {
-    const docRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.analytics, id);
-    batch.delete(docRef);
-  });
-  await batch.commit();
-  remoteState.data.analytics = applyRemoteCacheUpdates(remoteList, changes, (item) => item?.id).slice(-MAX_REMOTE_ANALYTICS_EVENTS);
 }
 
 function flushRemoteQueue() {
-  if (!remoteState.enabled || !firestoreDb || !remoteState.ready) return;
+  if (!remoteState.enabled || !remoteDocRef) return;
   if (!remoteState.pending) return;
   if (remoteSyncTimer) clearTimeout(remoteSyncTimer);
   remoteSyncTimer = setTimeout(commitRemoteSync, 50);
@@ -3130,15 +2403,9 @@ function flushRemoteQueue() {
 
 function applyRemoteData(data) {
   remoteDataArrived = true;
-  const payload = data || {};
-  if (Array.isArray(payload.users)) {
-    const existingPasswords = new Map(users.map(user => [user.username, user.password]));
-    const list = payload.users
-      .map(raw => {
-        const combined = { ...raw, password: existingPasswords.get(raw.username) || raw.password };
-        return normaliseUser(combined);
-      })
-      .filter(Boolean);
+  remoteState.data = data || {};
+  if (Array.isArray(remoteState.data.users)) {
+    const list = remoteState.data.users.map(normaliseUser).filter(Boolean);
     cleanManagedUsers(list);
     users = list;
     const adminEnsured = ensureDefaultAdminUser({ persist: false });
@@ -3159,64 +2426,72 @@ function applyRemoteData(data) {
       }
     }
   }
-  if (Array.isArray(payload.tariffs)) {
-    tariffs = payload.tariffs.map(normaliseTariff);
+  if (Array.isArray(remoteState.data.tariffs)) {
+    tariffs = remoteState.data.tariffs.map(normaliseTariff);
     try {
       localStorage.setItem(STORAGE_KEYS.tariffs, JSON.stringify(tariffs));
     } catch (error) {
       console.warn('No se pudieron sincronizar tarifas en localStorage', error);
     }
   }
-  if (Array.isArray(payload.leads)) {
-    leads = payload.leads.map(normaliseLead).filter(Boolean);
+  if (Array.isArray(remoteState.data.leads)) {
+    leads = remoteState.data.leads.map(normaliseLead).filter(Boolean);
     try {
       localStorage.setItem(STORAGE_KEYS.leads, JSON.stringify(leads));
     } catch (error) {
-      console.warn('No se pudieron sincronizar las oportunidades en localStorage', error);
+      console.warn('No se pudieron sincronizar leads en localStorage', error);
     }
   }
-  if (Array.isArray(payload.rewards)) {
-    rewards = payload.rewards.map(normaliseReward).filter(Boolean);
+  if (Array.isArray(remoteState.data.rewards)) {
+    rewards = remoteState.data.rewards.map(normaliseReward).filter(Boolean);
     try {
       localStorage.setItem(STORAGE_KEYS.rewards, JSON.stringify(rewards));
     } catch (error) {
-      console.warn('No se pudieron sincronizar las recompensas en localStorage', error);
+      console.warn('No se pudieron sincronizar recompensas en localStorage', error);
     }
   }
-  if (Array.isArray(payload.notifications)) {
-    notifications = payload.notifications.map(normaliseNotification).filter(Boolean);
+  if (Array.isArray(remoteState.data.notifications)) {
+    notifications = remoteState.data.notifications.map(normaliseNotification).filter(Boolean);
     try {
       localStorage.setItem(STORAGE_KEYS.notifications, JSON.stringify(notifications));
     } catch (error) {
-      console.warn('No se pudieron sincronizar las notificaciones en localStorage', error);
+      console.warn('No se pudieron sincronizar notificaciones en localStorage', error);
     }
   }
-  if (Array.isArray(payload.callRequests)) {
-    callRequests = payload.callRequests.map(normaliseCallRequest).filter(Boolean);
+  if (Array.isArray(remoteState.data.callRequests)) {
+    callRequests = remoteState.data.callRequests.map(normaliseCallRequest).filter(Boolean);
     try {
       localStorage.setItem(STORAGE_KEYS.callRequests, JSON.stringify(callRequests));
     } catch (error) {
-      console.warn('No se pudieron sincronizar las solicitudes de llamada en localStorage', error);
+      console.warn('No se pudieron sincronizar solicitudes de llamada en localStorage', error);
     }
   }
-  if (Array.isArray(payload.customBudgets)) {
-    customBudgets = payload.customBudgets.map(normaliseCustomBudget).filter(Boolean);
+  if (Array.isArray(remoteState.data.customBudgets)) {
+    customBudgets = remoteState.data.customBudgets.map(normaliseCustomBudget).filter(Boolean);
     try {
       localStorage.setItem(STORAGE_KEYS.customBudgets, JSON.stringify(customBudgets));
     } catch (error) {
-      console.warn('No se pudieron sincronizar los presupuestos personalizados en localStorage', error);
+      console.warn('No se pudieron sincronizar presupuestos a medida en localStorage', error);
     }
   }
-  if (Array.isArray(payload.analyticsEvents)) {
-    const remoteList = payload.analyticsEvents.map(normaliseAnalyticsEvent).filter(Boolean);
-    const remoteIds = new Set(remoteList.map(event => event.id).filter(Boolean));
-    const pendingLocal = analyticsEvents.filter(event => event && event.id && !remoteIds.has(event.id));
-    analyticsEvents = [...remoteList, ...pendingLocal];
-    analyticsEvents.sort((a, b) => {
-      const timeA = new Date(a?.timestamp || a?.createdAt || 0).getTime();
-      const timeB = new Date(b?.timestamp || b?.createdAt || 0).getTime();
-      return timeA - timeB;
-    });
+  if (Array.isArray(remoteState.data.messageThreads)) {
+    messageThreads = remoteState.data.messageThreads.map(normaliseMessageThread).filter(Boolean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(messageThreads));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar los mensajes internos en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.messageOffers)) {
+    messageOffers = remoteState.data.messageOffers.map(normaliseOffer).filter(Boolean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.offers, JSON.stringify(messageOffers));
+    } catch (error) {
+      console.warn('No se pudieron sincronizar las ofertas internas en localStorage', error);
+    }
+  }
+  if (Array.isArray(remoteState.data.analyticsEvents)) {
+    analyticsEvents = remoteState.data.analyticsEvents.map(normaliseAnalyticsEvent).filter(Boolean);
     if (analyticsEvents.length > MAX_ANALYTICS_EVENTS) {
       analyticsEvents = analyticsEvents.slice(-MAX_ANALYTICS_EVENTS);
     }
@@ -3226,25 +2501,9 @@ function applyRemoteData(data) {
       console.warn('No se pudieron sincronizar los eventos analíticos en localStorage', error);
     }
   }
-  if (Array.isArray(payload.messageThreads)) {
-    messageThreads = payload.messageThreads.map(normaliseMessageThread).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(messageThreads));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar los hilos de mensajes en localStorage', error);
-    }
-  }
-  if (Array.isArray(payload.messageOffers)) {
-    messageOffers = payload.messageOffers.map(normaliseOffer).filter(Boolean);
-    try {
-      localStorage.setItem(STORAGE_KEYS.offers, JSON.stringify(messageOffers));
-    } catch (error) {
-      console.warn('No se pudieron sincronizar las ofertas internas en localStorage', error);
-    }
-  }
-  if (payload.banner) {
-    setBannerConfig(payload.banner, { persistLocal: true, syncRemote: false });
-  } else if (payload.banner === null) {
+  if (remoteState.data.banner) {
+    setBannerConfig(remoteState.data.banner, { persistLocal: true, syncRemote: false });
+  } else if (remoteState.data.banner === null) {
     setBannerConfig(DEFAULT_BANNER_CONFIG, { persistLocal: true, syncRemote: false });
   }
   if (domReady) {
@@ -3317,24 +2576,7 @@ function collectDynamicDataSnapshot() {
     storage: storageSnapshot,
     remote: {
       enabled: remoteState.enabled,
-      targets: {
-        app: {
-          collection: REMOTE_TARGET.collection || 'app',
-          document: REMOTE_TARGET.document || 'state'
-        },
-        tariffs: FIRESTORE_COLLECTIONS.tariffs,
-        banner: FIRESTORE_COLLECTIONS.banner,
-        leads: FIRESTORE_COLLECTIONS.leads,
-        users: FIRESTORE_COLLECTIONS.users,
-        rewards: FIRESTORE_COLLECTIONS.rewards,
-        notifications: FIRESTORE_COLLECTIONS.notifications,
-        callRequests: FIRESTORE_COLLECTIONS.callRequests,
-        customBudgets: FIRESTORE_COLLECTIONS.customBudgets,
-        messageThreads: FIRESTORE_COLLECTIONS.messageThreads,
-        messageOffers: FIRESTORE_COLLECTIONS.messageOffers,
-        analytics: FIRESTORE_COLLECTIONS.analytics
-      },
-      ready: remoteState.ready,
+      target: REMOTE_TARGET,
       lastError: remoteState.lastError ? String(remoteState.lastError) : null
     }
   };
@@ -3343,15 +2585,6 @@ function collectDynamicDataSnapshot() {
 function formatBackupFilename(prefix, extension) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   return `${prefix}-${timestamp}.${extension}`;
-}
-
-function formatBytes(bytes) {
-  const value = Number(bytes) || 0;
-  if (value <= 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const power = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
-  const sized = value / Math.pow(1024, power);
-  return `${sized.toFixed(power === 0 ? 0 : 1)} ${units[power]}`;
 }
 
 function downloadBlob(filename, blob) {
@@ -3737,34 +2970,12 @@ async function handleBackupDataExport(event) {
   if (!backupDataButton) return;
   if (backupDataButton.disabled) return;
   backupDataButton.disabled = true;
+  setBackupStatusMessage('working', 'Generando copia de seguridad de los datos…');
   try {
-    let remoteFailure = false;
-    if (currentUser?.firebaseAdmin && manualBackupCallable) {
-      setBackupStatusMessage('working', 'Solicitando copia remota en la nube…');
-      try {
-        await ensureFirebaseCore();
-        const response = await manualBackupCallable();
-        const payload = response?.data || {};
-        const remoteSummary = payload.destination
-          ? `Copia en GCS: ${payload.destination} (${formatBytes(payload.sizeBytes || 0)})`
-          : 'Copia en la nube iniciada';
-        setBackupStatusMessage('syncing', `${remoteSummary}. Generando copia descargable…`);
-      } catch (error) {
-        console.error('No se pudo lanzar la copia remota', error);
-        remoteFailure = true;
-        setBackupStatusMessage('warning', 'La copia remota falló. Se generará solo la copia local.');
-      }
-    } else {
-      setBackupStatusMessage('working', 'Generando copia de seguridad de los datos…');
-    }
     const snapshot = collectDynamicDataSnapshot();
     const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
     downloadBlob(formatBackupFilename('backup-datos', 'json'), blob);
-    if (remoteFailure) {
-      setBackupStatusMessage('warning', 'Copia local creada. Revisa la consola para reintentar la copia remota.');
-    } else {
-      setBackupStatusMessage('success', 'Copia de seguridad creada. Guarda el archivo JSON descargado en un lugar seguro.');
-    }
+    setBackupStatusMessage('success', 'Copia de seguridad creada. Guarda el archivo JSON descargado en un lugar seguro.');
   } catch (error) {
     console.error('No se pudo generar la copia de seguridad', error);
     setBackupStatusMessage('error', 'Ocurrió un error al generar la copia de seguridad. Revisa la consola para más detalles.');
@@ -4933,9 +4144,6 @@ function loadAnalyticsEventsFromStorage() {
 }
 
 function saveAnalyticsEvents() {
-  if (remoteState.enabled && hasAdminPrivileges()) {
-    scheduleRemoteSync();
-  }
   try {
     localStorage.setItem(STORAGE_KEYS.analytics, JSON.stringify(analyticsEvents));
   } catch (error) {
@@ -4965,6 +4173,45 @@ function buildTariffMeta(tariff) {
     tariffName: tariff.nombre || '',
     tariffCompany: tariff['compañia'] || tariff.compania || ''
   };
+}
+
+function extractTariffPrice(tariff) {
+  if (!tariff || typeof tariff !== 'object') return null;
+  const priceKeys = [
+    'precioFinal',
+    'precio_final',
+    'precio',
+    'precio_total',
+    'precioTotal',
+    'precioMensual',
+    'precio_mensual',
+    'precio mensual',
+    'precio final',
+    'precioFinalPromo',
+    'precio_promocional',
+    'precioPromocional',
+    'precioOferta',
+    'precio_oferta',
+    'precioOfertaMensual',
+    'precio_iva',
+    'precioIva',
+    'precioBase',
+    'precio_base',
+    'precioPromo',
+    'precio_promo',
+    'precioPromoMensual',
+    'precioFinalConIva',
+    'precio_final_con_iva'
+  ];
+  for (const key of priceKeys) {
+    if (key in tariff) {
+      const value = tariff[key];
+      if (value !== undefined && value !== null && value !== '') {
+        return value;
+      }
+    }
+  }
+  return null;
 }
 
 function recordAnalyticsEvent(type, { username, role, meta, timestamp } = {}) {
@@ -12555,7 +11802,7 @@ function hideRegisterModal() {
   registerForm?.reset();
 }
 
-async function handleRegisterSubmit(event) {
+function handleRegisterSubmit(event) {
   event.preventDefault();
   if (!registerForm) return;
   const username = registerUserInput?.value.trim().toLowerCase();
@@ -12580,10 +11827,6 @@ async function handleRegisterSubmit(event) {
   const firstName = registerFirstNameInput?.value.trim() || '';
   const lastName = registerLastNameInput?.value.trim() || '';
   const email = registerEmailInput?.value.trim() || '';
-  if (!email) {
-    if (registerError) registerError.textContent = 'Añade un email válido.';
-    return;
-  }
   const newRecord = normaliseUser({
     username,
     password,
@@ -12593,28 +11836,14 @@ async function handleRegisterSubmit(event) {
     email,
     selfRegistered: true
   });
-  try {
-    await ensureFirebaseCore();
-    await createUserWithEmailAndPassword(firebaseAuth, email, password);
-    await refreshFirebaseClaims(true);
-    users.push(newRecord);
-    saveUsers();
-    updateAvailableUsersHint();
-    renderUserList();
-    hideRegisterModal();
-    setCurrentUser(buildUserSnapshot(newRecord));
-    if (currentUser?.role === CLIENT_ROLE) {
-      showCommercialFlash('Tu cuenta se creó correctamente. Ya puedes solicitar tarifas.');
-    }
-  } catch (error) {
-    console.error('No se pudo registrar en Firebase', error);
-    if (registerError) {
-      if (error?.code === 'auth/email-already-in-use') {
-        registerError.textContent = 'Ese correo ya está registrado. Usa otro o inicia sesión.';
-      } else {
-        registerError.textContent = 'No se pudo crear la cuenta. Revisa los datos e inténtalo de nuevo.';
-      }
-    }
+  users.push(newRecord);
+  saveUsers();
+  updateAvailableUsersHint();
+  renderUserList();
+  hideRegisterModal();
+  setCurrentUser(buildUserSnapshot(newRecord));
+  if (currentUser?.role === CLIENT_ROLE) {
+    showCommercialFlash('Tu cuenta se creó correctamente. Ya puedes solicitar tarifas.');
   }
 }
 
@@ -12651,6 +11880,26 @@ function handleLeadFormSubmit(event) {
     username: currentUser.username,
     role: currentUser.role,
     meta: { ...buildTariffMeta(tariff), origin: lead.origin }
+  });
+  const orderPayload = {
+    ...buildTariffMeta(tariff),
+    tariffPrice: extractTariffPrice(tariff),
+    source: 'leadForm',
+    origin: lead.origin,
+    leadId: lead.id,
+    commercialUsername: currentUser.username,
+    commercialName,
+    clientName: lead.clientName,
+    clientContact: lead.contact,
+    clientNotes: lead.notes,
+    requestedByRole: currentUser.role,
+    requestedAt: lead.createdAt
+  };
+  if (!orderPayload.tariffPrice) {
+    delete orderPayload.tariffPrice;
+  }
+  createRemoteOrder(orderPayload).catch((error) => {
+    console.error('No se pudo registrar el pedido remoto', error);
   });
   renderLeadSummary();
   renderAdminLeadList();
@@ -12755,6 +12004,28 @@ function handleRequestFormSubmit(event) {
     role: CLIENT_ROLE,
     meta: { ...buildTariffMeta(tariff), origin: CLIENT_ROLE }
   });
+  const orderPayload = {
+    ...buildTariffMeta(tariff),
+    tariffPrice: extractTariffPrice(tariff),
+    source: 'publicRequest',
+    origin: CLIENT_ROLE,
+    leadId: lead.id,
+    customerUsername: userRecord.username,
+    customerName: displayName,
+    customerEmail: email,
+    customerPhone: phone,
+    customerAddress: address,
+    contactSummary: contact,
+    requestedByRole: userRecord.role || CLIENT_ROLE,
+    requestedAt: lead.createdAt,
+    createdAccount: !existing
+  };
+  if (!orderPayload.tariffPrice) {
+    delete orderPayload.tariffPrice;
+  }
+  createRemoteOrder(orderPayload).catch((error) => {
+    console.error('No se pudo registrar el pedido remoto', error);
+  });
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
@@ -12777,51 +12048,21 @@ function hideLoginModal() {
   loginForm?.reset();
 }
 
-async function handleLoginSubmit(event) {
+function handleLoginSubmit(event) {
   event.preventDefault();
   const username = loginUserInput?.value.trim().toLowerCase();
   const password = loginPassInput?.value;
-  if (!username || !password) {
-    if (loginError) loginError.textContent = 'Introduce usuario y contraseña.';
-    return;
-  }
-  const user = users.find(u => u.username === username);
+  const user = users.find(u => u.username === username && u.password === password);
   if (!user) {
-    if (loginError) loginError.textContent = 'No existe una cuenta con ese usuario.';
+    if (loginError) loginError.textContent = 'Credenciales no válidas.';
     return;
   }
-  if (!user.email) {
-    if (loginError) loginError.textContent = 'La cuenta no tiene email asignado. Contacta con un administrador.';
-    return;
-  }
-  try {
-    await ensureFirebaseCore();
-    await signInWithEmailAndPassword(firebaseAuth, user.email, password);
-    await refreshFirebaseClaims(true);
-    setCurrentUser(buildUserSnapshot(user));
-    hideLoginModal();
-  } catch (error) {
-    console.error('Error al iniciar sesión con Firebase', error);
-    if (loginError) {
-      if (error?.code === 'auth/wrong-password') {
-        loginError.textContent = 'Contraseña incorrecta.';
-      } else if (error?.code === 'auth/user-not-found') {
-        loginError.textContent = 'No existe una cuenta en Firebase con ese email.';
-      } else if (error?.code === 'auth/too-many-requests') {
-        loginError.textContent = 'Demasiados intentos. Vuelve a intentarlo más tarde.';
-      } else {
-        loginError.textContent = 'No se pudo iniciar sesión. Revisa las credenciales.';
-      }
-    }
-  }
+  setCurrentUser(buildUserSnapshot(user));
+  hideLoginModal();
 }
 
 function setCurrentUser(user, { persist = true } = {}) {
   const previousUser = currentUser;
-  if (user) {
-    user.firebaseAdmin = hasAdminPrivileges();
-    user.firebaseClaims = { ...firebaseSession.claims };
-  }
   currentUser = user;
   if (persist) {
     persistSessionUser(user);
@@ -12844,14 +12085,7 @@ function setCurrentUser(user, { persist = true } = {}) {
   updateBannerDisplay({ force: true });
 }
 
-async function logout() {
-  try {
-    if (firebaseAuth) {
-      await signOut(firebaseAuth);
-    }
-  } catch (error) {
-    console.warn('No se pudo cerrar la sesión de Firebase', error);
-  }
+function logout() {
   setCurrentUser(null);
 }
 
@@ -12865,14 +12099,12 @@ function updateUserInfo() {
   } else {
     const displayName = userDisplayName(currentUser);
     const role = currentUser.role;
-    const firebaseBadge = currentUser.firebaseAdmin ? '<span class="role-tag" data-role="admin">Firebase admin</span>' : '';
     const avatar = currentUser.photo ? `<img class="avatar" src="${currentUser.photo}" alt="${displayName}">` : '';
     userInfo.innerHTML = `
       ${avatar}
       <span class="dim">Sesión iniciada:</span>
       <span class="name">${displayName}</span>
       <span class="role-tag" data-role="${role}">${roleLabel(role)}</span>
-      ${firebaseBadge}
       <button class="smallbtn" id="openProfile">Mi perfil</button>
       <button class="smallbtn" id="logoutBtn">Cerrar sesión</button>
     `;
@@ -13363,347 +12595,171 @@ function renderUserList() {
   `;
 }
 
-async function initRemoteSync() {
+async function initRemoteSync(user) {
   if (!remoteState.enabled) {
     return;
   }
-  try {
-    await ensureFirebaseCore();
-    setSyncStatus('connecting', 'Autenticando…');
-    await ensureRemoteAuth();
-    teardownRemoteSync();
-    if (!firestoreDb) {
-      firestoreDb = getFirestore(firebaseAppInstance);
+  if (!user) {
+    throw new Error('No hay usuario autenticado para la sincronización.');
+  }
+
+  if (remoteState.currentUid === user.uid) {
+    if (remoteState.initPromise) {
+      return remoteState.initPromise;
     }
+    if (remoteState.unsub && remoteState.ready) {
+      return true;
+    }
+  } else {
+    resetRemoteSyncState({ resetStatus: false });
+  }
+
+  try {
+    const db = ensureFirestoreDb();
     if (!REMOTE_TARGET || !REMOTE_TARGET.collection || !REMOTE_TARGET.document) {
       console.warn('REMOTE_TARGET no definido correctamente, usando valores por defecto.');
     }
     const collectionName = REMOTE_TARGET.collection || 'app';
     const documentName = REMOTE_TARGET.document || 'state';
-    appStateDocRef = doc(firestoreDb, collectionName, documentName);
-    tariffsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.tariffs);
-    bannerCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.banner);
-    leadsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.leads);
-    usersCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.users);
-    rewardsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.rewards);
-    notificationsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.notifications);
-    callRequestsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.callRequests);
-    customBudgetsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.customBudgets);
-    messageThreadsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.messageThreads);
-    messageOffersCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.messageOffers);
-    analyticsCollectionRef = collection(firestoreDb, FIRESTORE_COLLECTIONS.analytics);
-    setSyncStatus('connecting', 'Conectando…');
+    remoteDocRef = doc(db, collectionName, documentName);
+    remoteState.currentUid = user.uid;
+    remoteState.ready = false;
+    remoteState.lastError = null;
 
-    const handleError = (context) => (error) => {
-      remoteState.lastError = error;
-      console.error(`Error en la colección ${context}`, error);
-      if (error?.code === 'permission-denied') {
-        if (context === 'app') {
-          remoteState.data.app = {};
-        } else if (context) {
-          remoteState.data[context] = [];
+    const waitForSnapshot = new Promise((resolve, reject) => {
+      let settled = false;
+      const unsubscribe = onSnapshot(remoteDocRef, (snapshot) => {
+        remoteState.ready = true;
+        remoteState.lastError = null;
+        applyRemoteData(snapshot.data());
+        if (!remoteState.writing && !remoteState.pending) {
+          setSyncStatus('online', 'Sincronizado');
         }
-        markRemoteCollectionReady(context);
-        setSyncStatus('error', 'Permisos insuficientes');
-        flushRemoteQueue();
-        return;
-      }
-      setSyncStatus('error', 'Error de sincronización');
-    };
-
-    const unsubApp = onSnapshot(appStateDocRef, (snapshot) => {
-      remoteState.lastError = null;
-      remoteState.data.app = sanitizeAppState(snapshot.exists() ? snapshot.data() : {});
-      markRemoteCollectionReady('app');
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('app'));
-    remoteState.listeners.push(unsubApp);
-
-    const unsubUsers = onSnapshot(usersCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const username = (data.username || docSnap.id || '').trim().toLowerCase();
-        const record = normaliseUser({ ...data, username });
-        if (!record) return;
-        sanitized.push(sanitizeUserForRemote(record));
-        normalized.push({ ...record });
-      });
-    remoteState.data.users = sanitized;
-    markRemoteCollectionReady('users');
-    if (!normalized.length && users.length) {
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-      return;
-    }
-    applyRemoteData({ users: normalized });
-    if (!remoteState.writing && !remoteState.pending) {
-      setSyncStatus('online', 'Sincronizado');
-    }
-    flushRemoteQueue();
-    }, handleError('users'));
-    remoteState.listeners.push(unsubUsers);
-
-    const unsubTariffs = onSnapshot(tariffsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseTariff({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeTariffForRemote(record));
-        normalized.push(record);
-      });
-    remoteState.data.tariffs = sanitized;
-    markRemoteCollectionReady('tariffs');
-    if (!normalized.length && tariffs.length) {
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-      return;
-    }
-    applyRemoteData({ tariffs: normalized });
-    if (!remoteState.writing && !remoteState.pending) {
-      setSyncStatus('online', 'Sincronizado');
-    }
-    flushRemoteQueue();
-    }, handleError('tariffs'));
-    remoteState.listeners.push(unsubTariffs);
-
-    const unsubLeads = onSnapshot(leadsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseLead({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeLeadForRemote(record));
-        normalized.push(record);
-      });
-    remoteState.data.leads = sanitized;
-    markRemoteCollectionReady('leads');
-    if (!normalized.length && leads.length) {
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-      return;
-    }
-    applyRemoteData({ leads: normalized });
-    if (!remoteState.writing && !remoteState.pending) {
-      setSyncStatus('online', 'Sincronizado');
-    }
-    flushRemoteQueue();
-    }, handleError('leads'));
-    remoteState.listeners.push(unsubLeads);
-
-    const bannerDocRef = doc(firestoreDb, FIRESTORE_COLLECTIONS.banner, BANNER_DOCUMENT_ID);
-    const unsubBanner = onSnapshot(bannerDocRef, (snapshot) => {
-      remoteState.lastError = null;
-      if (snapshot.exists()) {
-        const config = normaliseBanner(snapshot.data());
-        remoteState.data.banner = sanitizeBannerForRemote(config);
-        applyRemoteData({ banner: config });
-      } else {
-        remoteState.data.banner = null;
-        const hasLocalBanner = Array.isArray(bannerConfig?.items) && bannerConfig.items.length > 0;
-        if (!hasLocalBanner) {
-          applyRemoteData({ banner: null });
+        if (!settled) {
+          settled = true;
+          resolve(true);
         }
-      }
-      markRemoteCollectionReady('banner');
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('banner'));
-    remoteState.listeners.push(unsubBanner);
-
-    const unsubRewards = onSnapshot(rewardsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseReward({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeRewardForRemote(record));
-        normalized.push(record);
+      }, (error) => {
+        remoteState.lastError = error;
+        console.error('Error en la suscripción a Firestore', error);
+        setSyncStatus('error', 'Error de sincronización');
+        if (!settled) {
+          settled = true;
+          reject(error);
+        }
       });
-      normalized.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
-      remoteState.data.rewards = sanitized;
-      markRemoteCollectionReady('rewards');
-      applyRemoteData({ rewards: normalized });
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('rewards'));
-    remoteState.listeners.push(unsubRewards);
+      remoteState.unsub = unsubscribe;
+    });
 
-    const unsubNotifications = onSnapshot(notificationsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseNotification({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeNotificationForRemote(record));
-        normalized.push(record);
-      });
-      normalized.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      remoteState.data.notifications = sanitized;
-      markRemoteCollectionReady('notifications');
-      applyRemoteData({ notifications: normalized });
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('notifications'));
-    remoteState.listeners.push(unsubNotifications);
+    remoteState.initPromise = waitForSnapshot;
 
-    const unsubCallRequests = onSnapshot(callRequestsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseCallRequest({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeCallRequestForRemote(record));
-        normalized.push(record);
+    const existing = await getDoc(remoteDocRef);
+    if (!existing.exists()) {
+      await setDoc(remoteDocRef, {
+        users: DEFAULT_USERS,
+        tariffs: BASE_DATA,
+        leads: [],
+        rewards: [],
+        notifications: [],
+        callRequests: [],
+        customBudgets: [],
+        messageThreads: [],
+        messageOffers: [],
+        analyticsEvents: [],
+        banner: DEFAULT_BANNER_CONFIG,
+        updatedAt: serverTimestamp()
       });
-      normalized.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
-      remoteState.data.callRequests = sanitized;
-      markRemoteCollectionReady('callRequests');
-      applyRemoteData({ callRequests: normalized });
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('callRequests'));
-    remoteState.listeners.push(unsubCallRequests);
+    }
 
-    const unsubCustomBudgets = onSnapshot(customBudgetsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseCustomBudget({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeCustomBudgetForRemote(record));
-        normalized.push(record);
-      });
-      normalized.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
-      remoteState.data.customBudgets = sanitized;
-      markRemoteCollectionReady('customBudgets');
-      applyRemoteData({ customBudgets: normalized });
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('customBudgets'));
-    remoteState.listeners.push(unsubCustomBudgets);
-
-    const unsubMessageThreads = onSnapshot(messageThreadsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseMessageThread({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeMessageThreadForRemote(record));
-        normalized.push(record);
-      });
-      normalized.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
-      remoteState.data.messageThreads = sanitized;
-      markRemoteCollectionReady('messageThreads');
-      applyRemoteData({ messageThreads: normalized });
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('messageThreads'));
-    remoteState.listeners.push(unsubMessageThreads);
-
-    const unsubMessageOffers = onSnapshot(messageOffersCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitized = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseOffer({ id: docSnap.id, ...data });
-        if (!record) return;
-        sanitized.push(sanitizeOfferForRemote(record));
-        normalized.push(record);
-      });
-      normalized.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      remoteState.data.messageOffers = sanitized;
-      markRemoteCollectionReady('messageOffers');
-      applyRemoteData({ messageOffers: normalized });
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('messageOffers'));
-    remoteState.listeners.push(unsubMessageOffers);
-
-    const unsubAnalytics = onSnapshot(analyticsCollectionRef, (snapshot) => {
-      remoteState.lastError = null;
-      const normalized = [];
-      const sanitizedMap = new Map();
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const record = normaliseAnalyticsEvent({ id: docSnap.id, ...data });
-        if (!record) return;
-        const clean = sanitizeAnalyticsEventForRemote(record);
-        if (!clean) return;
-        sanitizedMap.set(clean.id, clean);
-        normalized.push(record);
-      });
-      normalized.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
-      const limited = normalized.slice(-MAX_REMOTE_ANALYTICS_EVENTS);
-      const limitedSanitized = limited
-        .map((record) => sanitizedMap.get(record.id))
-        .filter(Boolean);
-      remoteState.data.analytics = limitedSanitized;
-      markRemoteCollectionReady('analytics');
-      applyRemoteData({ analyticsEvents: limited });
-      if (!remoteState.writing && !remoteState.pending) {
-        setSyncStatus('online', 'Sincronizado');
-      }
-      flushRemoteQueue();
-    }, handleError('analytics'));
-    remoteState.listeners.push(unsubAnalytics);
+    flushRemoteQueue();
+    try {
+      await waitForSnapshot;
+    } finally {
+      remoteState.initPromise = null;
+    }
   } catch (error) {
     remoteState.lastError = error;
     console.error('No se pudo iniciar la sincronización remota', error);
-    if (error?.code === 'auth/required') {
-      setSyncStatus('offline', 'Inicia sesión para sincronizar');
-    } else if (typeof error?.code === 'string' && error.code.startsWith('auth/')) {
-      setSyncStatus('error', 'Error de autenticación');
-    } else if (error?.code === 'permission-denied') {
-      setSyncStatus('error', 'Permisos insuficientes');
-    } else {
-      setSyncStatus('error', 'Sin conexión');
-    }
+    setSyncStatus('error', 'Sin conexión');
+    throw error;
   }
 }
 
-initRemoteSync();
+function setupFirebaseAuth() {
+  if (!remoteState.enabled) {
+    setSyncStatus('offline', 'Modo offline');
+    return;
+  }
+
+  const auth = ensureFirebaseAuth();
+  if (!auth) {
+    console.warn('Firebase Auth no está disponible.');
+    return;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    firebaseUser = user || null;
+    if (!user) {
+      resetRemoteSyncState({ resetStatus: true });
+      if (!anonymousSignInAttempted) {
+        anonymousSignInAttempted = true;
+        signInAnonymously(auth).catch((error) => {
+          console.error('Anon auth error:', error);
+          anonymousSignInAttempted = false;
+          setSyncStatus('error', 'Error de autenticación');
+        });
+      }
+      return;
+    }
+
+    setSyncStatus('connecting', 'Conectando…');
+    try {
+      await initRemoteSync(user);
+      if (!remoteState.writing && !remoteState.pending) {
+        setSyncStatus('online', 'Sincronizado');
+      }
+    } catch (error) {
+      console.error('Error al inicializar la sincronización remota', error);
+      setSyncStatus('error', 'Error de sincronización');
+    }
+  });
+
+  if (!auth.currentUser) {
+    anonymousSignInAttempted = true;
+    signInAnonymously(auth).catch((error) => {
+      console.error('Anon auth error:', error);
+      anonymousSignInAttempted = false;
+      setSyncStatus('error', 'Error de autenticación');
+    });
+  } else {
+    anonymousSignInAttempted = true;
+  }
+}
+
+async function createRemoteOrder(payload = {}) {
+  if (!remoteState.enabled) {
+    return null;
+  }
+
+  const auth = ensureFirebaseAuth();
+  const current = auth?.currentUser || firebaseUser;
+  if (!current) {
+    throw new Error('No user session');
+  }
+
+  const db = ensureFirestoreDb();
+  const { status, ...rest } = payload && typeof payload === 'object' ? payload : {};
+  const data = {
+    userId: current.uid,
+    createdAt: serverTimestamp(),
+    status: typeof status === 'string' && status ? status : 'pending',
+    ...rest
+  };
+
+  return addDoc(collection(db, 'orders'), data);
+}
+
+setupFirebaseAuth();
 
 document.addEventListener('DOMContentLoaded', () => {
   domReady = true;
@@ -14006,8 +13062,8 @@ document.addEventListener('DOMContentLoaded', () => {
   saveUserBtn = $('#saveUserBtn');
   cancelUserEdit = $('#cancelUserEdit');
 
-  setupBannerImageUploader();
-  setupRewardImageUploader();
+setupBannerImageUploader();
+setupRewardImageUploader();
 
   users = loadUsersFromStorage();
   ensureDefaultAdminUser();

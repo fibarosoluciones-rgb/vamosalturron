@@ -355,6 +355,89 @@ exports.assignAdminRole = onRequest({ region: "europe-west1" }, async (req, res)
   }
 });
 
+exports.setUserRoles = onCall({ region: "europe-west1" }, async (request) => {
+  if (!request.auth?.token?.admin) {
+    throw new HttpsError("permission-denied", "Admin privileges required");
+  }
+
+  const uidRaw = request.data?.uid;
+  if (typeof uidRaw !== "string" || !uidRaw.trim()) {
+    throw new HttpsError("invalid-argument", "A valid uid is required");
+  }
+  const uid = uidRaw.trim();
+  const rawClaims = request.data?.claims;
+  if (!rawClaims || typeof rawClaims !== "object" || Array.isArray(rawClaims)) {
+    throw new HttpsError("invalid-argument", "claims must be an object");
+  }
+
+  const updates = {};
+  const removals = new Set();
+
+  for (const [key, value] of Object.entries(rawClaims)) {
+    if (value === undefined) {
+      continue;
+    }
+    if (key === "roles") {
+      if (value === null) {
+        removals.add("roles");
+        continue;
+      }
+      if (!Array.isArray(value)) {
+        throw new HttpsError("invalid-argument", "roles must be an array of strings");
+      }
+      const roles = Array.from(new Set(value
+        .filter((entry) => typeof entry === "string")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length)));
+      if (roles.length) {
+        updates.roles = roles;
+      } else {
+        removals.add("roles");
+      }
+      continue;
+    }
+    if (key === "role") {
+      if (value === null || value === false) {
+        removals.add("role");
+        continue;
+      }
+      if (typeof value !== "string") {
+        throw new HttpsError("invalid-argument", "role must be a string");
+      }
+      const trimmedRole = value.trim();
+      if (trimmedRole) {
+        updates.role = trimmedRole;
+      } else {
+        removals.add("role");
+      }
+      continue;
+    }
+    if (value === null || value === false) {
+      removals.add(key);
+      continue;
+    }
+    if (typeof value === "boolean" || typeof value === "string" || typeof value === "number") {
+      updates[key] = value;
+      continue;
+    }
+    throw new HttpsError("invalid-argument", `Unsupported claim value for ${key}`);
+  }
+
+  try {
+    const record = await admin.auth().getUser(uid);
+    const customClaims = { ...(record.customClaims || {}) };
+    removals.forEach((key) => {
+      delete customClaims[key];
+    });
+    Object.assign(customClaims, updates);
+    await admin.auth().setCustomUserClaims(uid, customClaims);
+    return { uid, claims: customClaims };
+  } catch (error) {
+    logger.error("Failed to set user roles", { uid, error: error.message });
+    throw new HttpsError("internal", error.message || "Failed to set user roles");
+  }
+});
+
 exports.listBackups = onCall({ region: "europe-west1" }, async (request) => {
   if (!request.auth?.token?.admin) {
     throw new HttpsError("permission-denied", "Admin privileges required");
