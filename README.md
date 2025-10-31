@@ -16,6 +16,33 @@ Este paquete contiene tu página **index.html** lista para ser publicada como si
 1. `vercel deploy` apuntando a esta carpeta, o sube el proyecto desde el dashboard.
 2. Vercel detectará que es un sitio estático y lo publicará.
 
+## Opción D: Firebase Hosting (vamosalturron-3242c)
+Si prefieres publicar el sitio en el proyecto de Firebase que ya está configurado (`vamosalturron-3242c`), sigue estos pasos:
+
+1. Instala las herramientas de Firebase (solo es necesario la primera vez):
+   ```bash
+   npm install -g firebase-tools
+   ```
+2. Inicia sesión en tu cuenta de Google:
+   ```bash
+   firebase login
+   ```
+   > Puedes usar `firebase login --no-localhost` si trabajas en un entorno sin navegador.
+3. Inicializa el proyecto seleccionando **Hosting**, **Use existing project** y eligiendo `vamosalturron-3242c` cuando lo solicite. Cuando pregunte por la carpeta pública, introduce `public`.
+   ```bash
+   firebase init
+   ```
+4. Despliega el sitio estático incluido en este repositorio:
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+Tras el deploy, Firebase publicará el sitio automáticamente en:
+
+- https://vamosalturron-3242c.web.app
+- https://vamosalturron-3242c.firebaseapp.com
+- https://www.fibaroteleco.com
+
 ## Estructura del proyecto
 - `index.html` — tu panel, 100% estático (sin dependencias externas).
 - `netlify.toml` — configuración mínima.
@@ -42,7 +69,7 @@ Si quieres que el panel funcione completamente online y que los cambios del admi
    ```
    Ajusta las reglas a tus necesidades de seguridad.
 3. Copia las credenciales web de tu proyecto (menú _Project settings → General → Your apps → Web app_).
-4. Rellena los campos `apiKey`, `authDomain` y `projectId` dentro de [`firebase-config.js`](./firebase-config.js).
+4. Rellena los campos `apiKey`, `authDomain` y `projectId` dentro de [`public/firebase-config.js`](./public/firebase-config.js).
 5. (Opcional) Cambia los valores de `collection` y `document` si quieres guardar el estado en otra ruta de Firestore.
 6. Publica el sitio. La primera vez que un administrador acceda se creará el documento `app/state` con las tarifas, usuarios y leads por defecto.
 
