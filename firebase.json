@@ -1,11 +1,4 @@
 {
-  "functions": {
-    "source": "functions"
-
-  },
-  "firestore": {
-    "rules": "firestore.rules"
-  },
   "hosting": {
     "public": "public",
     "ignore": [
@@ -14,10 +7,7 @@
       "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "/importLatestBackup",
-        "function": "importLatestBackup"
-      }
+      { "source": "/importLatestBackup", "function": "importLatestBackup" }
     ]
   }
 }

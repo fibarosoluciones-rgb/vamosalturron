@@ -1,38 +1,31 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
-// DESARROLLO
-const devConfig = {
-  apiKey: "AIzaSyCk1wMhtVbO3O9QaWJ3taR2dDq1Wf8rFkY",
-  authDomain: "vamosalturron-dev.firebaseapp.com",
-  projectId: "vamosalturron-dev",
-  storageBucket: "vamosalturron-dev.appspot.com",
-  messagingSenderId: "1075634985123",
-  appId: "1:1075634985123:web:90c7a7d48d3bcbe6271e4f",
-  measurementId: "G-1N2P3Q4R5S"
+// Firebase Web config (vamosalturron-3242c)
+const firebaseConfig = {
+  apiKey: "AIzaSyD12d4a_m7Hn1xQ1uBwogvqnaVsFdnJxXo",
+  authDomain: "vamosalturron-3242c.firebaseapp.com",
+  projectId: "vamosalturron-3242c",
+  storageBucket: "vamosalturron-3242c.appspot.com",
+  messagingSenderId: "885711634201",
+  appId: "1:885711634201:web:565c8d958547964bc58f88",
+  measurementId: "G-NTWC6V4W4X",
 };
 
-// PRODUCCIÓN (rellena con las credenciales de `vamosalturron-3242c`)
-const prodConfig = {
-  apiKey: "AIzaSyDNvCUWoSppn7EKlUdc8CnADlBzT_nLzaE",
-  authDomain: "vamosalturron-prod.firebaseapp.com",
-  projectId: "vamosalturron-prod",
-  storageBucket: "vamosalturron-prod.appspot.com",
-  messagingSenderId: "878159706683",
-  appId: "1:878159706683:web:1adc78e6ac7a1a7e0e7a1e",
-  measurementId: "G-MGQ5TEBYD1"
-};
+const app = initializeApp(firebaseConfig);
 
-const isLocalhost =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-   window.location.hostname === "127.0.0.1" ||
-   window.location.hostname === "[::1]" ||
-   window.location.hostname.startsWith("192.168."));
-
-export const firebaseConfig = isLocalhost ? devConfig : prodConfig;
-export const app = initializeApp(firebaseConfig);
+try {
+  // `getAnalytics` solo funciona en navegadores con Analytics habilitado.
+  if (typeof window !== "undefined") {
+    getAnalytics(app);
+  }
+} catch (error) {
+  console.warn("Firebase Analytics no se ha podido inicializar", error);
+}
 
 if (typeof window !== "undefined") {
   window.FIREBASE_CONFIG = firebaseConfig;
   window.firebaseApp = app;
 }
+
+export { firebaseConfig, app };
