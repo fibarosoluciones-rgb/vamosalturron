@@ -1833,8 +1833,9 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 
 <script type="module" src="./firebase-config.js"></script>
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc, addDoc, collection } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { app } from './firebase-config.js';
 
 const BASE_DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 12.5, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "FIBRA 300 Y 2 LINEAS CON LLAMADAS ILIMITADAS Y 50 GI COMPARTIDOS", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0002", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 99.9, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "qwe", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0003", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "zxc", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0004", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 258.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "rty", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0005", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 46.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "fgh", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0006", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 21.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "cvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0007", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 12.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "tyu", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0008", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 45.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0009", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 14.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "fvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0010", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 13.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "uik", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0011", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0012", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 57.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "pñl", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0013", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 912.5, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "R45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0014", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 999.9, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "RF43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0015", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 978.0, "compañia": "simyo", "familia": "MEDIA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "F34F", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0016", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 958.0, "compañia": "jazztel", "familia": "MEDIA", "moneda": "EUR", "permanencia": "no", "descripción": "34F45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0017", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 946.0, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "34F43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0018", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 921.0, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F3RF", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0019", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 997.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "656H", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0020", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 5745.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "9 meses", "descripción": "H768", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0021", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 6745.0, "compañia": "mm", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "no", "descripción": "5G34G", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0022", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 5868.0, "compañia": "pp", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "12 meses", "descripción": "F3RT", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0023", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 9999.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F324TG6", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0024", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 3858.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "EF5655", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}];
 
@@ -2238,20 +2239,25 @@ const remoteState = {
   pending: false,
   unsub: null,
   lastError: null,
-  data: null
+  data: null,
+  currentUid: null,
+  initPromise: null
 };
 
-let firebaseAppInstance = null;
+let firebaseAppInstance = app || (typeof window !== 'undefined' ? window.firebaseApp : null);
+let firebaseAuthInstance = null;
+let firebaseUser = null;
 let firestoreDb = null;
 let remoteDocRef = null;
 let remoteSyncTimer = null;
 let remoteDataArrived = false;
+let anonymousSignInAttempted = false;
 
 let domReady = false;
 let syncStatusEl = null;
 let syncStatus = {
-  state: remoteState.enabled ? 'connecting' : 'offline',
-  message: remoteState.enabled ? 'Sincronizando…' : 'Modo offline'
+  state: 'offline',
+  message: remoteState.enabled ? 'Sin sesión' : 'Modo offline'
 };
 
 function setSyncStatus(state, message) {
@@ -2259,12 +2265,72 @@ function setSyncStatus(state, message) {
   if (domReady) renderSyncStatus();
 }
 
+if (typeof window !== 'undefined') {
+  window.updateStatus = (state, message) => setSyncStatus(state, message);
+}
+
+function ensureFirebaseApp() {
+  if (!firebaseAppInstance) {
+    if (app) {
+      firebaseAppInstance = app;
+    } else if (typeof window !== 'undefined' && window.firebaseApp) {
+      firebaseAppInstance = window.firebaseApp;
+    }
+  }
+  return firebaseAppInstance;
+}
+
+function ensureFirestoreDb() {
+  const instance = ensureFirebaseApp();
+  if (!instance) {
+    throw new Error('Firebase no está configurado correctamente.');
+  }
+  if (!firestoreDb) {
+    firestoreDb = getFirestore(instance);
+  }
+  return firestoreDb;
+}
+
+function ensureFirebaseAuth() {
+  const instance = ensureFirebaseApp();
+  if (!instance) {
+    return null;
+  }
+  if (!firebaseAuthInstance) {
+    firebaseAuthInstance = getAuth(instance);
+  }
+  return firebaseAuthInstance;
+}
+
+function resetRemoteSyncState({ resetStatus = true } = {}) {
+  if (remoteSyncTimer) {
+    clearTimeout(remoteSyncTimer);
+    remoteSyncTimer = null;
+  }
+  if (remoteState.unsub) {
+    remoteState.unsub();
+    remoteState.unsub = null;
+  }
+  remoteState.ready = false;
+  remoteState.pending = false;
+  remoteState.writing = false;
+  remoteState.lastError = null;
+  remoteState.data = null;
+  remoteState.currentUid = null;
+  remoteState.initPromise = null;
+  remoteDocRef = null;
+  remoteDataArrived = false;
+  if (resetStatus) {
+    setSyncStatus('offline', remoteState.enabled ? 'Sin sesión' : 'Modo offline');
+  }
+}
+
 function renderSyncStatus() {
   if (!domReady) return;
   if (!syncStatusEl) syncStatusEl = document.querySelector('#syncStatus');
   if (!syncStatusEl) return;
   const mapping = {
-    offline: { className: 'status-indicator--offline', label: 'Modo offline' },
+    offline: { className: 'status-indicator--offline', label: remoteState.enabled ? 'Sin sesión' : 'Modo offline' },
     connecting: { className: 'status-indicator--warning', label: 'Conectando…' },
     syncing: { className: 'status-indicator--warning', label: 'Guardando…' },
     online: { className: 'status-indicator--online', label: 'Sincronizado' },
@@ -4107,6 +4173,45 @@ function buildTariffMeta(tariff) {
     tariffName: tariff.nombre || '',
     tariffCompany: tariff['compañia'] || tariff.compania || ''
   };
+}
+
+function extractTariffPrice(tariff) {
+  if (!tariff || typeof tariff !== 'object') return null;
+  const priceKeys = [
+    'precioFinal',
+    'precio_final',
+    'precio',
+    'precio_total',
+    'precioTotal',
+    'precioMensual',
+    'precio_mensual',
+    'precio mensual',
+    'precio final',
+    'precioFinalPromo',
+    'precio_promocional',
+    'precioPromocional',
+    'precioOferta',
+    'precio_oferta',
+    'precioOfertaMensual',
+    'precio_iva',
+    'precioIva',
+    'precioBase',
+    'precio_base',
+    'precioPromo',
+    'precio_promo',
+    'precioPromoMensual',
+    'precioFinalConIva',
+    'precio_final_con_iva'
+  ];
+  for (const key of priceKeys) {
+    if (key in tariff) {
+      const value = tariff[key];
+      if (value !== undefined && value !== null && value !== '') {
+        return value;
+      }
+    }
+  }
+  return null;
 }
 
 function recordAnalyticsEvent(type, { username, role, meta, timestamp } = {}) {
@@ -11776,6 +11881,26 @@ function handleLeadFormSubmit(event) {
     role: currentUser.role,
     meta: { ...buildTariffMeta(tariff), origin: lead.origin }
   });
+  const orderPayload = {
+    ...buildTariffMeta(tariff),
+    tariffPrice: extractTariffPrice(tariff),
+    source: 'leadForm',
+    origin: lead.origin,
+    leadId: lead.id,
+    commercialUsername: currentUser.username,
+    commercialName,
+    clientName: lead.clientName,
+    clientContact: lead.contact,
+    clientNotes: lead.notes,
+    requestedByRole: currentUser.role,
+    requestedAt: lead.createdAt
+  };
+  if (!orderPayload.tariffPrice) {
+    delete orderPayload.tariffPrice;
+  }
+  createRemoteOrder(orderPayload).catch((error) => {
+    console.error('No se pudo registrar el pedido remoto', error);
+  });
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
@@ -11878,6 +12003,28 @@ function handleRequestFormSubmit(event) {
     username: userRecord.username,
     role: CLIENT_ROLE,
     meta: { ...buildTariffMeta(tariff), origin: CLIENT_ROLE }
+  });
+  const orderPayload = {
+    ...buildTariffMeta(tariff),
+    tariffPrice: extractTariffPrice(tariff),
+    source: 'publicRequest',
+    origin: CLIENT_ROLE,
+    leadId: lead.id,
+    customerUsername: userRecord.username,
+    customerName: displayName,
+    customerEmail: email,
+    customerPhone: phone,
+    customerAddress: address,
+    contactSummary: contact,
+    requestedByRole: userRecord.role || CLIENT_ROLE,
+    requestedAt: lead.createdAt,
+    createdAccount: !existing
+  };
+  if (!orderPayload.tariffPrice) {
+    delete orderPayload.tariffPrice;
+  }
+  createRemoteOrder(orderPayload).catch((error) => {
+    console.error('No se pudo registrar el pedido remoto', error);
   });
   renderLeadSummary();
   renderAdminLeadList();
@@ -12448,38 +12595,64 @@ function renderUserList() {
   `;
 }
 
-async function initRemoteSync() {
+async function initRemoteSync(user) {
   if (!remoteState.enabled) {
     return;
   }
+  if (!user) {
+    throw new Error('No hay usuario autenticado para la sincronización.');
+  }
+
+  if (remoteState.currentUid === user.uid) {
+    if (remoteState.initPromise) {
+      return remoteState.initPromise;
+    }
+    if (remoteState.unsub && remoteState.ready) {
+      return true;
+    }
+  } else {
+    resetRemoteSyncState({ resetStatus: false });
+  }
+
   try {
-    if (!firebaseAppInstance) {
-      firebaseAppInstance = initializeApp(window.FIREBASE_CONFIG);
-    }
-    if (!firestoreDb) {
-      firestoreDb = getFirestore(firebaseAppInstance);
-    }
+    const db = ensureFirestoreDb();
     if (!REMOTE_TARGET || !REMOTE_TARGET.collection || !REMOTE_TARGET.document) {
       console.warn('REMOTE_TARGET no definido correctamente, usando valores por defecto.');
     }
     const collectionName = REMOTE_TARGET.collection || 'app';
     const documentName = REMOTE_TARGET.document || 'state';
-    remoteDocRef = doc(firestoreDb, collectionName, documentName);
-    setSyncStatus('connecting', 'Conectando…');
-    if (!remoteState.unsub) {
-      remoteState.unsub = onSnapshot(remoteDocRef, (snapshot) => {
+    remoteDocRef = doc(db, collectionName, documentName);
+    remoteState.currentUid = user.uid;
+    remoteState.ready = false;
+    remoteState.lastError = null;
+
+    const waitForSnapshot = new Promise((resolve, reject) => {
+      let settled = false;
+      const unsubscribe = onSnapshot(remoteDocRef, (snapshot) => {
         remoteState.ready = true;
         remoteState.lastError = null;
         applyRemoteData(snapshot.data());
         if (!remoteState.writing && !remoteState.pending) {
           setSyncStatus('online', 'Sincronizado');
         }
+        if (!settled) {
+          settled = true;
+          resolve(true);
+        }
       }, (error) => {
         remoteState.lastError = error;
         console.error('Error en la suscripción a Firestore', error);
         setSyncStatus('error', 'Error de sincronización');
+        if (!settled) {
+          settled = true;
+          reject(error);
+        }
       });
-    }
+      remoteState.unsub = unsubscribe;
+    });
+
+    remoteState.initPromise = waitForSnapshot;
+
     const existing = await getDoc(remoteDocRef);
     if (!existing.exists()) {
       await setDoc(remoteDocRef, {
@@ -12497,15 +12670,96 @@ async function initRemoteSync() {
         updatedAt: serverTimestamp()
       });
     }
+
     flushRemoteQueue();
+    try {
+      await waitForSnapshot;
+    } finally {
+      remoteState.initPromise = null;
+    }
   } catch (error) {
     remoteState.lastError = error;
     console.error('No se pudo iniciar la sincronización remota', error);
     setSyncStatus('error', 'Sin conexión');
+    throw error;
   }
 }
 
-initRemoteSync();
+function setupFirebaseAuth() {
+  if (!remoteState.enabled) {
+    setSyncStatus('offline', 'Modo offline');
+    return;
+  }
+
+  const auth = ensureFirebaseAuth();
+  if (!auth) {
+    console.warn('Firebase Auth no está disponible.');
+    return;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    firebaseUser = user || null;
+    if (!user) {
+      resetRemoteSyncState({ resetStatus: true });
+      if (!anonymousSignInAttempted) {
+        anonymousSignInAttempted = true;
+        signInAnonymously(auth).catch((error) => {
+          console.error('Anon auth error:', error);
+          anonymousSignInAttempted = false;
+          setSyncStatus('error', 'Error de autenticación');
+        });
+      }
+      return;
+    }
+
+    setSyncStatus('connecting', 'Conectando…');
+    try {
+      await initRemoteSync(user);
+      if (!remoteState.writing && !remoteState.pending) {
+        setSyncStatus('online', 'Sincronizado');
+      }
+    } catch (error) {
+      console.error('Error al inicializar la sincronización remota', error);
+      setSyncStatus('error', 'Error de sincronización');
+    }
+  });
+
+  if (!auth.currentUser) {
+    anonymousSignInAttempted = true;
+    signInAnonymously(auth).catch((error) => {
+      console.error('Anon auth error:', error);
+      anonymousSignInAttempted = false;
+      setSyncStatus('error', 'Error de autenticación');
+    });
+  } else {
+    anonymousSignInAttempted = true;
+  }
+}
+
+async function createRemoteOrder(payload = {}) {
+  if (!remoteState.enabled) {
+    return null;
+  }
+
+  const auth = ensureFirebaseAuth();
+  const current = auth?.currentUser || firebaseUser;
+  if (!current) {
+    throw new Error('No user session');
+  }
+
+  const db = ensureFirestoreDb();
+  const { status, ...rest } = payload && typeof payload === 'object' ? payload : {};
+  const data = {
+    userId: current.uid,
+    createdAt: serverTimestamp(),
+    status: typeof status === 'string' && status ? status : 'pending',
+    ...rest
+  };
+
+  return addDoc(collection(db, 'orders'), data);
+}
+
+setupFirebaseAuth();
 
 document.addEventListener('DOMContentLoaded', () => {
   domReady = true;
@@ -12808,8 +13062,8 @@ document.addEventListener('DOMContentLoaded', () => {
   saveUserBtn = $('#saveUserBtn');
   cancelUserEdit = $('#cancelUserEdit');
 
-  setupBannerImageUploader();
-  setupRewardImageUploader();
+setupBannerImageUploader();
+setupRewardImageUploader();
 
   users = loadUsersFromStorage();
   ensureDefaultAdminUser();
