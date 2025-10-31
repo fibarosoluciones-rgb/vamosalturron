@@ -69,7 +69,7 @@ Si quieres que el panel funcione completamente online y que los cambios del admi
    ```
    Ajusta las reglas a tus necesidades de seguridad.
 3. Copia las credenciales web de tu proyecto (menú _Project settings → General → Your apps → Web app_).
-4. Rellena los campos `apiKey`, `authDomain` y `projectId` dentro de [`firebase-config.js`](./firebase-config.js).
+4. Rellena los campos `apiKey`, `authDomain` y `projectId` dentro de [`public/firebase-config.js`](./public/firebase-config.js).
 5. (Opcional) Cambia los valores de `collection` y `document` si quieres guardar el estado en otra ruta de Firestore.
 6. Publica el sitio. La primera vez que un administrador acceda se creará el documento `app/state` con las tarifas, usuarios y leads por defecto.
 
