@@ -1831,8 +1831,16 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
   </a>
 </div>
 
+<script type="importmap">
+{
+  "imports": {
+    "@/": "/src/"
+  }
+}
+</script>
 <script type="module" src="./firebase-config.js"></script>
 <script type="module">
+import { getDataSource } from "@/app/dataRouter";
 import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc, addDoc, collection } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { app } from './firebase-config.js';
@@ -2367,9 +2375,8 @@ async function commitRemoteSync() {
     const analyticsToSync = Array.isArray(analyticsEvents)
       ? analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
       : [];
-    await setDoc(remoteDocRef, {
+    const payload = {
       users,
-      tariffs,
       leads,
       rewards,
       notifications,
@@ -2380,7 +2387,11 @@ async function commitRemoteSync() {
       analyticsEvents: analyticsToSync,
       banner: bannerConfig,
       updatedAt: serverTimestamp()
-    }, { merge: true });
+    };
+    if (!catalogFeatureEnabled) {
+      payload.tariffs = tariffs;
+    }
+    await setDoc(remoteDocRef, payload, { merge: true });
     remoteState.lastError = null;
   } catch (error) {
     remoteState.lastError = error;
@@ -2426,7 +2437,7 @@ function applyRemoteData(data) {
       }
     }
   }
-  if (Array.isArray(remoteState.data.tariffs)) {
+  if (!catalogFeatureEnabled && Array.isArray(remoteState.data.tariffs)) {
     tariffs = remoteState.data.tariffs.map(normaliseTariff);
     try {
       localStorage.setItem(STORAGE_KEYS.tariffs, JSON.stringify(tariffs));
@@ -3435,6 +3446,9 @@ let grid,
 
 let currentUser = null;
 let tariffs = [];
+let catalogFeatureEnabled = false;
+let catalogCategories = [];
+let currentCatalogBrand = '';
 let leads = [];
 let rewards = [];
 let notifications = [];
@@ -3500,6 +3514,161 @@ function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   if (refreshAi && aiLastQuery) {
     runAiSearch(aiLastQuery, { preserveFormState: true });
   }
+}
+
+function applyCatalogBrand(brand) {
+  const safe = typeof brand === 'string' ? brand.trim() : '';
+  if (!safe || safe === currentCatalogBrand) {
+    return;
+  }
+  currentCatalogBrand = safe;
+  if (typeof document !== 'undefined') {
+    document.title = `Tarifas ${safe} – Panel Offline`;
+    const targets = document.querySelectorAll('[data-brand-name]');
+    targets.forEach((element) => {
+      element.textContent = safe;
+    });
+  }
+}
+
+function mapCatalogItemToTariff(item, category) {
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
+  const entry = item;
+  const categoria = (category?.id || entry.categoryId || entry.categoria || entry.category || '').toString().trim();
+  const categoriaNombre = category?.name || entry.categoriaNombre || entry.familia || entry.categoryName || '';
+  const precio = typeof entry.precio === 'number'
+    ? entry.precio
+    : typeof entry.price === 'number'
+      ? entry.price
+      : null;
+  const descripcion = typeof entry.descripcion === 'string'
+    ? entry.descripcion
+    : typeof entry.description === 'string'
+      ? entry.description
+      : '';
+  const moneda = typeof entry.moneda === 'string' && entry.moneda
+    ? entry.moneda
+    : 'EUR';
+  const details = entry.detalles && typeof entry.detalles === 'object'
+    ? { ...entry.detalles }
+    : entry.features && typeof entry.features === 'object'
+      ? { ...entry.features }
+      : {};
+  if (descripcion && typeof details.description !== 'string') {
+    details.description = descripcion;
+  }
+  if (moneda && typeof details.currency !== 'string') {
+    details.currency = moneda;
+  }
+  const destacada = Boolean(entry.destacada ?? entry.featured);
+  const id = entry.id || entry.codigo || createId('tarifa');
+  return {
+    id,
+    codigo: entry.codigo || id,
+    nombre: entry.nombre || entry.title || entry.name || id,
+    compania: entry.compania || entry.operator || '',
+    operador: entry.operator || '',
+    tipo: (entry.tipo || categoria || '').toString().trim().toUpperCase(),
+    categoria,
+    categoriaNombre,
+    familia: entry.familia || categoriaNombre || categoria,
+    precio,
+    moneda,
+    descripcion,
+    detalles: details,
+    features: details,
+    tags: entry.tags || details.tags || [],
+    destacada,
+    featured: destacada,
+    isActive: entry.isActive ?? entry.active ?? true,
+    active: entry.isActive ?? entry.active ?? true,
+  };
+}
+
+async function refreshCatalogFromDataSource() {
+  let dataSource;
+  try {
+    dataSource = await getDataSource();
+  } catch (error) {
+    console.warn('[catalog] No se pudo obtener el origen de datos del catálogo.', error);
+    catalogFeatureEnabled = false;
+    return;
+  }
+
+  const usingNewCatalog = dataSource && dataSource.SOURCE_ID === 'new-catalog-adapter';
+  catalogFeatureEnabled = Boolean(usingNewCatalog);
+  if (!usingNewCatalog) {
+    return;
+  }
+
+  try {
+    const brand = await dataSource.getLegacyBrand();
+    if (brand) {
+      applyCatalogBrand(brand);
+    }
+  } catch (error) {
+    console.warn('[catalog] No se pudo recuperar la marca del catálogo.', error);
+  }
+
+  try {
+    const categories = await dataSource.getLegacyCategoriesShape();
+    catalogCategories = Array.isArray(categories) ? categories : [];
+  } catch (error) {
+    console.warn('[catalog] No se pudieron obtener las categorías del catálogo.', error);
+    catalogCategories = [];
+  }
+
+  let aggregatedItems = [];
+  if (Array.isArray(catalogCategories) && catalogCategories.length) {
+    for (const category of catalogCategories) {
+      try {
+        const items = await dataSource.getLegacyItemsShape(category.id);
+        if (Array.isArray(items) && items.length) {
+          items.forEach((item) => {
+            const mapped = mapCatalogItemToTariff(item, category);
+            if (mapped) {
+              aggregatedItems.push(mapped);
+            }
+          });
+        }
+      } catch (error) {
+        console.warn(`[catalog] No se pudieron obtener items para la categoría ${category.id}.`, error);
+      }
+    }
+  }
+
+  if (!aggregatedItems.length) {
+    try {
+      const items = await dataSource.getLegacyItemsShape('');
+      if (Array.isArray(items) && items.length) {
+        aggregatedItems = items
+          .map((item) => mapCatalogItemToTariff(item, null))
+          .filter(Boolean);
+      }
+    } catch (error) {
+      console.warn('[catalog] No se pudieron obtener items del catálogo.', error);
+    }
+  }
+
+  if (!aggregatedItems.length) {
+    console.warn('[catalog] El catálogo no contiene items disponibles. Se mantiene el modo legacy.');
+    catalogFeatureEnabled = false;
+    return;
+  }
+
+  tariffs = aggregatedItems.map(normaliseTariff);
+  try {
+    localStorage.setItem(STORAGE_KEYS.tariffs, JSON.stringify(tariffs));
+  } catch (error) {
+    console.warn('No se pudo almacenar el catálogo en la caché local.', error);
+  }
+  aplicarFiltros();
+  renderTariffTable();
+  populateReferralTariffs();
+  populateAiFiberOptions();
+  renderEverythingAfterDataChange({ refreshAi: Boolean(aiLastQuery) });
 }
 
 function renderBannerForm() {
@@ -4879,7 +5048,7 @@ function loadTariffsFromStorage() {
 }
 
 function saveTariffs() {
-  if (remoteState.enabled) {
+  if (remoteState.enabled && !catalogFeatureEnabled) {
     scheduleRemoteSync();
   }
   try {
@@ -13293,6 +13462,9 @@ setupRewardImageUploader();
   recordPageVisit();
 
   resetAiSearch();
+  refreshCatalogFromDataSource().catch((error) => {
+    console.warn('[catalog] No se pudo cargar el catálogo inicial.', error);
+  });
 });
 </script>
 </body>
