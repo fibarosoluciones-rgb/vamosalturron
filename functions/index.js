@@ -452,3 +452,5 @@ exports.listBackups = onCall({ region: "europe-west1" }, async (request) => {
     }));
   return { items };
 });
+
+exports.migrateAppState = require("./migrations/migrateAppState").migrateAppState;
