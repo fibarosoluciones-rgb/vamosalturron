@@ -1835,7 +1835,6 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 <script type="module">
 import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc, addDoc, collection } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getDataSource } from './public/app/dataRouter.js';
 import { app } from './firebase-config.js';
 
 const BASE_DATA = [{"codigo": "P-0001", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 12.5, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "FIBRA 300 Y 2 LINEAS CON LLAMADAS ILIMITADAS Y 50 GI COMPARTIDOS", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0002", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 99.9, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "qwe", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0003", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "zxc", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0004", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 258.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "rty", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0005", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 46.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "fgh", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0006", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 21.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "cvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0007", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 12.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "tyu", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0008", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 45.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0009", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 14.0, "compañia": "mm", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "fvb", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0010", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 13.0, "compañia": "pp", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "uik", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0011", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 78.0, "compañia": "simyo", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "no", "descripción": "yhn", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0012", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 57.0, "compañia": "jazztel", "familia": "LA MÁS BARATA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "pñl", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0013", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 912.5, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "R45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0014", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 999.9, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "6 meses", "descripción": "RF43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0015", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 978.0, "compañia": "simyo", "familia": "MEDIA", "moneda": "EUR", "permanencia": "9 meses", "descripción": "F34F", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0016", "nombre": "CONVERGENTE  2 LINEAS ", "precio": 958.0, "compañia": "jazztel", "familia": "MEDIA", "moneda": "EUR", "permanencia": "no", "descripción": "34F45", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 2}, {"codigo": "P-0017", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 946.0, "compañia": "mm", "familia": "MEDIA", "moneda": "EUR", "permanencia": "12 meses", "descripción": "34F43", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0018", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 921.0, "compañia": "pp", "familia": "MEDIA", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F3RF", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0019", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 997.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "656H", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0020", "nombre": "CONVERGENTE  3 LINEAS ", "precio": 5745.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "9 meses", "descripción": "H768", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 3}, {"codigo": "P-0021", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 6745.0, "compañia": "mm", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "no", "descripción": "5G34G", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0022", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 5868.0, "compañia": "pp", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "12 meses", "descripción": "F3RT", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0023", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 9999.0, "compañia": "simyo", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "3 meses", "descripción": "F324TG6", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}, {"codigo": "P-0024", "nombre": "CONVERGENTE  4 LINEAS ", "precio": 3858.0, "compañia": "jazztel", "familia": "PREMIUM", "moneda": "EUR", "permanencia": "6 meses", "descripción": "EF5655", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31", "lineas": 4}];
@@ -2402,98 +2401,6 @@ function flushRemoteQueue() {
   remoteSyncTimer = setTimeout(commitRemoteSync, 50);
 }
 
-function updateBrandFromConfig(brand) {
-  const fallback = 'FÍBARO';
-  const label = typeof brand === 'string' && brand.trim() ? brand.trim() : fallback;
-  try {
-    document.title = `Tarifas ${label} – Panel Offline`;
-  } catch (error) {
-    console.warn('No se pudo actualizar el título con la marca', error);
-  }
-  const brandImage = document.querySelector('.brand img');
-  if (brandImage) {
-    brandImage.alt = `Logo de ${label}`;
-  }
-  const brandText = document.querySelector('[data-brand-name]');
-  if (brandText) {
-    brandText.textContent = label;
-  }
-}
-
-async function loadCatalogFromFeatureFlag() {
-  try {
-    catalogDataSource = await getDataSource();
-  } catch (error) {
-    console.warn('No se pudo inicializar el origen de datos, usando modo legacy', error);
-    catalogDataSource = window.__legacyDataSource;
-    newCatalogFeatureActive = false;
-    return;
-  }
-
-  if (!catalogDataSource || catalogDataSource.source !== 'new') {
-    if (catalogDataSource && catalogDataSource !== window.__legacyDataSource) {
-      console.warn('Catálogo nuevo no disponible, se mantiene modo legacy');
-    }
-    catalogDataSource = catalogDataSource || window.__legacyDataSource;
-    newCatalogFeatureActive = false;
-    return;
-  }
-
-  newCatalogFeatureActive = true;
-
-  try {
-    cachedCatalogCategories = await catalogDataSource.getLegacyCategoriesShape();
-  } catch (error) {
-    console.warn('No se pudieron cargar las categorías del nuevo catálogo', error);
-    cachedCatalogCategories = [];
-  }
-
-  const categoryList = Array.isArray(cachedCatalogCategories) && cachedCatalogCategories.length
-    ? cachedCatalogCategories
-    : [{ id: 'default', name: 'Catálogo', order: 0, active: true }];
-
-  const aggregated = [];
-  for (const category of categoryList) {
-    try {
-      const items = await catalogDataSource.getLegacyItemsShape(category.id);
-      if (Array.isArray(items)) {
-        aggregated.push(...items);
-      }
-    } catch (error) {
-      console.warn(`No se pudieron cargar las tarifas para la categoría ${category.id}`, error);
-    }
-  }
-
-  if (!aggregated.length) {
-    console.warn('El nuevo catálogo no devolvió tarifas, se mantiene el modo legacy');
-    newCatalogFeatureActive = false;
-    return;
-  }
-
-  tariffs = aggregated.map(normaliseTariff);
-
-  try {
-    localStorage.setItem(STORAGE_KEYS.tariffs, JSON.stringify(tariffs));
-  } catch (error) {
-    console.warn('No se pudieron guardar las tarifas del nuevo catálogo en localStorage', error);
-  }
-
-  aplicarFiltros();
-  renderTariffTable();
-  populateReferralTariffs();
-  populateAiFiberOptions();
-  if (aiLastQuery) {
-    runAiSearch(aiLastQuery, { preserveFormState: true });
-  }
-
-  try {
-    const brand = await catalogDataSource.getLegacyBrand();
-    updateBrandFromConfig(brand);
-  } catch (error) {
-    console.warn('No se pudo actualizar la marca desde el nuevo catálogo', error);
-  }
-}
-
 function applyRemoteData(data) {
   remoteDataArrived = true;
   remoteState.data = data || {};
@@ -2519,7 +2426,7 @@ function applyRemoteData(data) {
       }
     }
   }
-  if (!newCatalogFeatureActive && Array.isArray(remoteState.data.tariffs)) {
+  if (Array.isArray(remoteState.data.tariffs)) {
     tariffs = remoteState.data.tariffs.map(normaliseTariff);
     try {
       localStorage.setItem(STORAGE_KEYS.tariffs, JSON.stringify(tariffs));
@@ -3536,29 +3443,6 @@ let customBudgets = [];
 let messageThreads = [];
 let messageOffers = [];
 let analyticsEvents = [];
-
-window.__legacyDataSource = {
-  async getLegacyCategoriesShape() {
-    return [
-      {
-        id: 'legacy',
-        name: 'Catálogo legacy',
-        order: 0,
-        active: true,
-      },
-    ];
-  },
-  async getLegacyItemsShape() {
-    return Array.isArray(tariffs) ? tariffs.slice() : [];
-  },
-  async getLegacyBrand() {
-    return 'FÍBARO';
-  },
-};
-
-let catalogDataSource = null;
-let newCatalogFeatureActive = false;
-let cachedCatalogCategories = [];
 let discountCountdownTimer = null;
 let messageTabButtons = [];
 let messageTabPanels = {};
@@ -9710,9 +9594,6 @@ function handleStorageEvent(event) {
   if (!event) return;
   if (event.storageArea && event.storageArea !== localStorage) return;
   if (event.key === STORAGE_KEYS.tariffs) {
-    if (newCatalogFeatureActive) {
-      return;
-    }
     tariffs = loadTariffsFromStorage();
     aplicarFiltros();
     if (currentUser?.role === 'admin') {
@@ -13408,8 +13289,6 @@ setupRewardImageUploader();
   } else {
     updateUIForRole();
   }
-
-  loadCatalogFromFeatureFlag();
 
   recordPageVisit();
 
