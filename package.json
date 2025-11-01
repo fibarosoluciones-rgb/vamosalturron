@@ -4,8 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "seed:catalog": "ts-node --esm scripts/seedCatalog.ts",
-    "build:app": "tsc -p tsconfig.app.json"
   },
   "dependencies": {
     "firebase": "^10.12.2"
@@ -14,4 +12,4 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }
-}
+
