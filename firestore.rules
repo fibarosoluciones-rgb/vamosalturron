@@ -54,7 +54,12 @@ service cloud.firestore {
 
     match /app/state {
       allow read: if isAdmin();
-      allow write: if false;
+      allow write: if isSignedIn();
+    }
+
+    match /app/state/{collectionName}/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     match /products/{id} {
