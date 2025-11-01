@@ -1,4 +1,4 @@
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
 
 export const SOURCE_ID = "legacy-state";
 
@@ -43,9 +43,26 @@ async function readLegacyState(): Promise<LegacyState> {
   return data ?? {};
 }
 
-export async function getLegacyCategoriesShape() {
+async function readDistributedTariffs(): Promise<unknown[]> {
+  const colRef = collection(db, LEGACY_COLLECTION, LEGACY_DOCUMENT, "tariffs");
+  const snapshot = await getDocs(colRef);
+  if (snapshot.empty) {
+    return [];
+  }
+  return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Record<string, unknown>) }));
+}
+
+async function loadLegacyTariffs(): Promise<unknown[]> {
   const state = await readLegacyState();
-  const tariffs = Array.isArray(state.tariffs) ? state.tariffs : [];
+  const legacyTariffs = Array.isArray(state.tariffs) ? state.tariffs : [];
+  if (legacyTariffs.length) {
+    return legacyTariffs;
+  }
+  return readDistributedTariffs();
+}
+
+export async function getLegacyCategoriesShape() {
+  const tariffs = await loadLegacyTariffs();
   const categories: { id: string; name: string; order: number; active: boolean }[] = [];
   const seen = new Set<string>();
 
@@ -70,8 +87,7 @@ export async function getLegacyCategoriesShape() {
 }
 
 export async function getLegacyItemsShape(categoryId: string) {
-  const state = await readLegacyState();
-  const tariffs = Array.isArray(state.tariffs) ? state.tariffs : [];
+  const tariffs = await loadLegacyTariffs();
   const target = typeof categoryId === "string" && categoryId.trim() ? categoryId.trim().toLowerCase() : "";
 
   return tariffs

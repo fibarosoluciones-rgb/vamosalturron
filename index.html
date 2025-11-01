@@ -1841,7 +1841,19 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 <script type="module" src="./firebase-config.js"></script>
 <script type="module">
 import { getDataSource } from "@/app/dataRouter";
-import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc, addDoc, collection } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+  addDoc,
+  collection,
+  writeBatch,
+  getDocs,
+  deleteField
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { app } from './firebase-config.js';
 
@@ -2261,6 +2273,22 @@ let remoteSyncTimer = null;
 let remoteDataArrived = false;
 let anonymousSignInAttempted = false;
 
+const remoteDistributedData = {
+  root: {},
+  users: [],
+  leads: [],
+  tariffs: []
+};
+
+const remoteDistributedReadyState = {
+  root: false,
+  users: false,
+  leads: false,
+  tariffs: false
+};
+
+let remoteLegacyMigrationTask = null;
+
 let domReady = false;
 let syncStatusEl = null;
 let syncStatus = {
@@ -2310,6 +2338,17 @@ function ensureFirebaseAuth() {
   return firebaseAuthInstance;
 }
 
+function resetRemoteDistributedState() {
+  remoteDistributedData.root = {};
+  remoteDistributedData.users = [];
+  remoteDistributedData.leads = [];
+  remoteDistributedData.tariffs = [];
+  remoteDistributedReadyState.root = false;
+  remoteDistributedReadyState.users = false;
+  remoteDistributedReadyState.leads = false;
+  remoteDistributedReadyState.tariffs = false;
+}
+
 function resetRemoteSyncState({ resetStatus = true } = {}) {
   if (remoteSyncTimer) {
     clearTimeout(remoteSyncTimer);
@@ -2328,6 +2367,8 @@ function resetRemoteSyncState({ resetStatus = true } = {}) {
   remoteState.initPromise = null;
   remoteDocRef = null;
   remoteDataArrived = false;
+  remoteLegacyMigrationTask = null;
+  resetRemoteDistributedState();
   if (resetStatus) {
     setSyncStatus('offline', remoteState.enabled ? 'Sin sesión' : 'Modo offline');
   }
@@ -2354,6 +2395,236 @@ function renderSyncStatus() {
   syncStatusEl.dataset.state = syncStatus.state;
 }
 
+const DISTRIBUTED_BATCH_SIZE = 400;
+
+function cloneWithoutUndefined(value) {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null) {
+    return null;
+  }
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+  if (value && typeof value.toDate === 'function') {
+    try {
+      const dateValue = value.toDate();
+      if (dateValue instanceof Date && !Number.isNaN(dateValue.getTime())) {
+        return dateValue.toISOString();
+      }
+    } catch (error) {
+      return null;
+    }
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => cloneWithoutUndefined(entry))
+      .filter((entry) => entry !== undefined);
+  }
+  if (typeof value === 'object') {
+    const result = {};
+    for (const [key, inner] of Object.entries(value)) {
+      const cloned = cloneWithoutUndefined(inner);
+      if (cloned !== undefined) {
+        result[key] = cloned;
+      }
+    }
+    return result;
+  }
+  return value;
+}
+
+function normaliseDistributedIdValue(value) {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : null;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+  return null;
+}
+
+function resolveDistributedDocumentId(collectionName, entry) {
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+  const candidates = [];
+  if (collectionName === 'users') {
+    candidates.push(entry.username, entry.id, entry.uid);
+  } else if (collectionName === 'leads') {
+    candidates.push(entry.id, entry.leadId);
+  } else if (collectionName === 'tariffs') {
+    candidates.push(entry.id, entry.codigo, entry.code);
+  }
+  for (const candidate of candidates) {
+    const normalised = normaliseDistributedIdValue(candidate);
+    if (normalised) {
+      return normalised;
+    }
+  }
+  return null;
+}
+
+function prepareDistributedRecord(collectionName, record) {
+  if (!record || typeof record !== 'object') {
+    return null;
+  }
+  const plain = cloneWithoutUndefined(record);
+  if (!plain || typeof plain !== 'object') {
+    return null;
+  }
+  if (collectionName === 'users' && typeof plain.username !== 'string') {
+    const resolved = normaliseDistributedIdValue(plain.id || plain.uid);
+    if (resolved) {
+      plain.username = resolved;
+    }
+  }
+  if (!plain.updatedAt) {
+    plain.updatedAt = new Date().toISOString();
+  }
+  plain.syncedAt = serverTimestamp();
+  return plain;
+}
+
+async function syncRemoteCollection(collectionName, list) {
+  if (!remoteDocRef) {
+    return;
+  }
+  const db = ensureFirestoreDb();
+  const colRef = collection(remoteDocRef, collectionName);
+  const existingSnapshot = await getDocs(colRef);
+  const existingIds = new Set(existingSnapshot.docs.map((docSnap) => docSnap.id));
+
+  const payloadById = new Map();
+  const items = Array.isArray(list) ? list : [];
+
+  items.forEach((entry) => {
+    const id = resolveDistributedDocumentId(collectionName, entry);
+    if (!id) {
+      return;
+    }
+    const prepared = prepareDistributedRecord(collectionName, entry);
+    if (!prepared) {
+      return;
+    }
+    if (!prepared.id) {
+      prepared.id = id;
+    }
+    if (collectionName === 'users' && typeof prepared.username !== 'string') {
+      prepared.username = id;
+    }
+    payloadById.set(id, prepared);
+  });
+
+  const operations = [];
+
+  payloadById.forEach((data, id) => {
+    operations.push({ type: 'set', id, data });
+  });
+
+  existingIds.forEach((id) => {
+    if (!payloadById.has(id)) {
+      operations.push({ type: 'delete', id });
+    }
+  });
+
+  if (!operations.length) {
+    return;
+  }
+
+  for (let index = 0; index < operations.length; index += DISTRIBUTED_BATCH_SIZE) {
+    const batch = writeBatch(db);
+    const slice = operations.slice(index, index + DISTRIBUTED_BATCH_SIZE);
+    slice.forEach((operation) => {
+      const docRef = doc(colRef, operation.id);
+      if (operation.type === 'delete') {
+        batch.delete(docRef);
+      } else {
+        batch.set(docRef, operation.data);
+      }
+    });
+    await batch.commit();
+  }
+}
+
+async function syncDistributedCollections({ users = [], leads = [], tariffs = [] } = {}) {
+  if (!remoteDocRef) {
+    return;
+  }
+  await Promise.all([
+    syncRemoteCollection('users', users),
+    syncRemoteCollection('leads', leads),
+    syncRemoteCollection('tariffs', tariffs)
+  ]);
+}
+
+function buildCombinedRemoteData() {
+  const root = remoteDistributedData.root && typeof remoteDistributedData.root === 'object'
+    ? { ...remoteDistributedData.root }
+    : {};
+  root.users = remoteDistributedData.users.slice();
+  root.leads = remoteDistributedData.leads.slice();
+  root.tariffs = remoteDistributedData.tariffs.slice();
+  return root;
+}
+
+function markDistributedSnapshotReady(key) {
+  if (!remoteDistributedReadyState[key]) {
+    remoteDistributedReadyState[key] = true;
+  }
+}
+
+function distributedSnapshotsReady() {
+  return remoteDistributedReadyState.root && remoteDistributedReadyState.users && remoteDistributedReadyState.leads && remoteDistributedReadyState.tariffs;
+}
+
+async function migrateLegacyStateDocument(data) {
+  if (!remoteDocRef || !data || typeof data !== 'object') {
+    return false;
+  }
+  const tasks = [];
+  const cleanup = {};
+
+  if (Array.isArray(data.users)) {
+    tasks.push(syncRemoteCollection('users', data.users));
+    cleanup.users = deleteField();
+  }
+  if (Array.isArray(data.leads)) {
+    tasks.push(syncRemoteCollection('leads', data.leads));
+    cleanup.leads = deleteField();
+  }
+  if (Array.isArray(data.tariffs)) {
+    tasks.push(syncRemoteCollection('tariffs', data.tariffs));
+    cleanup.tariffs = deleteField();
+  }
+
+  if (!tasks.length) {
+    return false;
+  }
+
+  await Promise.all(tasks);
+  cleanup.migratedAt = serverTimestamp();
+  await setDoc(remoteDocRef, cleanup, { merge: true });
+  return true;
+}
+
+async function ensureLegacyStateMigrated(data) {
+  if (!Array.isArray(data?.users) && !Array.isArray(data?.leads) && !Array.isArray(data?.tariffs)) {
+    return;
+  }
+  if (remoteLegacyMigrationTask) {
+    return remoteLegacyMigrationTask;
+  }
+  remoteLegacyMigrationTask = migrateLegacyStateDocument(data).catch((error) => {
+    console.error('No se pudo migrar el estado legacy a la estructura distribuida', error);
+  }).finally(() => {
+    remoteLegacyMigrationTask = null;
+  });
+  return remoteLegacyMigrationTask;
+}
+
 function scheduleRemoteSync() {
   if (!remoteState.enabled) return;
   remoteState.pending = true;
@@ -2376,8 +2647,6 @@ async function commitRemoteSync() {
       ? analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
       : [];
     const payload = {
-      users,
-      leads,
       rewards,
       notifications,
       callRequests,
@@ -2388,10 +2657,15 @@ async function commitRemoteSync() {
       banner: bannerConfig,
       updatedAt: serverTimestamp()
     };
-    if (!catalogFeatureEnabled) {
-      payload.tariffs = tariffs;
-    }
-    await setDoc(remoteDocRef, payload, { merge: true });
+    const distributed = {
+      users: Array.isArray(users) ? users : [],
+      leads: Array.isArray(leads) ? leads : [],
+      tariffs: !catalogFeatureEnabled && Array.isArray(tariffs) ? tariffs : []
+    };
+    await Promise.all([
+      setDoc(remoteDocRef, payload, { merge: true }),
+      syncDistributedCollections(distributed)
+    ]);
     remoteState.lastError = null;
   } catch (error) {
     remoteState.lastError = error;
@@ -12794,21 +13068,53 @@ async function initRemoteSync(user) {
     remoteState.currentUid = user.uid;
     remoteState.ready = false;
     remoteState.lastError = null;
+    resetRemoteDistributedState();
+
+    const existing = await getDoc(remoteDocRef);
+    if (!existing.exists()) {
+      const analyticsSeed = Array.isArray(analyticsEvents)
+        ? analyticsEvents.slice(-MAX_ANALYTICS_EVENTS)
+        : [];
+      await setDoc(
+        remoteDocRef,
+        {
+          rewards,
+          notifications,
+          callRequests,
+          customBudgets,
+          messageThreads,
+          messageOffers,
+          analyticsEvents: analyticsSeed,
+          banner: bannerConfig,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+      await syncDistributedCollections({
+        users: Array.isArray(users) ? users : [],
+        leads: Array.isArray(leads) ? leads : [],
+        tariffs: !catalogFeatureEnabled && Array.isArray(tariffs) ? tariffs : []
+      });
+    } else {
+      await ensureLegacyStateMigrated(existing.data());
+    }
 
     const waitForSnapshot = new Promise((resolve, reject) => {
       let settled = false;
-      const unsubscribe = onSnapshot(remoteDocRef, (snapshot) => {
-        remoteState.ready = true;
-        remoteState.lastError = null;
-        applyRemoteData(snapshot.data());
-        if (!remoteState.writing && !remoteState.pending) {
-          setSyncStatus('online', 'Sincronizado');
+      const unsubscribers = [];
+
+      const maybeResolve = () => {
+        if (distributedSnapshotsReady()) {
+          remoteState.ready = true;
+          if (!settled) {
+            settled = true;
+            resolve(true);
+          }
         }
-        if (!settled) {
-          settled = true;
-          resolve(true);
-        }
-      }, (error) => {
+      };
+
+      const handleError = (error) => {
         remoteState.lastError = error;
         console.error('Error en la suscripción a Firestore', error);
         setSyncStatus('error', 'Error de sincronización');
@@ -12816,29 +13122,120 @@ async function initRemoteSync(user) {
           settled = true;
           reject(error);
         }
-      });
-      remoteState.unsub = unsubscribe;
+      };
+
+      const rootUnsub = onSnapshot(
+        remoteDocRef,
+        (snapshot) => {
+          remoteState.lastError = null;
+          const rawData = snapshot.data() || {};
+          ensureLegacyStateMigrated(rawData);
+          const { users: legacyUsers, leads: legacyLeads, tariffs: legacyTariffs, ...rest } = rawData;
+          remoteDistributedData.root = rest;
+          markDistributedSnapshotReady('root');
+          const ready = distributedSnapshotsReady();
+          if (ready) {
+            applyRemoteData(buildCombinedRemoteData());
+            if (!remoteState.writing && !remoteState.pending) {
+              setSyncStatus('online', 'Sincronizado');
+            }
+          }
+          maybeResolve();
+        },
+        handleError
+      );
+      unsubscribers.push(rootUnsub);
+
+      const usersUnsub = onSnapshot(
+        collection(remoteDocRef, 'users'),
+        (snapshot) => {
+          remoteDistributedData.users = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data() || {};
+            const record = data && typeof data === 'object' ? { ...data } : {};
+            if (!record.username && docSnap.id) {
+              record.username = docSnap.id;
+            }
+            if (!record.id && docSnap.id) {
+              record.id = docSnap.id;
+            }
+            return record;
+          });
+          markDistributedSnapshotReady('users');
+          if (distributedSnapshotsReady()) {
+            applyRemoteData(buildCombinedRemoteData());
+            if (!remoteState.writing && !remoteState.pending) {
+              setSyncStatus('online', 'Sincronizado');
+            }
+          }
+          maybeResolve();
+        },
+        handleError
+      );
+      unsubscribers.push(usersUnsub);
+
+      const leadsUnsub = onSnapshot(
+        collection(remoteDocRef, 'leads'),
+        (snapshot) => {
+          remoteDistributedData.leads = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data() || {};
+            const record = data && typeof data === 'object' ? { ...data } : {};
+            if (!record.id && docSnap.id) {
+              record.id = docSnap.id;
+            }
+            return record;
+          });
+          markDistributedSnapshotReady('leads');
+          if (distributedSnapshotsReady()) {
+            applyRemoteData(buildCombinedRemoteData());
+            if (!remoteState.writing && !remoteState.pending) {
+              setSyncStatus('online', 'Sincronizado');
+            }
+          }
+          maybeResolve();
+        },
+        handleError
+      );
+      unsubscribers.push(leadsUnsub);
+
+      const tariffsUnsub = onSnapshot(
+        collection(remoteDocRef, 'tariffs'),
+        (snapshot) => {
+          remoteDistributedData.tariffs = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data() || {};
+            const record = data && typeof data === 'object' ? { ...data } : {};
+            if (!record.id && docSnap.id) {
+              record.id = docSnap.id;
+            }
+            if (!record.codigo && docSnap.id) {
+              record.codigo = record.codigo || docSnap.id;
+            }
+            return record;
+          });
+          markDistributedSnapshotReady('tariffs');
+          if (distributedSnapshotsReady()) {
+            applyRemoteData(buildCombinedRemoteData());
+            if (!remoteState.writing && !remoteState.pending) {
+              setSyncStatus('online', 'Sincronizado');
+            }
+          }
+          maybeResolve();
+        },
+        handleError
+      );
+      unsubscribers.push(tariffsUnsub);
+
+      remoteState.unsub = () => {
+        unsubscribers.forEach((fn) => {
+          try {
+            fn();
+          } catch (unsubscribeError) {
+            console.warn('No se pudo cancelar una suscripción remota', unsubscribeError);
+          }
+        });
+      };
     });
 
     remoteState.initPromise = waitForSnapshot;
-
-    const existing = await getDoc(remoteDocRef);
-    if (!existing.exists()) {
-      await setDoc(remoteDocRef, {
-        users: DEFAULT_USERS,
-        tariffs: BASE_DATA,
-        leads: [],
-        rewards: [],
-        notifications: [],
-        callRequests: [],
-        customBudgets: [],
-        messageThreads: [],
-        messageOffers: [],
-        analyticsEvents: [],
-        banner: DEFAULT_BANNER_CONFIG,
-        updatedAt: serverTimestamp()
-      });
-    }
 
     flushRemoteQueue();
     try {
