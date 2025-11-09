@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "seed:catalog": "ts-node --esm scripts/seedCatalog.ts"
+    "seed:catalog": "ts-node --esm scripts/seedCatalog.ts",
+    "test": "node --test"
   },
   "dependencies": {
     "firebase": "^10.12.2"

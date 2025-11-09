@@ -1,19 +1,20 @@
-import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
+import { loadFirestoreModule } from "../services/firebaseModule.js";
 
 export const SOURCE_ID = "legacy-state";
 
-const db = getFirestore();
 const LEGACY_COLLECTION = "app";
 const LEGACY_DOCUMENT = "state";
 
-interface LegacyState {
-  tariffs?: unknown[];
-  brand?: unknown;
-  config?: { brand?: unknown };
-  featureFlags?: Record<string, unknown>;
+async function getFirestoreExports() {
+  return loadFirestoreModule();
 }
 
-function normaliseCategoryId(entry: Record<string, unknown>): string | null {
+async function getDb() {
+  const firestore = await getFirestoreExports();
+  return firestore.getFirestore();
+}
+
+function normaliseCategoryId(entry) {
   const candidates = [entry.categoryId, entry.category, entry.tipo, entry.type];
   for (const candidate of candidates) {
     if (typeof candidate === "string" && candidate.trim()) {
@@ -23,7 +24,7 @@ function normaliseCategoryId(entry: Record<string, unknown>): string | null {
   return null;
 }
 
-function normaliseCategoryName(entry: Record<string, unknown>, fallback: string): string {
+function normaliseCategoryName(entry, fallback) {
   const candidates = [entry.categoriaNombre, entry.familia, entry.categoryName, entry.category];
   for (const candidate of candidates) {
     if (typeof candidate === "string" && candidate.trim()) {
@@ -33,26 +34,30 @@ function normaliseCategoryName(entry: Record<string, unknown>, fallback: string)
   return fallback;
 }
 
-async function readLegacyState(): Promise<LegacyState> {
-  const ref = doc(db, LEGACY_COLLECTION, LEGACY_DOCUMENT);
-  const snap = await getDoc(ref);
+async function readLegacyState() {
+  const firestore = await getFirestoreExports();
+  const db = await getDb();
+  const ref = firestore.doc(db, LEGACY_COLLECTION, LEGACY_DOCUMENT);
+  const snap = await firestore.getDoc(ref);
   if (!snap.exists()) {
     return {};
   }
-  const data = snap.data() as LegacyState | undefined;
+  const data = snap.data();
   return data ?? {};
 }
 
-async function readDistributedTariffs(): Promise<unknown[]> {
-  const colRef = collection(db, LEGACY_COLLECTION, LEGACY_DOCUMENT, "tariffs");
-  const snapshot = await getDocs(colRef);
+async function readDistributedTariffs() {
+  const firestore = await getFirestoreExports();
+  const db = await getDb();
+  const colRef = firestore.collection(db, LEGACY_COLLECTION, LEGACY_DOCUMENT, "tariffs");
+  const snapshot = await firestore.getDocs(colRef);
   if (snapshot.empty) {
     return [];
   }
-  return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Record<string, unknown>) }));
+  return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() ?? {}) }));
 }
 
-async function loadLegacyTariffs(): Promise<unknown[]> {
+async function loadLegacyTariffs() {
   const state = await readLegacyState();
   const legacyTariffs = Array.isArray(state.tariffs) ? state.tariffs : [];
   if (legacyTariffs.length) {
@@ -63,14 +68,14 @@ async function loadLegacyTariffs(): Promise<unknown[]> {
 
 export async function getLegacyCategoriesShape() {
   const tariffs = await loadLegacyTariffs();
-  const categories: { id: string; name: string; order: number; active: boolean }[] = [];
-  const seen = new Set<string>();
+  const categories = [];
+  const seen = new Set();
 
   tariffs.forEach((raw, index) => {
     if (!raw || typeof raw !== "object") {
       return;
     }
-    const entry = raw as Record<string, unknown>;
+    const entry = raw;
     const categoryId = normaliseCategoryId(entry);
     if (!categoryId || seen.has(categoryId)) {
       return;
@@ -86,7 +91,7 @@ export async function getLegacyCategoriesShape() {
   return categories;
 }
 
-export async function getLegacyItemsShape(categoryId: string) {
+export async function getLegacyItemsShape(categoryId) {
   const tariffs = await loadLegacyTariffs();
   const target = typeof categoryId === "string" && categoryId.trim() ? categoryId.trim().toLowerCase() : "";
 
@@ -98,7 +103,7 @@ export async function getLegacyItemsShape(categoryId: string) {
       if (!raw || typeof raw !== "object") {
         return false;
       }
-      const entry = raw as Record<string, unknown>;
+      const entry = raw;
       const category = normaliseCategoryId(entry);
       if (category) {
         return category === target;
@@ -106,10 +111,10 @@ export async function getLegacyItemsShape(categoryId: string) {
       const type = typeof entry.tipo === "string" ? entry.tipo.trim().toLowerCase() : "";
       return type === target;
     })
-    .map((entry) => (entry && typeof entry === "object" ? { ...(entry as Record<string, unknown>) } : entry));
+    .map((entry) => (entry && typeof entry === "object" ? { ...entry } : entry));
 }
 
-export async function getLegacyBrand(): Promise<string> {
+export async function getLegacyBrand() {
   const state = await readLegacyState();
   const brandCandidates = [state.config?.brand, state.brand];
   for (const value of brandCandidates) {
