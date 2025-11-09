@@ -1840,7 +1840,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 </script>
 <script type="module" src="./firebase-config.js"></script>
 <script type="module">
-import { getDataSource } from "@/app/dataRouter";
+import { getDataSource } from "@/app/dataRouter.js";
 import { getFirestore, doc, getDoc, onSnapshot, serverTimestamp, setDoc, addDoc, collection } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { app } from './firebase-config.js';

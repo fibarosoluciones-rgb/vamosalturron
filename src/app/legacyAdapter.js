@@ -1,41 +1,8 @@
-import type { AppConfigGeneral, Category, Item } from "@/types/catalog";
-import { listCategories, listItemsByCategory, loadAppConfig } from "./dataSource";
+import { listCategories, listItemsByCategory, loadAppConfig } from "./dataSource.js";
 
 export const SOURCE_ID = "new-catalog-adapter";
 
-export interface LegacyCategoryShape {
-  id: string;
-  name: string;
-  order: number;
-  active: boolean;
-}
-
-export interface LegacyItemShape {
-  id: string;
-  codigo?: string;
-  nombre?: string;
-  title?: string;
-  compania?: string;
-  operator?: string;
-  categoryId?: string;
-  categoria?: string;
-  categoriaNombre?: string;
-  familia?: string;
-  precio?: number | null;
-  price?: number | null;
-  moneda?: string;
-  descripcion?: string;
-  description?: string;
-  detalles?: Record<string, unknown>;
-  features?: Record<string, unknown>;
-  tags?: unknown;
-  destacada?: boolean;
-  featured?: boolean;
-  isActive?: boolean;
-  active?: boolean;
-}
-
-function mapCategory(category: Category, index: number): LegacyCategoryShape {
+function mapCategory(category, index) {
   return {
     id: category.id,
     name: category.name,
@@ -44,11 +11,11 @@ function mapCategory(category: Category, index: number): LegacyCategoryShape {
   };
 }
 
-function ensureRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+function ensureRecord(value) {
+  return value && typeof value === "object" ? value : {};
 }
 
-function mapItem(item: Item, category: LegacyCategoryShape | null): LegacyItemShape {
+function mapItem(item, category) {
   const features = ensureRecord(item.features);
   const descripcion = typeof features.description === "string" ? features.description : "";
   const moneda = typeof features.currency === "string" ? features.currency : "EUR";
@@ -85,12 +52,12 @@ function mapItem(item: Item, category: LegacyCategoryShape | null): LegacyItemSh
   };
 }
 
-export async function getLegacyCategoriesShape(): Promise<LegacyCategoryShape[]> {
+export async function getLegacyCategoriesShape() {
   const categories = await listCategories();
   return categories.map(mapCategory);
 }
 
-export async function getLegacyItemsShape(categoryId: string): Promise<LegacyItemShape[]> {
+export async function getLegacyItemsShape(categoryId) {
   const [{ items }, categories] = await Promise.all([
     listItemsByCategory(categoryId, 100),
     getLegacyCategoriesShape(),
@@ -101,8 +68,8 @@ export async function getLegacyItemsShape(categoryId: string): Promise<LegacyIte
   return items.map((item) => mapItem(item, categoryMap.get(item.categoryId) ?? null));
 }
 
-export async function getLegacyBrand(): Promise<string> {
-  const cfg: AppConfigGeneral | null = await loadAppConfig();
+export async function getLegacyBrand() {
+  const cfg = await loadAppConfig();
   const brand = cfg?.brand;
   return typeof brand === "string" && brand.trim() ? brand.trim() : "FIBARO";
 }
