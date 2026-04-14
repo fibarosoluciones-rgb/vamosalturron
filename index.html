@@ -1394,6 +1394,11 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
       </div>
       <div id="leadSummary" class="kpis" style="margin-top:12px;"></div>
       <div id="leadList" class="lead-list" style="margin-top:12px;"></div>
+      <div class="notice admin-subsection">
+        <h3 class="section-subtitle" style="margin:0;">Prepedidos (Firestore)</h3>
+        <p class="dim" style="margin-top:8px;">Registro operativo de prepedidos captados desde formularios de tarifa.</p>
+        <div id="preorderList" class="lead-list" style="margin-top:12px;"></div>
+      </div>
       <div id="customBudgetSection" class="notice admin-subsection hidden">
         <h3 class="section-subtitle" style="margin:0;">Solicitudes de presupuestos a medida</h3>
         <div id="customBudgetList" class="lead-list" style="margin-top:12px;"></div>
@@ -1841,6 +1846,7 @@ hr.sep { border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10
 <script type="module" src="./firebase-config.js"></script>
 <script type="module">
 import { getDataSource } from "@/app/dataRouter.js";
+import { createPreorder as createPreorderEntry, listPreorders as listPreordersEntries } from "@/app/preordersSource.js";
 import {
   getFirestore,
   doc,
@@ -3494,6 +3500,7 @@ let grid,
   referralError,
   leadSummary,
   leadList,
+  preorderList,
   leadFilter,
   directClientSection,
   directClientList,
@@ -3724,6 +3731,7 @@ let catalogFeatureEnabled = false;
 let catalogCategories = [];
 let currentCatalogBrand = '';
 let leads = [];
+let preorders = [];
 let rewards = [];
 let notifications = [];
 let callRequests = [];
@@ -3770,6 +3778,7 @@ function renderEverythingAfterDataChange({ refreshAi = false } = {}) {
   populateReferralTariffs();
   renderLeadSummary();
   renderAdminLeadList();
+  renderAdminPreorderList();
   renderAdminRewards();
   renderCustomBudgetInbox();
   renderCallRequestInbox();
@@ -10738,6 +10747,86 @@ function renderLeadComments(lead) {
   `;
 }
 
+function preorderStatusLabel(status) {
+  switch (status) {
+    case 'contactado':
+      return 'Contactado';
+    case 'en_gestion':
+      return 'En gestión';
+    case 'cerrado':
+      return 'Cerrado';
+    default:
+      return 'Nuevo';
+  }
+}
+
+function dateFromFirestoreValue(value) {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value.toDate === 'function') {
+    const converted = value.toDate();
+    return converted instanceof Date && !Number.isNaN(converted.getTime()) ? converted : null;
+  }
+  if (typeof value === 'number') {
+    const converted = new Date(value);
+    return Number.isNaN(converted.getTime()) ? null : converted;
+  }
+  if (typeof value === 'string') {
+    const converted = new Date(value);
+    return Number.isNaN(converted.getTime()) ? null : converted;
+  }
+  return null;
+}
+
+function formatPreorderDate(value) {
+  const parsed = dateFromFirestoreValue(value);
+  return parsed ? formatDateTime(parsed.toISOString()) : '—';
+}
+
+function renderAdminPreorderList() {
+  if (!preorderList) return;
+  if (!Array.isArray(preorders) || !preorders.length) {
+    preorderList.innerHTML = '<p class="dim">Aún no hay prepedidos en Firestore.</p>';
+    return;
+  }
+  preorderList.innerHTML = preorders
+    .map((entry) => {
+      const clientName = escapeHtml(entry?.client?.name || 'Cliente sin nombre');
+      const clientPhone = escapeHtml(entry?.client?.phone || 'Sin teléfono');
+      const clientEmail = escapeHtml(entry?.client?.email || 'Sin email');
+      const clientNotes = escapeHtml(entry?.client?.notes || '');
+      const collaboratorName = escapeHtml(entry?.collaborator?.name || entry?.collaborator?.username || 'Sin colaborador');
+      const firstItem = Array.isArray(entry?.items) && entry.items.length ? entry.items[0] : null;
+      const itemName = escapeHtml(firstItem?.name || firstItem?.code || 'Tarifa no especificada');
+      const itemCode = escapeHtml(firstItem?.code || '—');
+      const itemCompany = escapeHtml(firstItem?.company || '—');
+      const badgeStatus = preorderStatusLabel(entry?.status);
+      return `
+        <div class="lead-card lead-card--commercial">
+          <header>
+            <div>
+              <strong>${clientName}</strong>
+              <span class="tag">${itemCode}</span>
+              <span class="tag">${itemCompany}</span>
+            </div>
+            <span class="status-pill" data-status="pendiente">${badgeStatus}</span>
+          </header>
+          <div class="body">
+            <p><strong>Tarifa:</strong> ${itemName}</p>
+            <p><strong>Contacto:</strong> ${clientPhone} · ${clientEmail}</p>
+            <p><strong>Colaborador:</strong> ${collaboratorName}</p>
+            ${clientNotes ? `<p><strong>Notas:</strong> ${clientNotes}</p>` : ''}
+          </div>
+          <footer>
+            <span>ID: ${escapeHtml(entry.id || '—')}</span>
+            <span>Creado: ${formatPreorderDate(entry.createdAt)} · Actualizado: ${formatPreorderDate(entry.updatedAt)}</span>
+          </footer>
+        </div>
+      `;
+    })
+    .join('');
+}
+
 function renderAdminLeadList() {
   if (!leadList) return;
   const teamLeads = leads.filter(lead => lead.origin !== CLIENT_ROLE);
@@ -12344,6 +12433,14 @@ function handleLeadFormSubmit(event) {
   createRemoteOrder(orderPayload).catch((error) => {
     console.error('No se pudo registrar el pedido remoto', error);
   });
+  const preorderPayload = buildPreorderPayloadFromLead(lead, tariff, { source: 'lead-form' });
+  if (preorderPayload) {
+    createPreorderEntry(preorderPayload)
+      .then(() => loadPreordersFromFirestore())
+      .catch((error) => {
+        console.error('No se pudo registrar el prepedido en Firestore', error);
+      });
+  }
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
@@ -12469,6 +12566,14 @@ function handleRequestFormSubmit(event) {
   createRemoteOrder(orderPayload).catch((error) => {
     console.error('No se pudo registrar el pedido remoto', error);
   });
+  const preorderPayload = buildPreorderPayloadFromLead(lead, tariff, { source: 'public-request' });
+  if (preorderPayload) {
+    createPreorderEntry(preorderPayload)
+      .then(() => loadPreordersFromFirestore())
+      .catch((error) => {
+        console.error('No se pudo registrar el prepedido en Firestore', error);
+      });
+  }
   renderLeadSummary();
   renderAdminLeadList();
   renderCommercialPanel();
@@ -13325,6 +13430,55 @@ async function createRemoteOrder(payload = {}) {
   return addDoc(collection(db, 'orders'), data);
 }
 
+function buildPreorderPayloadFromLead(lead, tariff, { source }) {
+  if (!lead || !tariff) {
+    return null;
+  }
+
+  const clientPhone = lead.contact && typeof lead.contact === 'string'
+    ? lead.contact
+    : '';
+
+  return {
+    status: 'nuevo',
+    client: {
+      name: lead.clientName || '',
+      phone: clientPhone,
+      email: '',
+      notes: lead.notes || ''
+    },
+    items: [
+      {
+        tariffId: tariff.id || lead.tariffId || '',
+        code: lead.tariffCodigo || tariff.codigo || '',
+        name: lead.tariffNombre || tariff.nombre || '',
+        company: lead.tariffCompania || tariff.compania || tariff['compañia'] || '',
+        price: extractTariffPrice(tariff)
+      }
+    ],
+    collaborator: lead.commercial
+      ? {
+          username: lead.commercial,
+          name: lead.commercialName || lead.commercial
+        }
+      : null,
+    source: source || 'web',
+    leadId: lead.id || ''
+  };
+}
+
+async function loadPreordersFromFirestore() {
+  try {
+    const list = await listPreordersEntries({ limit: 50 });
+    preorders = Array.isArray(list) ? list : [];
+    renderAdminPreorderList();
+  } catch (error) {
+    console.warn('No se pudieron cargar los prepedidos desde Firestore', error);
+    preorders = [];
+    renderAdminPreorderList();
+  }
+}
+
 setupFirebaseAuth();
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -13389,6 +13543,7 @@ document.addEventListener('DOMContentLoaded', () => {
   referralError = $('#referralError');
   leadSummary = $('#leadSummary');
   leadList = $('#leadList');
+  preorderList = $('#preorderList');
   leadFilter = $('#leadFilter');
   directClientSection = $('#directClientSection');
   directClientList = $('#directClientList');
@@ -13648,6 +13803,7 @@ setupRewardImageUploader();
   populateReferralTariffs();
   populateAiLinesOptions();
   renderEverythingAfterDataChange({ refreshAi: Boolean(aiLastQuery) });
+  loadPreordersFromFirestore();
   renderBannerForm();
   ensureDiscountCountdownTicker();
   updateDiscountCountdowns();
